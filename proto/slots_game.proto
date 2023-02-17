@@ -1,0 +1,12 @@
+
+syntax = "proto3";
+
+package api;
+
+option go_package = "github.com/ciaolink-game-platform/cgp-bing-module/api";
+
+message SlotDesk {
+  repeated int32 matrices = 1;
+  int64 chips = 2;
+  repeated int32 matrix_wins  = 3;
+}

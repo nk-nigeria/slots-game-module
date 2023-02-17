@@ -55,13 +55,21 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	}
 
 	message := procPkg.GetMessages()
+	procPkg.GetProcessor().ProcessGame(ctx,
+		procPkg.GetLogger(),
+		procPkg.GetNK(),
+		procPkg.GetDb(),
+		procPkg.GetDispatcher(),
+		state)
+
 	if len(message) > 0 {
 		procPkg.GetProcessor().ProcessMessageFromUser(ctx,
 			procPkg.GetLogger(),
 			procPkg.GetNK(),
 			procPkg.GetDb(),
 			procPkg.GetDispatcher(),
-			message, state)
+			message,
+			state)
 	}
 
 	if state.IsNeedNotifyCountDown() {

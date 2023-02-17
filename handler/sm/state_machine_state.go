@@ -18,6 +18,8 @@ const (
 	//rewardTimeout    = time.Second * 10
 )
 
+var _ lib.StateMachineState = &SlotsStateMachineState{}
+
 type SlotsStateMachineState struct {
 	lib.StateMachineState
 }
@@ -27,17 +29,20 @@ func NewSlotsStateMachineState() lib.StateMachineState {
 	return &s
 }
 
-func (s *SlotsStateMachineState) NewIdleState(
-	fn lib.FireFn,
-) lib.StateHandler {
+func (s *SlotsStateMachineState) NewIdleState(fn lib.FireFn) lib.StateHandler {
 	return NewIdleState(fn)
 }
 
 func (s *SlotsStateMachineState) NewStateMatching(fn lib.FireFn) lib.StateHandler {
 	return NewStateMatching(fn)
 }
+
 func (s *SlotsStateMachineState) NewStatePreparing(fn lib.FireFn) lib.StateHandler {
 	return NewStatePreparing(fn)
+}
+
+func (s *SlotsStateMachineState) NewStatePlay(fn lib.FireFn) lib.StateHandler {
+	return NewStatePlay(fn)
 }
 func (s *SlotsStateMachineState) NewStateReward(fn lib.FireFn) lib.StateHandler {
 	return NewStateReward(fn)

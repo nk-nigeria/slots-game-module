@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
 
@@ -20,24 +21,32 @@ import (
 var _ lib.Processor = &processor{}
 
 type processor struct {
-	engine      lib.Engine
-	marshaler   *protojson.MarshalOptions
-	unmarshaler *protojson.UnmarshalOptions
+	engine         lib.Engine
+	marshaler      *protojson.MarshalOptions
+	unmarshaler    *protojson.UnmarshalOptions
+	turnBaseEngine *lib.TurnBaseEngine
 }
 
 func NewMatchProcessor(marshaler *protojson.MarshalOptions,
 	unmarshaler *protojson.UnmarshalOptions,
 	engine lib.Engine) lib.Processor {
 	p := processor{
-		marshaler:   marshaler,
-		unmarshaler: unmarshaler,
-		engine:      engine,
+		marshaler:      marshaler,
+		unmarshaler:    unmarshaler,
+		engine:         engine,
+		turnBaseEngine: lib.NewTurnBaseEngine(),
 	}
 	return &p
 }
 func (p *processor) ProcessNewGame(logger runtime.Logger,
 	dispatcher runtime.MatchDispatcher,
 	matchState interface{}) {
+	listUserId := make([]string, 0)
+	s := matchState.(*entity.SlotsMatchState)
+	for _, p := range s.GetPlayingPresences() {
+		listUserId = append(listUserId, p.GetUserId())
+	}
+	p.turnBaseEngine.Config(listUserId, 5*time.Second)
 }
 
 func (p *processor) NotifyUpdateGameState(
@@ -77,7 +86,7 @@ func (p *processor) ProcessFinishGame(ctx context.Context,
 	matchState interface{},
 ) {
 	s := matchState.(*entity.SlotsMatchState)
-	updateFinish := p.engine.Finish(s)
+	updateFinish, _ := p.engine.Finish(s)
 	// p.broadcastMessage(
 	// 	logger, dispatcher,
 	// 	int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
@@ -94,9 +103,52 @@ func (p *processor) ProcessMessageFromUser(ctx context.Context,
 	matchState interface{},
 ) {
 	s := matchState.(*entity.SlotsMatchState)
-	_ = s
 	for _, message := range messages {
-		_ = message
+		switch pb.OpCodeRequest(message.GetOpCode()) {
+		case pb.OpCodeRequest_OPCODE_REQUEST_BET:
+			if s.IsAllowBet() == false {
+				return
+			}
+			if s.WaitSpinMatrix {
+				return
+			}
+			bet := &pb.InfoBet{}
+			err := p.unmarshaler.Unmarshal(message.GetData(), bet)
+			logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
+				message.GetUserId(), message.GetData(), err)
+			s.ResetUserNotInteract(message.GetUserId())
+			s.WaitSpinMatrix = true
+		}
+	}
+}
+
+func (p *processor) ProcessGame(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	matchState interface{},
+) {
+	s := matchState.(*entity.SlotsMatchState)
+	if !s.WaitSpinMatrix {
+		return
+	}
+	p.turnBaseEngine.Loop()
+	if p.turnBaseEngine.IsNewTurn() {
+		p.engine.Process(s)
+		s.WaitSpinMatrix = false
+		slotsDesk := pb.SlotDesk{
+			Matrices: make([]int32, 0),
+		}
+		matrix, cols, rows := s.GetMatrix()
+		for row := 0; row < rows; row++ {
+			for col := 0; col < cols; col++ {
+				slotsDesk.Matrices = append(slotsDesk.Matrices, int32(matrix[row][col]))
+			}
+		}
+		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+			&slotsDesk, s.GetPlayingPresences(), nil, false)
+		return
 	}
 }
 
