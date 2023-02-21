@@ -88,8 +88,8 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 
 	matchState := entity.NewSlotsMathState(label)
 
-	procPkg := lib.NewProcessorPackage(&matchState, m.processor, logger, nil, nil, nil, nil, nil)
+	procPkg := lib.NewProcessorPackage(matchState, m.processor, logger, nil, nil, nil, nil, nil)
 	m.machine.TriggerIdle(lib.GetContextWithProcessorPackager(procPkg))
 
-	return &matchState, tickRate, string(labelJSON)
+	return matchState, tickRate, string(labelJSON)
 }

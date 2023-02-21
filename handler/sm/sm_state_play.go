@@ -35,8 +35,9 @@ func (s *StatePlay) Enter(ctx context.Context, _ ...interface{}) error {
 		},
 		state,
 	)
+	state.InitNewMatch()
 	state.SetupMatchPresence()
-	state.SetAllowBet(true)
+	state.SetAllowSpin(true)
 	return nil
 }
 
@@ -53,16 +54,17 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 		s.Trigger(ctx, lib.TriggerPlayTimeout)
 		return nil
 	}
-
 	message := procPkg.GetMessages()
 	procPkg.GetProcessor().ProcessGame(ctx,
 		procPkg.GetLogger(),
 		procPkg.GetNK(),
 		procPkg.GetDb(),
 		procPkg.GetDispatcher(),
+		message,
 		state)
 
 	if len(message) > 0 {
+
 		procPkg.GetProcessor().ProcessMessageFromUser(ctx,
 			procPkg.GetLogger(),
 			procPkg.GetNK(),

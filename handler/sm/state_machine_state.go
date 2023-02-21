@@ -11,10 +11,10 @@ import (
 
 const (
 	idleTimeout      = time.Second * 15
-	preparingTimeout = time.Second * 5
-	playTimeout      = time.Second * 15
+	preparingTimeout = time.Second * 1
+	playTimeout      = time.Second * 5
 	//playTimeout      = time.Second * 10
-	rewardTimeout = time.Second * 10
+	rewardTimeout = time.Second * 3
 	//rewardTimeout    = time.Second * 10
 )
 
