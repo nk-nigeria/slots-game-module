@@ -1,0 +1,27 @@
+### Mo ta
+
+- Định nghĩa các symbol ở  slots_game.proto (SiXiangSymbol)
+- Sau khi join match, chờ tới khi có notification op code là OpCodeUpdate_OPCODE_UPDATE_GAME_STATE (5), body là UpdateGameState, có state =  GameState_GameStatePlay (4) thì game đã sẵn sàng để chơi
+- Khi vào game, để yêu cần quay (spin) thì gửi notification có opcode = OpCodeRequest_OPCODE_REQUEST_SPIN(12), body là InfoBet, truyền giá trị. chips là mức cược cho lần spin đó.
+
+- Khi mới vào game, server sẽ gửi 1 notification để cập nhật table, có opcode = OpCodeUpdate_OPCODE_UPDATE_TABLE(1), body là SlotDesk
+- Sau khi gửi request spin, server sẽ trả lại notificaition ngay sau đó để cập nhật kết quả spin, được, có opcode = OpCodeUpdate_OPCODE_UPDATE_TABLE(1), body là SlotDesk
+
+Struct SlotDesk
+message SlotDesk {
+  SlotMatrix matrix = 1; //  ma trận 5x3 ở dạng array 1 chiều, thể hiện các symbol hiện tại của game
+  SlotMatrix spread_matrix = 4; ma trận 5x3 ở dạng array 1 chiều, thể hiện các symbol hiện tại của game, đã áp dụng rule thay thế wild
+  repeated Payline paylines = 5; // mảng chưa danh sách payline đã win.
+  int64 chips_mcb = 6;  // mức cược hiện tại của lần spin
+  SiXiangGame sixiang_game = 7; // loại game kế tiếp user sẽ chơi (bonus, dragon, lucky...),   chưa làm
+  repeated SiXiangSymbol special_symbols = 8;  // chưa làm
+  int64 win_jp = 9; // loại jackot đã win, chưa làm
+  int64 win_jp_ratio = 10; // tỉ lệ jackot đã win, chưa làm
+  BigWin big_win = 11; // loại big win (mega, huge, big...)
+  int64 chips_win_in_special_game = 12; // tổng số chip thắng ở bonus game
+  int64 chips_win_in_spin = 13; // tổng số chip thắng ở lần spin hiện tại
+  int64 balance_chips_wallet_before = 14; // số chip trong wallet trước spin
+  int64 balance_chips_wallet_after = 15; / số chip trong wallet sau spin
+}
+
+** Game client demo đơn giản ở repo <https://github.com/ciaolink-game-platform/cgp-game-client.git>
