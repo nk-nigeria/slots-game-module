@@ -26,6 +26,9 @@ func NewSlotsEngine() lib.Engine {
 }
 
 func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	matrix := e.SpinMatrix(s.GetMatrix())
+	s.SetMatrix(matrix)
 	return nil, nil
 }
 
@@ -39,16 +42,19 @@ func (e *slotsEngine) Process(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(matrix)
 	spreadMatrix := e.SpreadWildInMatrix(matrix)
 	s.SetSpreadMMatrix(spreadMatrix)
-	paylines := e.PaylineMatrix(spreadMatrix)
-	paylines = e.FilterPayline(paylines, func(numOccur int) bool {
-		return numOccur >= 3
-	})
-	chipsMcb := s.GetBetInfo().Chips
-	for _, payline := range paylines {
-		payline.Rate = e.RatioPayline(payline)
-		payline.Chips = int64(payline.Rate) * chipsMcb
+	// logic
+	{
+		paylines := e.PaylineMatrix(spreadMatrix)
+		paylinesFilter := e.FilterPayline(paylines, func(numOccur int) bool {
+			return numOccur >= 3
+		})
+		s.SetPaylines(paylinesFilter)
 	}
-	s.SetPaylines(paylines)
+	chipsMcb := s.GetBetInfo().Chips
+	for _, payline := range s.GetPaylines() {
+		payline.Rate = e.RatioPayline(payline)
+		payline.Chips = int64(payline.Rate * float64(chipsMcb))
+	}
 	return s, nil
 }
 
@@ -70,7 +76,7 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 	{
 		slotDesk.Paylines = s.GetPaylines()
 		for _, payline := range slotDesk.Paylines {
-			slotDesk.TotalChipsWin += payline.GetChips()
+			slotDesk.ChipsWinInSpin += payline.GetChips()
 		}
 	}
 	// check if win bonus game
@@ -102,7 +108,6 @@ func (e *slotsEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 				mapColExistScatter[col] = true
 			}
 			matrix.List[idx] = symbol
-
 			break
 		}
 		return
@@ -139,11 +144,16 @@ func (e *slotsEngine) SpreadWildInMatrix(matrix entity.SlotMatrix) entity.SlotMa
 
 func (e *slotsEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 	paylines := make([]*pb.Payline, 0)
-	payline := &pb.Payline{}
 	// matrix.ForEeachLine(func(line int, symbols []pb.SiXiangSymbol) {
-	for _, indexs := range entity.MapPaylineIdx {
-		symbols := matrix.ListFromIndexs(indexs)
-		for id, val := range entity.ListSymbol {
+	// for idx, indexs := range entity.MapPaylineIdx {
+	idx := 0
+	for pair := entity.MapPaylineIdx.Oldest(); pair != nil; pair = pair.Next() {
+		payline := &pb.Payline{
+			Id: int32(idx),
+		}
+		idx++
+		symbols := matrix.ListFromIndexs(pair.Value)
+		for _, val := range entity.ListSymbol {
 			numOccur := 0
 			if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
 				continue
@@ -159,10 +169,9 @@ func (e *slotsEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 				if numOccur >= 3 {
 					break
 				}
-				numOccur = 0
+				break
 			}
 			if numOccur > int(payline.NumOccur) {
-				payline.Id = int32(id)
 				payline.NumOccur = int32(numOccur)
 				payline.Symbol = val
 			}
@@ -171,7 +180,6 @@ func (e *slotsEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 			}
 		}
 		paylines = append(paylines, payline)
-		payline = &pb.Payline{}
 	}
 	return paylines
 }
@@ -209,7 +217,8 @@ func (e *slotsEngine) RatioPayline(payline *pb.Payline) float64 {
 	switch payline.Symbol {
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_10,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_J,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q, pb.SiXiangSymbol_SI_XIANG_SYMBOL_K:
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_K:
 		if payline.NumOccur == 3 {
 			return 0.5
 		}

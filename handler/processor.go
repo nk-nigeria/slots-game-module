@@ -37,15 +37,107 @@ func NewMatchProcessor(marshaler *protojson.MarshalOptions,
 	}
 	return &p
 }
-func (p *processor) ProcessNewGame(logger runtime.Logger,
+func (p *processor) ProcessNewGame(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
 	matchState interface{}) {
-	// listUserId := make([]string, 0)
-	// s := matchState.(*entity.SlotsMatchState)
-	// for _, p := range s.GetPlayingPresences() {
-	// 	listUserId = append(listUserId, p.GetUserId())
-	// }
-	// p.turnBaseEngine.Config(listUserId, 5*time.Second)
+	s := matchState.(*entity.SlotsMatchState)
+	s.InitNewMatch()
+	s.SetupMatchPresence()
+	s.SetAllowSpin(true)
+	p.engine.NewGame(matchState)
+	if len(s.GetPlayingPresences()) == 0 {
+		return
+	}
+	logger.Info("List matrix new game %v", string(s.GetMatrix().List))
+	slotDesk := &pb.SlotDesk{}
+	presence := s.GetPlayingPresences()[0]
+	wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
+	if err != nil {
+		logger.WithField("error", err.Error()).
+			WithField("user id", presence.GetUserId()).
+			Error("get profile user failed")
+		return
+	}
+	matrix := s.GetMatrix()
+	slotDesk.Matrix = matrix.ToPbSlotMatrix()
+	slotDesk.BalanceChipsWalletBefore = wallet.Chips
+	slotDesk.BalanceChipsWalletAfter = wallet.Chips
+
+	p.broadcastMessage(logger, dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+		slotDesk,
+		[]runtime.Presence{presence},
+		nil, false)
+}
+
+func (p *processor) ProcessGame(ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	messages []runtime.MatchData,
+	matchState interface{},
+) {
+	s := matchState.(*entity.SlotsMatchState)
+	defer s.SetAllowSpin(true)
+
+	for _, message := range messages {
+		if message.GetOpCode() == int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN) {
+			if !s.IsAllowSpin() {
+				continue
+			}
+			bet := &pb.InfoBet{}
+			err := p.unmarshaler.Unmarshal(message.GetData(), bet)
+			logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
+				message.GetUserId(), message.GetData(), err)
+			if err != nil {
+				continue
+			}
+			if bet.Chips <= 0 {
+				logger.WithField("user id", message.GetUserId()).
+					Error("bet with mcb <= 0 ")
+				continue
+			}
+			s.SetAllowSpin(false)
+			s.SetBetInfo(bet)
+			p.engine.Process(matchState)
+			wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
+			if err != nil {
+				logger.WithField("error", err.Error()).
+					WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
+					Error("get profile user failed")
+				continue
+			}
+			result, err := p.engine.Finish(matchState)
+			if err != nil {
+				logger.WithField("error", err.Error()).
+					Error("engine finish failed")
+				continue
+			}
+			slotDesk := result.(*pb.SlotDesk)
+			slotDesk.BalanceChipsWalletBefore = wallet.Chips
+			slotDesk.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWinInSpin() - bet.Chips
+			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
+				Updates: []*pb.BalanceUpdate{
+					{
+						UserId:            s.GetPlayingPresences()[0].GetUserId(),
+						AmountChipBefore:  slotDesk.BalanceChipsWalletBefore,
+						AmountChipCurrent: slotDesk.BalanceChipsWalletAfter,
+						AmountChipAdd:     slotDesk.BalanceChipsWalletAfter - slotDesk.BalanceChipsWalletBefore,
+					},
+				},
+			})
+			p.broadcastMessage(logger, dispatcher,
+				int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+				slotDesk,
+				s.GetPlayingPresences(),
+				nil, false)
+			continue
+		}
+	}
 }
 
 func (p *processor) NotifyUpdateGameState(
@@ -84,24 +176,24 @@ func (p *processor) ProcessFinishGame(ctx context.Context,
 	dispatcher runtime.MatchDispatcher,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SlotsMatchState)
-	if s.WaitSpinMatrix {
-		p.engine.Process(s)
-		s.WaitSpinMatrix = false
-	}
-	result, _ := p.engine.Finish(s)
-	updateFinish, ok := result.(*pb.SlotDesk)
-	if !ok {
-		logger.WithField("result", result).
-			Error("Result from engine can not convert to SlotDesk")
-		return
-	}
-	p.broadcastMessage(
-		logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
-		updateFinish, nil, nil, true)
+	// s := matchState.(*entity.SlotsMatchState)
+	// if s.WaitSpinMatrix {
+	// 	p.engine.Process(s)
+	// 	s.WaitSpinMatrix = false
+	// }
+	// result, _ := p.engine.Finish(s)
+	// updateFinish, ok := result.(*pb.SlotDesk)
+	// if !ok {
+	// 	logger.WithField("result", result).
+	// 		Error("Result from engine can not convert to SlotDesk")
+	// 	return
+	// }
+	// p.broadcastMessage(
+	// 	logger, dispatcher,
+	// 	int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
+	// 	updateFinish, nil, nil, true)
 
-	logger.Info("process finish game done %v", updateFinish)
+	// logger.Info("process finish game done %v", updateFinish)
 }
 
 func (p *processor) ProcessMessageFromUser(ctx context.Context,
@@ -132,65 +224,6 @@ func (p *processor) ProcessMessageFromUser(ctx context.Context,
 	// }
 }
 
-func (p *processor) ProcessGame(ctx context.Context,
-	logger runtime.Logger,
-	nk runtime.NakamaModule,
-	db *sql.DB,
-	dispatcher runtime.MatchDispatcher,
-	messages []runtime.MatchData,
-	matchState interface{},
-) {
-	s := matchState.(*entity.SlotsMatchState)
-	defer s.SetAllowSpin(true)
-	for _, message := range messages {
-		if message.GetOpCode() == int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN) {
-			if !s.IsAllowSpin() {
-				continue
-			}
-			bet := &pb.InfoBet{}
-			err := p.unmarshaler.Unmarshal(message.GetData(), bet)
-			logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
-				message.GetUserId(), message.GetData(), err)
-			if err != nil {
-				continue
-			}
-			s.SetAllowSpin(false)
-			s.SetBetInfo(bet)
-			p.engine.Process(matchState)
-			wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
-			if err != nil {
-				logger.WithField("error", err.Error()).
-					WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
-					Error("get profile user failed")
-				return
-			}
-			result, err := p.engine.Finish(matchState)
-			if err != nil {
-				return
-			}
-			slotDesk := result.(*pb.SlotDesk)
-			slotDesk.BalanceChipsWalletBefore = wallet.Chips
-			slotDesk.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetTotalChipsWin() - bet.Chips
-			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
-				Updates: []*pb.BalanceUpdate{
-					{
-						UserId:            s.GetPlayingPresences()[0].GetUserId(),
-						AmountChipBefore:  slotDesk.BalanceChipsWalletBefore,
-						AmountChipCurrent: slotDesk.BalanceChipsWalletAfter,
-						AmountChipAdd:     slotDesk.BalanceChipsWalletAfter - slotDesk.BalanceChipsWalletBefore,
-					},
-				},
-			})
-			p.broadcastMessage(logger, dispatcher,
-				int64(pb.OpCodeUpdate_OPCODE_UPDATE_FINISH),
-				slotDesk,
-				s.GetPlayingPresences(),
-				nil, false)
-			return
-		}
-	}
-}
-
 func (p *processor) ProcessPresencesJoin(ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule,
@@ -216,19 +249,26 @@ func (p *processor) ProcessPresencesJoin(ctx context.Context,
 	}
 	s.AddPresence(ctx, nk, newJoins)
 	s.JoinsInProgress -= len(newJoins)
-	{
-		var listUserId []string
-		for _, p := range newJoins {
-			listUserId = append(listUserId, p.GetUserId())
-		}
-		matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
-		playingMatch := &pb.PlayingMatch{
-			Code:    entity.ModuleName,
-			MatchId: matchId,
-		}
-		playingMatchJson, _ := json.Marshal(playingMatch)
-		cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, string(playingMatchJson))
-	}
+	// for _, presence := range newJoins {
+	// 	slotDesk := &pb.SlotDesk{}
+	// 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
+	// 	if err != nil {
+	// 		logger.WithField("error", err.Error()).
+	// 			WithField("user id", presence.GetUserId()).
+	// 			Error("get profile user failed")
+	// 		return
+	// 	}
+	// 	matrix := s.GetMatrix()
+	// 	slotDesk.Matrix = matrix.ToPbSlotMatrix()
+	// 	slotDesk.BalanceChipsWalletBefore = wallet.Chips
+	// 	slotDesk.BalanceChipsWalletAfter = wallet.Chips
+
+	// 	p.broadcastMessage(logger, dispatcher,
+	// 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+	// 		slotDesk,
+	// 		[]runtime.Presence{presence},
+	// 		nil, false)
+	// }
 }
 
 func (p *processor) ProcessPresencesLeave(ctx context.Context,
@@ -303,14 +343,12 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 		metadata := map[string]interface{}{
 			"game_reward": entity.ModuleName,
 		}
-
 		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
 			UserID:    result.UserId,
 			Changeset: changeset,
 			Metadata:  metadata,
 		})
 	}
-
 	logger.Info("wallet update ctx %v, walletUpdates %v", ctx, walletUpdates)
 	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
 	if err != nil {

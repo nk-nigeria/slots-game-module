@@ -31,7 +31,14 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 		procPkg.GetDb(),
 		procPkg.GetDispatcher(),
 		state)
-	procPkg.GetProcessor().ProcessNewGame(procPkg.GetLogger(), procPkg.GetDispatcher(), state)
+	procPkg.GetProcessor().ProcessNewGame(
+		procPkg.GetContext(),
+		procPkg.GetLogger(),
+		procPkg.GetNK(),
+		procPkg.GetDb(),
+		procPkg.GetDispatcher(),
+		procPkg.GetMatchState(),
+	)
 	return nil
 }
 func (s *StateMatching) Exit(_ context.Context, _ ...interface{}) error {

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ciaolink-game-platform/cgp-common/lib"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
@@ -18,70 +19,67 @@ const (
 	MaxRowMatix  = 3
 )
 
-var MapPaylineIdx map[int][]int
+var MapPaylineIdx = orderedmap.New[int, []int]()
 
 func init() {
-	MapPaylineIdx = make(map[int][]int, 0)
-
+	// MapPaylineIdx = make(map[int][]int, 0)
 	// 1 - 5
 	idx := 0
-	MapPaylineIdx[idx] = []int{0, 1, 2, 3, 4}
+	MapPaylineIdx.Set(idx, []int{0, 1, 2, 3, 4})
+	// MapPaylineIdx[idx] = []int{0, 1, 2, 3, 4}
 	idx++
-	MapPaylineIdx[idx] = []int{5, 6, 7, 8, 9}
+	MapPaylineIdx.Set(idx, []int{5, 6, 7, 8, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 11, 12, 13, 14}
+	MapPaylineIdx.Set(idx, []int{10, 11, 12, 13, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 6, 2, 8, 14}
+	MapPaylineIdx.Set(idx, []int{10, 6, 2, 8, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{0, 6, 12, 8, 4}
+	MapPaylineIdx.Set(idx, []int{0, 6, 12, 8, 4})
 	idx++
-
 	// 5 - 10
-	MapPaylineIdx[idx] = []int{5, 11, 7, 3, 9}
+	MapPaylineIdx.Set(idx, []int{5, 11, 7, 3, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{5, 11, 7, 13, 9}
+	MapPaylineIdx.Set(idx, []int{5, 11, 7, 13, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{0, 6, 2, 8, 14}
+	MapPaylineIdx.Set(idx, []int{0, 6, 2, 8, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 6, 12, 8, 4}
+	MapPaylineIdx.Set(idx, []int{10, 6, 12, 8, 4})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 6, 2, 8, 4}
+	MapPaylineIdx.Set(idx, []int{10, 6, 2, 8, 4})
 	idx++
 
 	// 11 - 15
-	MapPaylineIdx[idx] = []int{0, 6, 12, 8, 14}
+	MapPaylineIdx.Set(idx, []int{0, 6, 12, 8, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{5, 1, 7, 13, 9}
+	MapPaylineIdx.Set(idx, []int{5, 1, 7, 13, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 6, 12, 8, 14}
+	MapPaylineIdx.Set(idx, []int{10, 6, 12, 8, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{5, 1, 7, 3, 9}
+	MapPaylineIdx.Set(idx, []int{5, 1, 7, 3, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{0, 6, 2, 8, 4}
+	MapPaylineIdx.Set(idx, []int{0, 6, 2, 8, 4})
 	idx++
-
 	//16-20
-	MapPaylineIdx[idx] = []int{5, 6, 12, 8, 9}
+	MapPaylineIdx.Set(idx, []int{5, 6, 12, 8, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{0, 1, 7, 3, 4}
+	MapPaylineIdx.Set(idx, []int{0, 1, 7, 3, 4})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 11, 7, 13, 14}
+	MapPaylineIdx.Set(idx, []int{10, 11, 7, 13, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{5, 6, 2, 8, 9}
+	MapPaylineIdx.Set(idx, []int{5, 6, 2, 8, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{0, 1, 12, 3, 4}
+	MapPaylineIdx.Set(idx, []int{0, 1, 12, 3, 4})
 	idx++
 	//21-25
-	MapPaylineIdx[idx] = []int{10, 11, 2, 13, 14}
+	MapPaylineIdx.Set(idx, []int{10, 11, 2, 13, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{5, 6, 7, 13, 9}
+	MapPaylineIdx.Set(idx, []int{5, 6, 7, 13, 9})
 	idx++
-	MapPaylineIdx[idx] = []int{0, 1, 2, 8, 14}
+	MapPaylineIdx.Set(idx, []int{0, 1, 2, 8, 14})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 11, 12, 8, 4}
+	MapPaylineIdx.Set(idx, []int{10, 11, 12, 8, 4})
 	idx++
-	MapPaylineIdx[idx] = []int{10, 5, 6, 7, 4}
-
+	MapPaylineIdx.Set(idx, []int{10, 6, 7, 8, 4})
 }
 
 type SlotMatrix struct {

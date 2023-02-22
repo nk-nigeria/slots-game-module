@@ -16,3 +16,6 @@ sync:
 bsync: build sync
 proto:
 	protoc -I ./ --go_out=$(pwd)/proto  ./proto/chinese_poker_game_api.proto
+
+local:
+	go build --trimpath --mod=vendor --buildmode=plugin -o ./bin/slot-game.so

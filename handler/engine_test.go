@@ -6,6 +6,7 @@ import (
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -150,6 +151,40 @@ func Test_slotsEngine_FilterSymbol(t *testing.T) {
 			return numOccur >= 3
 		}) {
 			fmt.Printf("payline id %d symbol %d occur %d \r\n", payline.Id, payline.Symbol.Number(), payline.NumOccur)
+		}
+	})
+}
+
+func Test_slotsEngine_Process(t *testing.T) {
+	name := "Test Enginre Process"
+	t.Run(name, func(t *testing.T) {
+		engine := &slotsEngine{}
+		matchState := entity.NewSlotsMathState(nil)
+		matrix := entity.SlotMatrix{
+			List: []pb.SiXiangSymbol{
+				2048, 16, 16, 128, 64,
+				4095, 1, 128, 8, 64,
+				16, 1, 256, 4095, 1,
+			},
+			Cols: 5,
+			Rows: 3,
+		}
+		matchState.SetMatrix(matrix)
+		spreadMatrix := engine.SpreadWildInMatrix(matrix)
+		engine.PrintMatrix(spreadMatrix)
+		paylines := engine.PaylineMatrix(spreadMatrix)
+		paylinesFilter := engine.FilterPayline(paylines, func(numOccur int) bool {
+			return numOccur >= 3
+		})
+		matchState.SetPaylines(paylinesFilter)
+		chipsMcb := int64(22222)
+		for _, payline := range matchState.GetPaylines() {
+			payline.Rate = engine.RatioPayline(payline)
+			payline.Chips = int64(payline.Rate * float64(chipsMcb))
+		}
+		for _, payline := range matchState.GetPaylines() {
+			t.Logf("payline id %d, symbol %d occur %d ratio %v chips %d",
+				payline.Id, payline.Symbol, payline.NumOccur, payline.Rate, payline.Chips)
 		}
 	})
 }
