@@ -19,4 +19,10 @@ proto:
 	protoc -I ./ --go_out=$(pwd)/proto  ./proto/chinese_poker_game_api.proto
 
 local:
-	go build --trimpath --mod=vendor --buildmode=plugin -o ./bin/slot-game.so
+	git submodule update --init
+	git submodule update --remote
+	go get github.com/ciaolink-game-platform/cgp-common@main
+	go mod tidy
+	go mod vendor
+	rm ./bin/* || true
+	go build -buildvcs=false --trimpath --mod=vendor --buildmode=plugin -o ./bin/${APP_NAME}
