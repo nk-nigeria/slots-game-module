@@ -23,7 +23,6 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg.GetLogger().Info("[matching] enter")
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	state.SetUpCountDown(1 * time.Second)
-	procPkg.GetLogger().Info("apply leave presence")
 	procPkg.GetProcessor().ProcessApplyPresencesLeave(
 		procPkg.GetContext(),
 		procPkg.GetLogger(),
@@ -31,14 +30,7 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 		procPkg.GetDb(),
 		procPkg.GetDispatcher(),
 		state)
-	procPkg.GetProcessor().ProcessNewGame(
-		procPkg.GetContext(),
-		procPkg.GetLogger(),
-		procPkg.GetNK(),
-		procPkg.GetDb(),
-		procPkg.GetDispatcher(),
-		procPkg.GetMatchState(),
-	)
+
 	return nil
 }
 func (s *StateMatching) Exit(_ context.Context, _ ...interface{}) error {
@@ -61,6 +53,7 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 	if remain > 0 {
 		return nil
 	}
+
 	if state.IsReadyToPlay() {
 		s.Trigger(ctx, lib.TriggerPresenceReady)
 	} else {

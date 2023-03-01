@@ -15,9 +15,140 @@ const (
 )
 
 const (
-	MaxColMatrix = 5
-	MaxRowMatix  = 3
+	ColsMatrix = 5
+	RowsMatrix = 3
 )
+
+var ListSymbol = []pb.SiXiangSymbol{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BLUE_DRAGON,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WHITE_TIGER,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WARRIOR,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_VERMILION_BIRD,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_10,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_J,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_K,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_A,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD,
+}
+
+var ListSymbolLuckyDraw = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1: {
+		NumOccur: 1,
+		Value:    Range{5, 7},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_2: {
+		NumOccur: 1,
+		Value:    Range{10, 14},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_3: {
+		NumOccur: 1,
+		Value:    Range{15, 18},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR: {
+		NumOccur: 1,
+		Value:    Range{10, 10},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR: {
+		NumOccur: 1,
+		Value:    Range{50, 50},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA: {
+		NumOccur: 1,
+		Value:    Range{100, 100},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND: {
+		NumOccur: 1,
+		Value:    Range{500, 500},
+	},
+}
+
+var ListSymbolBonusGame = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL: {
+		NumOccur: 1,
+		Value:    Range{0, 0},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_LUCKYDRAW: {
+		NumOccur: 1,
+		Value:    Range{0, 0},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDPICK: {
+		NumOccur: 1,
+		Value:    Range{0, 0},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_RAPIDPAY: {
+		NumOccur: 1,
+		Value:    Range{0, 0},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX10: {
+		NumOccur: 1,
+		Value:    Range{10, 10},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX20: {
+		NumOccur: 1,
+		Value:    Range{20, 20},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX30: {
+		NumOccur: 1,
+		Value:    Range{30, 30},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX50: {
+		NumOccur: 1,
+		Value:    Range{50, 50},
+	},
+}
+
+var ListSymbolDragonPearl = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_LUCKMONEY: {
+		NumOccur: 3,
+		Value:    Range{0, 0},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM1: {
+		NumOccur: 4,
+		Value:    Range{0.1, 0.2},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM2: {
+		NumOccur: 3,
+		Value:    Range{0.3, 0.7},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM3: {
+		NumOccur: 2,
+		Value:    Range{1, 2},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM4: {
+		NumOccur: 2,
+		Value:    Range{3, 6},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM5: {
+		NumOccur: 1,
+		Value:    Range{8, 10},
+	},
+}
+
+var ListEyeSiXiang = []pb.SiXiangSymbol{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON,
+}
+
+var ListSpecialGame = []pb.SiXiangGame{
+	pb.SiXiangGame_SI_XIANG_GAME_BONUS,
+	pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+	pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+	pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
+	pb.SiXiangGame_SI_XIANG_GAME_BONUS,
+}
+
+type Range struct {
+	Min float32
+	Max float32
+}
+type SymbolInfo struct {
+	NumOccur int
+	Value    Range
+}
 
 var MapPaylineIdx = orderedmap.New[int, []int]()
 
@@ -83,19 +214,85 @@ func init() {
 }
 
 type SlotMatrix struct {
-	List []pb.SiXiangSymbol
-	Cols int
-	Rows int
+	List      []pb.SiXiangSymbol
+	Cols      int
+	Rows      int
+	Size      int
+	TrackFlip map[int]bool
 }
 
-func NewSlotMatrix() SlotMatrix {
+func NewSiXiangMatrixNormal() SlotMatrix {
 	sm := SlotMatrix{
-		List: make([]pb.SiXiangSymbol, MaxRowMatix*MaxColMatrix, MaxRowMatix*MaxColMatrix),
-		Cols: MaxColMatrix,
-		Rows: MaxRowMatix,
+		List:      make([]pb.SiXiangSymbol, RowsMatrix*ColsMatrix, RowsMatrix*ColsMatrix),
+		Cols:      ColsMatrix,
+		Rows:      RowsMatrix,
+		TrackFlip: map[int]bool{},
 	}
-
+	sm.Size = sm.Cols * sm.Rows
 	return sm
+}
+
+func NewSiXiangMatrixBonusGame() SlotMatrix {
+	sm := SlotMatrix{
+		List:      make([]pb.SiXiangSymbol, 0, len(ListSymbolBonusGame)),
+		Cols:      len(ListSymbolBonusGame) / 2,
+		Rows:      2,
+		TrackFlip: map[int]bool{},
+	}
+	sm.Size = sm.Cols * sm.Rows
+	for symbol := range ListSymbolBonusGame {
+		sm.List = append(sm.List, symbol)
+	}
+	return sm
+}
+
+func NewSiXiangMatrixLuckyDraw() SlotMatrix {
+	sm := SlotMatrix{
+		List:      make([]pb.SiXiangSymbol, 0, RowsMatrix*ColsMatrix),
+		Cols:      ColsMatrix,
+		Rows:      RowsMatrix,
+		TrackFlip: map[int]bool{},
+	}
+	for symbol := range ListSymbolLuckyDraw {
+		sm.List = append(sm.List, symbol)
+		if symbol < pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1 {
+			sm.List = append(sm.List, symbol, symbol)
+		}
+	}
+	sm.Size = sm.Cols * sm.Rows
+	return sm
+}
+
+func NewSiXiangMatrixDragonPearl() SlotMatrix {
+	sm := SlotMatrix{
+		List:      make([]pb.SiXiangSymbol, 0, RowsMatrix*ColsMatrix),
+		Cols:      ColsMatrix,
+		Rows:      RowsMatrix,
+		TrackFlip: map[int]bool{},
+	}
+	for symbol, v := range ListSymbolDragonPearl {
+		for i := 0; i < v.NumOccur; i++ {
+			sm.List = append(sm.List, symbol)
+		}
+	}
+	sm.Size = sm.Cols * sm.Rows
+	return sm
+}
+
+func (sm *SlotMatrix) RowCol(id int) (int, int) {
+	if sm.Cols == 0 || sm.Rows == 0 {
+		return 0, 0
+	}
+	row := id / sm.Cols
+	col := id - row*sm.Cols
+	return row, col
+}
+
+func (sm *SlotMatrix) Reset() {
+	sm.List = make([]pb.SiXiangSymbol, 0)
+	sm.Cols = 0
+	sm.Rows = 0
+	sm.TrackFlip = make(map[int]bool)
 }
 
 func (sm *SlotMatrix) ForEeach(fn func(idx, row, col int, symbol pb.SiXiangSymbol)) {
@@ -148,36 +345,43 @@ func (sm *SlotMatrix) ToPbSlotMatrix() *pb.SlotMatrix {
 	return pbSl
 }
 
-var ListSymbol = []pb.SiXiangSymbol{
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BLUE_DRAGON,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WHITE_TIGER,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WARRIOR,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_VERMILION_BIRD,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_10,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_J,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_K,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_A,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD,
+func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int, pb.SiXiangSymbol) {
+	listIdNotFlip := make([]int, 0)
+	for id, symbol := range sm.List {
+		if sm.TrackFlip[int(symbol)] == false {
+			listIdNotFlip = append(listIdNotFlip, id)
+		}
+	}
+	id := randomFn(0, len(listIdNotFlip))
+	idInList := listIdNotFlip[id]
+	symbol := sm.List[idInList]
+	return idInList, symbol
+}
+
+type UserDataMatch struct {
+	RRSpecialGame bool `json:"rr_spec_game"`
 }
 
 type SlotsMatchState struct {
 	lib.MatchState
 	allowSpin     bool // allow user submit new bet
 	balanceResult *pb.BalanceResult
+	// UserDataMatch  UserDataMatch
+	matrix         SlotMatrix
+	spreadMatrix   SlotMatrix
+	paylines       []*pb.Payline
+	WaitSpinMatrix bool
 
-	matrix                  SlotMatrix
-	spreadMatrix            SlotMatrix
-	paylines                []*pb.Payline
-	WaitSpinMatrix          bool
-	AutoSpin                bool
-	playSiXiangGameTracking map[pb.SiXiangGame]int
-	// current game
-	SiXiangGame pb.SiXiangGame
+	CurrentSiXiangGame pb.SiXiangGame
 	// next game in loop
 	NextSiXiangGame pb.SiXiangGame
 	bet             *pb.InfoBet
+	WinJp           pb.WinJackpot
+
+	MatrixSpecial         SlotMatrix
+	ChipsWinInSpecialGame int64
+	SpinSymbol            *pb.SpinSymbol
+	EyeSiXiangRemain      []pb.SiXiangSymbol
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -185,8 +389,13 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		MatchState:     lib.NewMathState(label, NewMyPrecense),
 		balanceResult:  nil,
 		WaitSpinMatrix: false,
+		bet: &pb.InfoBet{
+			Chips: 0,
+		},
+		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NOMAL,
+		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NOMAL,
 	}
-	m.matrix = NewSlotMatrix()
+
 	return &m
 }
 
@@ -222,10 +431,16 @@ func (s *SlotsMatchState) SetBetInfo(bet *pb.InfoBet) {
 	s.bet = bet
 }
 
-func (s *SlotsMatchState) InitNewMatch() {
-	s.AutoSpin = true
+func (s *SlotsMatchState) InitNewRound() {
 	s.WaitSpinMatrix = false
+	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
+	s.paylines = nil
+	s.spreadMatrix = SlotMatrix{}
+	s.EyeSiXiangRemain = nil
+}
 
+func (s *SlotsMatchState) ResetSpecialGame() {
+	s.MatrixSpecial = SlotMatrix{}
 }
 
 func (s *SlotsMatchState) IsAllowSpin() bool {
@@ -253,19 +468,19 @@ func (s *SlotsMatchState) SetBalanceResult(u *pb.BalanceResult) {
 	s.balanceResult = u
 }
 
-func (s *SlotsMatchState) IsWinSiXangBonusGame() bool {
-	return s.playSiXiangGameTracking[pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL]&
-		s.playSiXiangGameTracking[pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW]&
-		s.playSiXiangGameTracking[pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK]&
-		s.playSiXiangGameTracking[pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY] != 0
-}
+// func (s *SlotsMatchState) IsWinSiXangBonusGame() bool {
+// 	return s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL]&
+// 		s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW]&
+// 		s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK]&
+// 		s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY] != 0
+// }
 
-func (s *SlotsMatchState) AddTrackingPlayBonusGame(siXiangGame pb.SiXiangGame) {
-	num := s.playSiXiangGameTracking[siXiangGame]
-	num++
-	s.playSiXiangGameTracking[siXiangGame] = num
-}
+// func (s *SlotsMatchState) AddTrackingPlaySiXiangGame(siXiangGame pb.SiXiangGame) {
+// 	num := s.trackingPlaySiXiangGame[siXiangGame]
+// 	num++
+// 	s.trackingPlaySiXiangGame[siXiangGame] = num
+// }
 
-func (s *SlotsMatchState) ResetdTrackingPlayBonusGame() {
-	s.playSiXiangGameTracking = make(map[pb.SiXiangGame]int)
-}
+// func (s *SlotsMatchState) ResetTrackingPlayBonusGame() {
+// 	s.trackingPlaySiXiangGame = make(map[pb.SiXiangGame]int)
+// }

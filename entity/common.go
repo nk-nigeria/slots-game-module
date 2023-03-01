@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	ModuleName        = "slots-game"
+	ModuleName        = "sixiang"
 	MaxPresenceCard   = 13
 	JackpotPercentTax = 1 // 1%
 )

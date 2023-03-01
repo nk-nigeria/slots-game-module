@@ -22,6 +22,7 @@ func NewStatePlay(fn lib.FireFn) lib.StateHandler {
 
 func (s *StatePlay) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
+	procPkg.GetLogger().Info("[playing] enter")
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	// Setup count down
 	// state.SetUpCountDown(playTimeout)
@@ -34,6 +35,14 @@ func (s *StatePlay) Enter(ctx context.Context, _ ...interface{}) error {
 			CountDown: int64(math.Round(state.GetRemainCountDown())),
 		},
 		state,
+	)
+	procPkg.GetProcessor().ProcessNewGame(
+		procPkg.GetContext(),
+		procPkg.GetLogger(),
+		procPkg.GetNK(),
+		procPkg.GetDb(),
+		procPkg.GetDispatcher(),
+		procPkg.GetMatchState(),
 	)
 	return nil
 }
@@ -52,9 +61,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	// 	return nil
 	// }
 	if state.GetPresenceSize() <= 0 {
-		if state.CountDownReachTime.Unix() <= 0 {
-			state.SetUpCountDown(playTimeout)
-		}
+		s.Trigger(ctx, lib.TriggerNoOne)
 		return nil
 	}
 

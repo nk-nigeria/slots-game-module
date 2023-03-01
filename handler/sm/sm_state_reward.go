@@ -62,7 +62,7 @@ func (s *StateReward) Process(ctx context.Context, args ...interface{}) error {
 	// 		message, state)
 	// }
 	// if remain := state.GetRemainCountDown(); remain <= 0 {
-	// 	s.Trigger(ctx, lib.TriggerRewardTimeout)
+	s.Trigger(ctx, lib.TriggerRewardTimeout)
 	// }
 	return nil
 }

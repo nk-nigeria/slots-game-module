@@ -2,11 +2,15 @@ package handler
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
+	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/ciaolink-game-platform/cgp-common/utilities"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var _ lib.Engine = &slotsEngine{}
@@ -18,17 +22,50 @@ func AllowScatter(col int) bool {
 }
 
 type slotsEngine struct {
+	engines map[pb.SiXiangGame]lib.Engine
+}
+
+func newEngine(game pb.SiXiangGame) lib.Engine {
+	switch game {
+	case pb.SiXiangGame_SI_XIANG_GAME_NOMAL:
+		return engine.NewNormalEngine()
+	case pb.SiXiangGame_SI_XIANG_GAME_BONUS:
+		return engine.NewBonusEngine(nil)
+	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL:
+		return engine.NewDragonPearlEngine(nil)
+	case pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW:
+		return engine.NewLuckyDrawEngine(nil, nil)
+	case pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY:
+		return engine.NewRapidPayEngine()
+	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS:
+		return engine.NewSixiangBonusEngine()
+	}
+	return engine.NewNormalEngine()
 }
 
 func NewSlotsEngine() lib.Engine {
-	engine := slotsEngine{}
-	return &engine
+	slotEngine := slotsEngine{}
+	slotEngine.engines = make(map[pb.SiXiangGame]lib.Engine)
+	i := 1
+	for {
+		game := pb.SiXiangGame(i)
+		if game == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED ||
+			game.String() == strconv.Itoa(i) {
+			break
+		}
+		slotEngine.engines[game] = newEngine(game)
+		i++
+	}
+	return &slotEngine
 }
 
 func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := e.SpinMatrix(s.GetMatrix())
-	s.SetMatrix(matrix)
+	engine, ok := e.engines[s.CurrentSiXiangGame]
+	if !ok {
+		return nil, status.Error(codes.Unimplemented, "not implement new game "+s.CurrentSiXiangGame.String())
+	}
+	engine.NewGame(s)
 	return nil, nil
 }
 
@@ -38,238 +75,20 @@ func (e *slotsEngine) Random(min, max int) int {
 
 func (e *slotsEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := e.SpinMatrix(s.GetMatrix())
-	s.SetMatrix(matrix)
-	spreadMatrix := e.SpreadWildInMatrix(matrix)
-	s.SetSpreadMMatrix(spreadMatrix)
-	// logic
-	{
-		paylines := e.PaylineMatrix(spreadMatrix)
-		paylinesFilter := e.FilterPayline(paylines, func(numOccur int) bool {
-			return numOccur >= 3
-		})
-		s.SetPaylines(paylinesFilter)
+	engine, ok := e.engines[s.CurrentSiXiangGame]
+	if !ok {
+		return nil, status.Error(codes.Unimplemented, "not implement process game "+s.CurrentSiXiangGame.String())
 	}
-	chipsMcb := s.GetBetInfo().Chips
-	for _, payline := range s.GetPaylines() {
-		payline.Rate = e.RatioPayline(payline)
-		payline.Chips = int64(payline.Rate * float64(chipsMcb))
-	}
-	return s, nil
+	return engine.Process(matchState)
 }
 
 func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	slotDesk := &pb.SlotDesk{}
-	// set matrix spin
-	{
-		sm := s.GetMatrix()
-		slotDesk.Matrix = sm.ToPbSlotMatrix()
+	engine, ok := e.engines[s.CurrentSiXiangGame]
+	if !ok {
+		return nil, status.Error(codes.Unimplemented, "not implement fisnish game "+s.CurrentSiXiangGame.String())
 	}
-	slotDesk.ChipsMcb = s.GetBetInfo().GetChips()
-	// set matrix spread matrix wild symbol
-	{
-		sm := s.GetSpreadMatrix()
-		slotDesk.SpreadMatrix = sm.ToPbSlotMatrix()
-	}
-	// add payline result
-	{
-		slotDesk.Paylines = s.GetPaylines()
-		for _, payline := range slotDesk.Paylines {
-			slotDesk.ChipsWinInSpin += payline.GetChips()
-		}
-	}
-	// check if win bonus game
-	{
-		nextSiXiangGame := e.GetNextSiXiangGame(s)
-		// s.AddTrackingPlayBonusGame(nextSiXiangGame)
-		s.NextSiXiangGame = nextSiXiangGame
-		slotDesk.SixiangGame = nextSiXiangGame
-	}
-	return slotDesk, nil
-}
-
-func (e *slotsEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
-	// matrix := matchState.GetMatrix()
-	mapColExistScatter := make(map[int]bool)
-	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		for {
-			numRandom := e.Random(0, len(entity.ListSymbol))
-			symbol := entity.ListSymbol[numRandom]
-			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
-				// Scatter only allow appear in list RellsAllowScatter
-				if !AllowScatter(col) {
-					continue
-				}
-				// check if symbol scatter already exist in this row
-				if mapColExistScatter[col] {
-					continue
-				}
-				mapColExistScatter[col] = true
-			}
-			matrix.List[idx] = symbol
-			break
-		}
-		return
-	})
-	return matrix
-}
-
-func (e *slotsEngine) SpreadWildInMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
-	// matrix := matchState.GetMatrix()
-	spreadMatrix := entity.SlotMatrix{
-		List: make([]pb.SiXiangSymbol, len(matrix.List), len(matrix.List)),
-		Cols: matrix.Cols,
-		Rows: matrix.Rows,
-	}
-
-	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
-			cols := spreadMatrix.Cols
-			spreadMatrix.List[idx] = symbol
-			for row := 0; row < matrix.Rows; row++ {
-				id := row*cols + col
-				spreadMatrix.List[id] = symbol
-			}
-
-			return
-		}
-		if spreadMatrix.List[idx] != pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
-			spreadMatrix.List[idx] = symbol
-		}
-		return
-	})
-	return spreadMatrix
-}
-
-func (e *slotsEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
-	paylines := make([]*pb.Payline, 0)
-	// matrix.ForEeachLine(func(line int, symbols []pb.SiXiangSymbol) {
-	// for idx, indexs := range entity.MapPaylineIdx {
-	idx := 0
-	for pair := entity.MapPaylineIdx.Oldest(); pair != nil; pair = pair.Next() {
-		payline := &pb.Payline{
-			Id: int32(idx),
-		}
-		idx++
-		symbols := matrix.ListFromIndexs(pair.Value)
-		for _, val := range entity.ListSymbol {
-			numOccur := 0
-			if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
-				continue
-			}
-			if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
-				continue
-			}
-			for _, symbol := range symbols {
-				if (symbol & val) > 0 {
-					numOccur++
-					continue
-				}
-				if numOccur >= 3 {
-					break
-				}
-				break
-			}
-			if numOccur > int(payline.NumOccur) {
-				payline.NumOccur = int32(numOccur)
-				payline.Symbol = val
-			}
-			if numOccur >= 3 {
-				break
-			}
-		}
-		paylines = append(paylines, payline)
-	}
-	return paylines
-}
-
-func (e *slotsEngine) FilterPayline(paylines []*pb.Payline, fn func(numOccur int) bool) []*pb.Payline {
-	list := make([]*pb.Payline, 0)
-	for _, payline := range paylines {
-		if fn(int(payline.GetNumOccur())) {
-			list = append(list, payline)
-		}
-	}
-	return list
-}
-func (e *slotsEngine) GetNextSiXiangGame(matchState *entity.SlotsMatchState) pb.SiXiangGame {
-	matrix := matchState.GetMatrix()
-	numScatter := 0
-	matrix.ForEeachLine(func(line int, symbols []pb.SiXiangSymbol) {
-		if !RellsAllowScatter[line] {
-			return
-		}
-		for _, symbol := range symbols {
-			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
-				numScatter++
-				break
-			}
-		}
-	})
-	if numScatter == 3 {
-		return pb.SiXiangGame_SI_XIANG_GAME_BONUS
-	}
-	return pb.SiXiangGame_SI_XIANG_GAME_NOMAL
-}
-
-func (e *slotsEngine) RatioPayline(payline *pb.Payline) float64 {
-	switch payline.Symbol {
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_10,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_J,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_K:
-		if payline.NumOccur == 3 {
-			return 0.5
-		}
-		if payline.NumOccur == 4 {
-			return 2.5
-		}
-		if payline.NumOccur == 5 {
-			return 5
-		}
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BLUE_DRAGON:
-		if payline.NumOccur == 3 {
-			return 2
-		}
-		if payline.NumOccur == 4 {
-			return 10
-		}
-		if payline.NumOccur == 5 {
-			return 20
-		}
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_WHITE_TIGER:
-		if payline.NumOccur == 3 {
-			return 1.5
-		}
-		if payline.NumOccur == 4 {
-			return 7.5
-		}
-		if payline.NumOccur == 5 {
-			return 15
-		}
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_WARRIOR:
-		if payline.NumOccur == 3 {
-			return 1.2
-		}
-		if payline.NumOccur == 4 {
-			return 6
-		}
-		if payline.NumOccur == 5 {
-			return 12
-		}
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_VERMILION_BIRD:
-		if payline.NumOccur == 3 {
-			return 1
-		}
-		if payline.NumOccur == 4 {
-			return 5
-		}
-		if payline.NumOccur == 5 {
-			return 10
-		}
-	}
-	return 0
+	return engine.Finish(matchState)
 }
 
 func (e *slotsEngine) PrintMatrix(matrix entity.SlotMatrix) {
