@@ -59,11 +59,11 @@ func Test_luckyDrawEngine_Process(t *testing.T) {
 			}
 			for i := int32(0); i < int32(matchState.MatrixSpecial.Size); i++ {
 				e.Process(matchState)
-				if mapTrackDraw[matchState.SpinSymbol.Symbol] {
+				if mapTrackDraw[matchState.SpinSymbols[0].Symbol] {
 					t.Fatalf("draw duplicate symbol")
 					break
 				}
-				mapTrackDraw[api.SiXiangSymbol(matchState.SpinSymbol.Symbol)] = true
+				mapTrackDraw[api.SiXiangSymbol(matchState.SpinSymbols[0].Symbol)] = true
 			}
 			t.Log("Done")
 		})
@@ -106,7 +106,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 				NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 				BigWin:             api.BigWin_BIG_WIN_UNSPECIFIED,
 				WinJp:              api.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
-				ChipsWinInSpin:     0,
+				ChipsWin:           0,
 				ChipsMcb:           bet.Chips,
 			},
 		}
@@ -136,7 +136,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			matchState.MatrixSpecial.TrackFlip[idFlip] = true
 			matchState.SetBetInfo(bet)
 
-			matchState.SpinSymbol.Symbol = symbol
+			matchState.SpinSymbols[0].Symbol = symbol
 			test := test{
 				name: "Test_luckyDrawEngine_Finish lucky symbok" + symbol.String(),
 
@@ -145,7 +145,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 					NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 					BigWin:             api.BigWin_BIG_WIN_UNSPECIFIED,
 					WinJp:              api.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
-					ChipsWinInSpin:     bet.Chips * int64(entity.ListSymbolLuckyDraw[symbol].Value.Min),
+					ChipsWin:           bet.Chips * int64(entity.ListSymbolLuckyDraw[symbol].Value.Min),
 					ChipsMcb:           bet.Chips,
 				},
 			}
@@ -175,7 +175,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			engine.NewGame(matchState)
 			matchState.MatrixSpecial.List[1] = api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1
 			matchState.MatrixSpecial.TrackFlip[1] = true
-			matchState.SpinSymbol.Symbol = api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1
+			matchState.SpinSymbols[0].Symbol = api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1
 			engine.Finish(matchState)
 
 			matchState.MatrixSpecial.List[2] = symbol
@@ -186,14 +186,14 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			matchState.MatrixSpecial.TrackFlip[5] = true
 			matchState.MatrixSpecial.TrackFlip[8] = true
 
-			matchState.SpinSymbol.Symbol = symbol
+			matchState.SpinSymbols[9].Symbol = symbol
 			test := test{
 				name: "Test_luckyDrawEngine_Finish lucky symbok" + symbol.String(),
 
 				want: pb.SlotDesk{
 					CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
-					NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_NOMAL,
-					ChipsWinInSpin: bet.Chips*int64(entity.ListSymbolLuckyDraw[api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1].Value.Min) +
+					NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_NORMAL,
+					ChipsWin: bet.Chips*int64(entity.ListSymbolLuckyDraw[api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1].Value.Min) +
 						bet.Chips*int64(entity.ListSymbolLuckyDraw[symbol].Value.Min),
 					ChipsMcb: bet.Chips,
 				},
@@ -216,7 +216,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			assert.Equal(t, tt.want.NextSixiangGame, slotDesk.NextSixiangGame)
 			assert.Equal(t, tt.want.BigWin, slotDesk.BigWin)
 			assert.Equal(t, tt.want.WinJp, slotDesk.WinJp)
-			assert.Equal(t, tt.want.ChipsWinInSpin, slotDesk.ChipsWinInSpin)
+			assert.Equal(t, tt.want.ChipsWin, slotDesk.ChipsWin)
 			assert.Equal(t, tt.want.ChipsMcb, slotDesk.ChipsMcb)
 		})
 	}

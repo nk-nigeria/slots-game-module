@@ -7,16 +7,16 @@ require (
 	github.com/heroiclabs/nakama-common v1.22.0
 )
 
-replace github.com/ciaolink-game-platform/cgp-common => ./cgp-common
-
 require (
-	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230222130036-cfdaaeae575f
+	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230306150102-cadd818b5f81
 	github.com/qmuntal/stateless v1.5.3
 	github.com/stretchr/testify v1.7.2
 	github.com/wk8/go-ordered-map/v2 v2.1.3
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
 )
+
+replace github.com/ciaolink-game-platform/cgp-common => ./cgp-common
 
 require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect

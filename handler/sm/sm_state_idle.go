@@ -22,7 +22,7 @@ func NewIdleState(fn lib.FireFn) lib.StateHandler {
 func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
-	state.SetUpCountDown(1 * time.Second)
+	state.SetUpCountDown(0 * time.Second)
 	dispatcher := procPkg.GetDispatcher()
 	if dispatcher == nil {
 		procPkg.GetLogger().Warn("missing dispatcher don't broadcast")

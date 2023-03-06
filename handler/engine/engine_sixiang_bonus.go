@@ -60,10 +60,10 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_RAPIDPAY:
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
 	default:
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NOMAL
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 		ratio := entity.ListSymbolBonusGame[drawSymbol].Value.Min
-		slotDesk.ChipsWinInSpecialGame = int64(float64(ratio) * float64(s.GetBetInfo().GetChips()))
-		slotDesk.ChipsWinInSpin = slotDesk.ChipsWinInSpecialGame
+		slotDesk.ChipsWin = int64(float64(ratio) * float64(s.GetBetInfo().GetChips()))
+		// slotDesk.ChipsWin = slotDesk.ChipsWinInSpecialGame
 	}
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame

@@ -32,7 +32,7 @@ func Test_bonusEngine_Process(t *testing.T) {
 			Id: 4,
 		})
 		e.Process(matchState)
-		matchState.SpinSymbol.Symbol = api.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL
+		matchState.SpinSymbols[0].Symbol = api.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL
 	})
 }
 
@@ -107,7 +107,7 @@ func Test_bonusEngine_FullFlow(t *testing.T) {
 				chip:           1,
 			},
 			want: wants{
-				nextGame: api.SiXiangGame_SI_XIANG_GAME_NOMAL,
+				nextGame: api.SiXiangGame_SI_XIANG_GAME_NORMAL,
 				chips: 1 *
 					int64(entity.ListSymbolBonusGame[api.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX10].Value.Min),
 			},
@@ -120,7 +120,7 @@ func Test_bonusEngine_FullFlow(t *testing.T) {
 				chip:           1,
 			},
 			want: wants{
-				nextGame: api.SiXiangGame_SI_XIANG_GAME_NOMAL,
+				nextGame: api.SiXiangGame_SI_XIANG_GAME_NORMAL,
 				chips: 1 *
 					int64(entity.ListSymbolBonusGame[api.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX20].Value.Min),
 			},
@@ -133,7 +133,7 @@ func Test_bonusEngine_FullFlow(t *testing.T) {
 				chip:           1,
 			},
 			want: wants{
-				nextGame: api.SiXiangGame_SI_XIANG_GAME_NOMAL,
+				nextGame: api.SiXiangGame_SI_XIANG_GAME_NORMAL,
 				chips: 1 *
 					int64(entity.ListSymbolBonusGame[api.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX30].Value.Min),
 			},
@@ -145,7 +145,7 @@ func Test_bonusEngine_FullFlow(t *testing.T) {
 				chip:           1,
 			},
 			want: wants{
-				nextGame: api.SiXiangGame_SI_XIANG_GAME_NOMAL,
+				nextGame: api.SiXiangGame_SI_XIANG_GAME_NORMAL,
 				chips: 1 *
 					int64(entity.ListSymbolBonusGame[api.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX50].Value.Min),
 			},
@@ -169,8 +169,8 @@ func Test_bonusEngine_FullFlow(t *testing.T) {
 			assert.NotNil(t, result)
 			slotDesk := result.(*api.SlotDesk)
 			assert.Equal(t, tt.want.nextGame, slotDesk.NextSixiangGame)
-			assert.Equal(t, tt.want.chips, slotDesk.ChipsWinInSpecialGame)
-			assert.Equal(t, tt.want.chips, slotDesk.ChipsWinInSpin)
+			// assert.Equal(t, tt.want.chips, slotDesk.ChipsWinInSpecialGame)
+			assert.Equal(t, tt.want.chips, slotDesk.ChipsWin)
 			assert.Equal(t, tt.args.chip, slotDesk.ChipsMcb)
 		})
 	}

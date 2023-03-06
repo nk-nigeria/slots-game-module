@@ -111,13 +111,13 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	}
 	// add payline result
 	if s.WinJp == pb.WinJackpot_WIN_JACKPOT_GRAND {
-		slotDesk.ChipsWinInSpin = int64(s.WinJp) * s.GetBetInfo().Chips
+		slotDesk.ChipsWin = int64(s.WinJp) * s.GetBetInfo().Chips
 		slotDesk.BigWin = pb.BigWin_BIG_WIN_MEGA
 	} else {
 		totalRate := float64(0)
 		slotDesk.Paylines = s.GetPaylines()
 		for _, payline := range slotDesk.Paylines {
-			slotDesk.ChipsWinInSpin += payline.GetChips()
+			slotDesk.ChipsWin += payline.GetChips()
 			totalRate += payline.Rate
 		}
 		slotDesk.BigWin = e.TotalRateToTypeBigWin(totalRate)
@@ -284,7 +284,7 @@ func (e *normalEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangG
 	if numScatter >= 3 {
 		return pb.SiXiangGame_SI_XIANG_GAME_BONUS
 	}
-	return pb.SiXiangGame_SI_XIANG_GAME_NOMAL
+	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }
 
 func (e *normalEngine) PrintMatrix(matrix entity.SlotMatrix) {

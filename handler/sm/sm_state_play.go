@@ -54,14 +54,10 @@ func (s *StatePlay) Exit(_ context.Context, _ ...interface{}) error {
 func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
-	// remain := state.GetRemainCountDown()
-	// if remain <= 0 {
-	// 	procPkg.GetLogger().Info("[play] timeout reach %v", remain)
-	// 	s.Trigger(ctx, lib.TriggerPlayTimeout)
-	// 	return nil
-	// }
+
 	if state.GetPresenceSize() <= 0 {
-		s.Trigger(ctx, lib.TriggerNoOne)
+		procPkg.GetLogger().Info("no user in game")
+		s.Trigger(ctx, lib.TriggerPlayTimeout)
 		return nil
 	}
 
@@ -73,34 +69,5 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 		procPkg.GetDispatcher(),
 		message,
 		state)
-
-	if state.CountDownReachTime.Unix() <= 0 {
-		s.Trigger(ctx, lib.TriggerNoOne)
-	}
-
-	// if len(message) > 0 {
-
-	// 	procPkg.GetProcessor().ProcessMessageFromUser(ctx,
-	// 		procPkg.GetLogger(),
-	// 		procPkg.GetNK(),
-	// 		procPkg.GetDb(),
-	// 		procPkg.GetDispatcher(),
-	// 		message,
-	// 		state)
-	// }
-
-	// if state.IsNeedNotifyCountDown() {
-	// 	remainCountDown := int(math.Round(state.GetRemainCountDown()))
-	// 	procPkg.GetProcessor().NotifyUpdateGameState(
-	// 		procPkg.GetLogger(),
-	// 		procPkg.GetDispatcher(),
-	// 		&pb.UpdateGameState{
-	// 			State:     pb.GameState_GameStatePlay,
-	// 			CountDown: int64(remainCountDown),
-	// 		},
-	// 		state,
-	// 	)
-	// 	state.SetLastCountDown(remainCountDown)
-	// }
 	return nil
 }

@@ -27,12 +27,12 @@ type slotsEngine struct {
 
 func newEngine(game pb.SiXiangGame) lib.Engine {
 	switch game {
-	case pb.SiXiangGame_SI_XIANG_GAME_NOMAL:
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
 		return engine.NewNormalEngine()
 	case pb.SiXiangGame_SI_XIANG_GAME_BONUS:
 		return engine.NewBonusEngine(nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL:
-		return engine.NewDragonPearlEngine(nil)
+		return engine.NewDragonPearlEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW:
 		return engine.NewLuckyDrawEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY:
@@ -66,6 +66,7 @@ func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
 		return nil, status.Error(codes.Unimplemented, "not implement new game "+s.CurrentSiXiangGame.String())
 	}
 	engine.NewGame(s)
+	s.RatioBonus = 1
 	return nil, nil
 }
 

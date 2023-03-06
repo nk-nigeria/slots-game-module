@@ -49,8 +49,8 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	s.InitNewRound()
 	s.SetupMatchPresence()
 	s.SetAllowSpin(true)
-	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NOMAL
-	s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NOMAL
+	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+	s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	_, err := p.engine.NewGame(matchState)
 	if err != nil {
 		logger.WithField("err", err).Error("Engine new game failed")
@@ -67,28 +67,30 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 		WithField("data", s.GetMatrix()).
 		Info("new game")
 
-	slotDesk := &pb.SlotDesk{}
-	presence := s.GetPresences()[0]
-	wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
-	if err != nil {
-		logger.WithField("error", err.Error()).
-			WithField("user id", presence.GetUserId()).
-			Error("get profile user failed")
-		return
-	}
-	matrix := s.GetMatrix()
-	slotDesk.Matrix = matrix.ToPbSlotMatrix()
-	slotDesk.UpdateWallet = true
-	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.BalanceChipsWalletBefore = wallet.Chips
-	slotDesk.BalanceChipsWalletAfter = wallet.Chips
+	// slotDesk := &pb.SlotDesk{}
+	// presence := s.GetPresences()[0]
+	// wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
+	// if err != nil {
+	// 	logger.WithField("error", err.Error()).
+	// 		WithField("user id", presence.GetUserId()).
+	// 		Error("get profile user failed")
+	// 	return
+	// }
+	// matrix := s.GetMatrix()
+	// slotDesk.Matrix = matrix.ToPbSlotMatrix()
+	// slotDesk.UpdateWallet = true
+	// slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
+	// slotDesk.NextSixiangGame = s.NextSiXiangGame
+	// slotDesk.BalanceChipsWalletBefore = wallet.Chips
+	// slotDesk.BalanceChipsWalletAfter = wallet.Chips
 
-	p.broadcastMessage(logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
-		slotDesk,
-		[]runtime.Presence{presence},
-		nil, false)
+	// p.broadcastMessage(logger, dispatcher,
+	// 	int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+	// 	slotDesk,
+	// 	[]runtime.Presence{presence},
+	// 	nil, false)
+	presence := s.GetPresences()[0]
+	p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, presence.GetUserId(), s)
 }
 
 func (p *processor) ProcessGame(ctx context.Context,
@@ -104,13 +106,16 @@ func (p *processor) ProcessGame(ctx context.Context,
 	defer s.SetAllowSpin(true)
 	// s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
-		needInitSpecialGame := false
-		if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NOMAL {
-			needInitSpecialGame = true
-		}
 		s.CurrentSiXiangGame = s.NextSiXiangGame
-		if needInitSpecialGame {
+		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 			p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
+		}
+		for _, player := range s.GetPlayingPresences() {
+			p.handlerRequestGetInfoTable(ctx,
+				logger, nk, db,
+				dispatcher,
+				player.GetUserId(),
+				s)
 		}
 	}
 
@@ -119,9 +124,10 @@ func (p *processor) ProcessGame(ctx context.Context,
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN):
 			p.handlerRequestBet(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_INFO_TABLE):
-			p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message, s)
+			p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 		}
 	}
+	p.ProcessApplyPresencesLeave(ctx, logger, nk, db, dispatcher, s)
 }
 
 func (p *processor) NotifyUpdateGameState(
@@ -233,40 +239,12 @@ func (p *processor) ProcessPresencesJoin(ctx context.Context,
 	}
 	s.AddPresence(ctx, nk, newJoins)
 	s.JoinsInProgress -= len(newJoins)
-	for _, presence := range newJoins {
-		slotDesk := &pb.SlotDesk{}
-
-		switch s.CurrentSiXiangGame {
-		case pb.SiXiangGame_SI_XIANG_GAME_NOMAL:
-			matrix := s.GetMatrix()
-			slotDesk.Matrix = matrix.ToPbSlotMatrix()
-		case pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW:
-			result, _ := p.engine.Finish(matchState)
-			slotDesk = result.(*pb.SlotDesk)
-		default:
-		}
-		if slotDesk.Matrix == nil || slotDesk.Matrix.GetCols() == 0 {
-			logger.Debug("game state not init")
-			return
-		}
-		wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
-		if err != nil {
-			logger.WithField("error", err.Error()).
-				WithField("user id", presence.GetUserId()).
-				Error("get profile user failed")
-			return
-		}
-		slotDesk.UpdateWallet = true
-		slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-		slotDesk.NextSixiangGame = s.NextSiXiangGame
-		slotDesk.BalanceChipsWalletBefore = wallet.Chips
-		slotDesk.BalanceChipsWalletAfter = wallet.Chips
-
-		p.broadcastMessage(logger, dispatcher,
-			int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
-			slotDesk,
-			[]runtime.Presence{presence},
-			nil, false)
+	if len(s.GetMatrix().List) == 0 {
+		logger.Debug("game state not init")
+		return
+	}
+	for _, newuser := range newJoins {
+		p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, newuser.GetUserId(), s)
 	}
 }
 
@@ -333,7 +311,10 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	}
 	s.SetAllowSpin(false)
 	// only update new bet in normal game
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NOMAL {
+	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		s.SetBetInfo(bet)
+	} else {
+		bet.Chips = s.GetBetInfo().GetChips()
 		s.SetBetInfo(bet)
 	}
 	p.engine.Process(s)
@@ -346,6 +327,12 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	if slotDesk.IsFinishGame {
+		if slotDesk.ChipsWin <= 0 {
+			logger.WithField("user", s.GetPlayingPresences()[0].GetUserId()).
+				WithField("current game", slotDesk.CurrentSixiangGame.String()).
+				WithField("next game", slotDesk.NextSixiangGame.String()).
+				Info("no need update wallet, because chip win <= 0")
+		}
 		wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
 		if err != nil {
 			logger.WithField("error", err.Error()).
@@ -355,7 +342,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		}
 		slotDesk.UpdateWallet = true
 		slotDesk.BalanceChipsWalletBefore = wallet.Chips
-		slotDesk.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWinInSpin() - bet.Chips
+		slotDesk.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWin() - bet.Chips
 		p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
 			Updates: []*pb.BalanceUpdate{
 				{
@@ -381,22 +368,21 @@ func (p *processor) handlerRequestGetInfoTable(
 	nk runtime.NakamaModule,
 	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
-	message runtime.MatchData,
+	userID string,
 	s *entity.SlotsMatchState,
 ) {
-	logger.WithField("user", message.GetUserId()).Info("request info table")
+	logger.WithField("user", userID).Info("request info table")
 	slotdesk := &pb.SlotDesk{
 		ChipsMcb:           s.GetBetInfo().Chips,
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 	}
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NOMAL {
+	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		matrix := s.GetMatrix()
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 	} else if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL {
 		matrix := s.MatrixSpecial
-		slotdesk.Matrix.Cols = int32(matrix.Cols)
-		slotdesk.Matrix.Rows = int32(matrix.Rows)
+		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 		for idx, symbol := range matrix.List {
 			if matrix.TrackFlip[idx] {
 				slotdesk.Matrix.Lists[idx] = symbol
@@ -408,8 +394,19 @@ func (p *processor) handlerRequestGetInfoTable(
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 	}
+	slotdesk.NextSixiangGame = s.NextSiXiangGame
+	wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
+	if err != nil {
+		logger.WithField("error", err.Error()).
+			WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
+			Error("get profile user failed")
+	} else {
+		slotdesk.UpdateWallet = true
+		slotdesk.BalanceChipsWalletBefore = wallet.Chips
+		slotdesk.BalanceChipsWalletAfter = slotdesk.BalanceChipsWalletBefore
+	}
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
-		slotdesk, s.GetPlayingPresences(), nil, true)
+		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
 
 func (p *processor) broadcastMessage(logger runtime.Logger,
@@ -493,7 +490,7 @@ func (p *processor) InitSpecialGameDesk(ctx context.Context,
 func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet) bool {
 
 	switch s.CurrentSiXiangGame {
-	case pb.SiXiangGame_SI_XIANG_GAME_NOMAL:
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
 		if bet.Chips <= 0 {
 			return false
 		}

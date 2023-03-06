@@ -338,17 +338,18 @@ func (sm *SlotMatrix) ListFromIndexs(indexs []int) []pb.SiXiangSymbol {
 func (sm *SlotMatrix) ToPbSlotMatrix() *pb.SlotMatrix {
 	// matrix, cols,row
 	pbSl := &pb.SlotMatrix{
-		Rows:  int32(sm.Rows),
-		Cols:  int32(sm.Cols),
-		Lists: sm.List[:], // using trick [:] for deep copy list
+		Rows: int32(sm.Rows),
+		Cols: int32(sm.Cols),
 	}
+	pbSl.Lists = make([]pb.SiXiangSymbol, pbSl.Rows*pbSl.Cols)
+	copy(pbSl.Lists, sm.List) // deep copy
 	return pbSl
 }
 
 func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int, pb.SiXiangSymbol) {
 	listIdNotFlip := make([]int, 0)
-	for id, symbol := range sm.List {
-		if sm.TrackFlip[int(symbol)] == false {
+	for id, _ := range sm.List {
+		if sm.TrackFlip[id] == false {
 			listIdNotFlip = append(listIdNotFlip, id)
 		}
 	}
@@ -378,10 +379,13 @@ type SlotsMatchState struct {
 	bet             *pb.InfoBet
 	WinJp           pb.WinJackpot
 
-	MatrixSpecial         SlotMatrix
-	ChipsWinInSpecialGame int64
-	SpinSymbol            *pb.SpinSymbol
-	EyeSiXiangRemain      []pb.SiXiangSymbol
+	MatrixSpecial SlotMatrix
+	// ChipsWinInSpecialGame int64
+	SpinSymbols      []*pb.SpinSymbol
+	EyeSiXiangRemain []pb.SiXiangSymbol
+	GemSpin          int64 // gem using for spin in dragon perl
+	EyeSiXiangSpined []pb.SiXiangSymbol
+	RatioBonus       int64
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -392,8 +396,8 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		bet: &pb.InfoBet{
 			Chips: 0,
 		},
-		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NOMAL,
-		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NOMAL,
+		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 	}
 
 	return &m
@@ -436,13 +440,7 @@ func (s *SlotsMatchState) InitNewRound() {
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.paylines = nil
 	s.spreadMatrix = SlotMatrix{}
-	s.EyeSiXiangRemain = nil
 }
-
-func (s *SlotsMatchState) ResetSpecialGame() {
-	s.MatrixSpecial = SlotMatrix{}
-}
-
 func (s *SlotsMatchState) IsAllowSpin() bool {
 	return s.allowSpin
 }
@@ -467,19 +465,6 @@ func (s *SlotsMatchState) GetBalanceResult() *pb.BalanceResult {
 func (s *SlotsMatchState) SetBalanceResult(u *pb.BalanceResult) {
 	s.balanceResult = u
 }
-
-// func (s *SlotsMatchState) IsWinSiXangBonusGame() bool {
-// 	return s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL]&
-// 		s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW]&
-// 		s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK]&
-// 		s.trackingPlaySiXiangGame[pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY] != 0
-// }
-
-// func (s *SlotsMatchState) AddTrackingPlaySiXiangGame(siXiangGame pb.SiXiangGame) {
-// 	num := s.trackingPlaySiXiangGame[siXiangGame]
-// 	num++
-// 	s.trackingPlaySiXiangGame[siXiangGame] = num
-// }
 
 // func (s *SlotsMatchState) ResetTrackingPlayBonusGame() {
 // 	s.trackingPlaySiXiangGame = make(map[pb.SiXiangGame]int)
