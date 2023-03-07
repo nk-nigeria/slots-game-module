@@ -1,12 +1,17 @@
 package engine
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
+)
+
+var (
+	ErrorSpinReadMax = errors.New("Spin reach max")
 )
 
 func RandomInt(min, max int) int {

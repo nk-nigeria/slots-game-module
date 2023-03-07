@@ -79,3 +79,11 @@ func MaxInt64(a, b int64) int64 {
 	}
 	return b
 }
+
+func SliceRepeat[T any](size int, v T) []T {
+	retval := make([]T, 0, size)
+	for i := 0; i < size; i++ {
+		retval = append(retval, v)
+	}
+	return retval
+}

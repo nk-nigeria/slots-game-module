@@ -17,6 +17,12 @@ const (
 const (
 	ColsMatrix = 5
 	RowsMatrix = 3
+
+	ColsMatrixGoldPick = 5
+	RowsMatrixGoldPick = 4
+
+	ColsMatrixRapidPay = 5
+	RowsMatrixRapidPay = 5
 )
 
 var ListSymbol = []pb.SiXiangSymbol{
@@ -124,6 +130,18 @@ var ListSymbolDragonPearl = map[pb.SiXiangSymbol]SymbolInfo{
 		NumOccur: 1,
 		Value:    Range{8, 10},
 	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR: {
+		NumOccur: 0,
+		Value:    Range{10, 10},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR: {
+		NumOccur: 0,
+		Value:    Range{50, 50},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA: {
+		NumOccur: 0,
+		Value:    Range{100, 100},
+	},
 }
 
 var ListEyeSiXiang = []pb.SiXiangSymbol{
@@ -139,6 +157,64 @@ var ListSpecialGame = []pb.SiXiangGame{
 	pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 	pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
 	pb.SiXiangGame_SI_XIANG_GAME_BONUS,
+}
+
+var ListSymbolGoldPick = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_TRYAGAIN: {
+		NumOccur: 4,
+		Value:    Range{0, 0},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD1: {
+		NumOccur: 5,
+		Value:    Range{0.1, 0.2},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD2: {
+		NumOccur: 4,
+		Value:    Range{0.3, 0.7},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD3: {
+		NumOccur: 4,
+		Value:    Range{1, 2},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD4: {
+		NumOccur: 2,
+		Value:    Range{3, 6},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD5: {
+		NumOccur: 1,
+		Value:    Range{8, 10},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR: {
+		NumOccur: 0,
+		Value:    Range{10, 10},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MAJOR: {
+		NumOccur: 0,
+		Value:    Range{50, 50},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MEGA: {
+		NumOccur: 0,
+		Value:    Range{100, 100},
+	},
+}
+
+var ListSymbolRapidPay = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END: {
+		NumOccur: 1,
+		Value:    Range{},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2: {
+		NumOccur: 1,
+		Value:    Range{2, 2},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3: {
+		NumOccur: 1,
+		Value:    Range{3, 3},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4: {
+		NumOccur: 1,
+		Value:    Range{3, 3},
+	},
 }
 
 type Range struct {
@@ -274,6 +350,76 @@ func NewSiXiangMatrixDragonPearl() SlotMatrix {
 			sm.List = append(sm.List, symbol)
 		}
 	}
+	sm.Size = sm.Cols * sm.Rows
+	return sm
+}
+
+func NewSiXiangMatrixGoldPick() SlotMatrix {
+	sm := SlotMatrix{
+		List:      make([]pb.SiXiangSymbol, 0, RowsMatrixGoldPick*ColsMatrixGoldPick),
+		Cols:      RowsMatrixGoldPick,
+		Rows:      ColsMatrixGoldPick,
+		TrackFlip: map[int]bool{},
+	}
+	for symbol, v := range ListSymbolGoldPick {
+		for i := 0; i < v.NumOccur; i++ {
+			sm.List = append(sm.List, symbol)
+		}
+	}
+	sm.Size = sm.Cols * sm.Rows
+	return sm
+}
+
+// x4 END
+// x3 x4 END
+// x2 x3 x4 END
+// x2 x3 X4 END
+// x2 x2 x3 x3 x4
+func NewSiXiangMatrixRapidPay() SlotMatrix {
+	sm := SlotMatrix{
+		List:      make([]pb.SiXiangSymbol, 0, RowsMatrixRapidPay*ColsMatrixRapidPay),
+		Cols:      RowsMatrixGoldPick,
+		Rows:      ColsMatrixGoldPick,
+		TrackFlip: map[int]bool{},
+	}
+	// x4 END
+	sm.List = append(sm.List,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+	)
+	sm.List = append(sm.List, SliceRepeat(3, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)...)
+	// x3 x4 END
+	sm.List = append(sm.List,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+	)
+	sm.List = append(sm.List, SliceRepeat(2, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)...)
+	// x2 x3 x4 END
+	sm.List = append(sm.List,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+	)
+	// x2 x3 X4 END
+	sm.List = append(sm.List,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+	)
+	// x2 x2 x3 x3 x4
+	sm.List = append(sm.List,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+	)
 	sm.Size = sm.Cols * sm.Rows
 	return sm
 }

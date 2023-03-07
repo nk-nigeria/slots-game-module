@@ -11,8 +11,8 @@ import (
 var _ lib.Engine = &dragonPearlEngine{}
 
 const (
-	defaultGemSpin = 3
-	bonusGemSpin   = 3
+	defaultDragonPearlGemSpin = 3
+	bonusDragonPearlGemSpin   = 3
 )
 
 type dragonPearlEngine struct {
@@ -44,9 +44,10 @@ func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error)
 		{Symbol: pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED},
 	}
 	s.EyeSiXiangRemain = ShuffleSlice(entity.ListEyeSiXiang[:])
-	s.GemSpin = defaultGemSpin
+	s.GemSpin = defaultDragonPearlGemSpin
 	s.EyeSiXiangSpined = make([]pb.SiXiangSymbol, 0)
 	s.RatioBonus = 1
+	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	return s, nil
 }
 
@@ -78,7 +79,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	switch s.SpinSymbols[0].Symbol {
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD:
 		// add spin
-		s.GemSpin += bonusGemSpin
+		s.GemSpin += bonusDragonPearlGemSpin
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
 		// x2 money in gem
 		s.RatioBonus = 2
@@ -119,14 +120,20 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA,
 		}
 		randomJp := ShuffleSlice(listSymbolJP)[e.randomIntFn(0, len(listSymbolJP))]
-		switch randomJp {
-		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR:
-			s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
-		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR:
-			s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
-		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA:
-			s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+		// switch randomJp {
+		// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR:
+		// 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+		// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR:
+		// 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+		// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA:
+		// 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+		// }
+		spinSymbol := &pb.SpinSymbol{
+			Symbol: randomJp,
+			Row:    s.SpinSymbols[0].Row,
+			Col:    s.SpinSymbols[0].Col,
 		}
+		s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
 	}
 	return s, nil
 }

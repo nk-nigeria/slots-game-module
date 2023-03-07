@@ -35,8 +35,10 @@ func newEngine(game pb.SiXiangGame) lib.Engine {
 		return engine.NewDragonPearlEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW:
 		return engine.NewLuckyDrawEngine(nil, nil)
+	case pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK:
+		return engine.NewGoldPickEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY:
-		return engine.NewRapidPayEngine()
+		return engine.NewRapidPayEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS:
 		return engine.NewSixiangBonusEngine()
 	}

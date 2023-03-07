@@ -19,7 +19,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 	matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
 	matchStateExpect := entity.NewSlotsMathState(nil)
 	matchStateExpect.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
-	matchStateExpect.GemSpin = defaultGemSpin
+	matchStateExpect.GemSpin = defaultDragonPearlGemSpin
 	matchStateExpect.EyeSiXiangRemain = entity.ListEyeSiXiang[:]
 	matchStateExpect.EyeSiXiangSpined = make([]api.SiXiangSymbol, 0)
 	matchStateExpect.MatrixSpecial = entity.NewSiXiangMatrixDragonPearl()
