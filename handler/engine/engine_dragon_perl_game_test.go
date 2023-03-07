@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -99,19 +100,26 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 				num := trackSymbolSpin[spin.Symbol]
 				num++
 				trackSymbolSpin[spin.Symbol] = num
-				switch spin.Symbol {
-				case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD:
-					assert.Equal(t, gemSpinRemain-1+3, matchState.GemSpin)
-				case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON: //todo
-				case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
-					ratioBonus = 2
-				case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR:
-					assert.Equal(t, 4, len(matchState.SpinSymbols))
-				default:
-					assert.Equal(t, 1, len(matchState.SpinSymbols))
-					assert.Equal(t, gemSpinRemain-1, matchState.GemSpin)
-				}
 			}
+			spin := matchState.SpinSymbols[0]
+			msg := fmt.Sprintf("symbol %s", spin.Symbol)
+			switch spin.Symbol {
+			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD:
+				assert.Equal(t, gemSpinRemain-1+3, matchState.GemSpin, msg)
+			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON: //todo
+				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
+			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
+				ratioBonus = 2
+				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
+				assert.Equal(t, ratioBonus, matchState.RatioBonus, msg)
+			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR:
+				assert.Equal(t, 4, len(matchState.SpinSymbols), msg)
+				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
+			default:
+				assert.Equal(t, 1, len(matchState.SpinSymbols), msg)
+				assert.Equal(t, gemSpinRemain-1, matchState.GemSpin, msg)
+			}
+			// }
 			assert.Equal(t, ratioBonus, matchState.RatioBonus)
 		}
 		for k, v := range trackSymbolSpin {

@@ -47,19 +47,19 @@ var ListSymbolLuckyDraw = map[pb.SiXiangSymbol]SymbolInfo{
 		Value:    Range{15, 18},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR: {
-		NumOccur: 1,
+		NumOccur: 3,
 		Value:    Range{10, 10},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR: {
-		NumOccur: 1,
+		NumOccur: 3,
 		Value:    Range{50, 50},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA: {
-		NumOccur: 1,
+		NumOccur: 3,
 		Value:    Range{100, 100},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND: {
-		NumOccur: 1,
+		NumOccur: 3,
 		Value:    Range{500, 500},
 	},
 }
@@ -253,10 +253,9 @@ func NewSiXiangMatrixLuckyDraw() SlotMatrix {
 		Rows:      RowsMatrix,
 		TrackFlip: map[int]bool{},
 	}
-	for symbol := range ListSymbolLuckyDraw {
-		sm.List = append(sm.List, symbol)
-		if symbol < pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1 {
-			sm.List = append(sm.List, symbol, symbol)
+	for symbol, info := range ListSymbolLuckyDraw {
+		for i := 0; i < info.NumOccur; i++ {
+			sm.List = append(sm.List, symbol)
 		}
 	}
 	sm.Size = sm.Cols * sm.Rows

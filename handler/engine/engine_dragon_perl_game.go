@@ -59,7 +59,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	if s.GemSpin <= 0 {
 		return s, errors.New("gem spin not enough")
 	}
-	if len(s.MatrixSpecial.TrackFlip) == 15 {
+	if len(s.MatrixSpecial.TrackFlip) >= 15 {
 		return s, errors.New("Spin all")
 	}
 	e.randomPearl(s, func(symbolRand, eyeRand pb.SiXiangSymbol, row, col int) bool {
@@ -82,14 +82,16 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
 		// x2 money in gem
 		s.RatioBonus = 2
+		s.GemSpin += 1
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR:
-		// add more than gen money
+		s.GemSpin += 1
+		// add 3 gen money
 		for i := 0; i < 3; i++ {
 			for {
 				// todo if gen money not enough, not add more gem money
-				if len(s.MatrixSpecial.List)-len(s.MatrixSpecial.TrackFlip) == len(s.EyeSiXiangRemain) {
-					break
-				}
+				// if len(s.MatrixSpecial.List)-len(s.MatrixSpecial.TrackFlip) == len(s.EyeSiXiangRemain) {
+				// 	break
+				// }
 				valid := e.randomPearl(s, func(symbolRand, eyeRand pb.SiXiangSymbol, row, col int) bool {
 					if eyeRand == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 						spinSymbol := &pb.SpinSymbol{
@@ -109,16 +111,22 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 		}
 		// todo
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON:
-		// add jp pearl
-		// listSymbolJP := []pb.SiXiangSymbol{
-		// 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR,
-		// 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR,
-		// 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA,
-		// }
-		// randomJp := ShuffleSlice(listSymbolJP)[0]
-		// s.SpinSymbols = append(s.SpinSymbols, &pb.SpinSymbol{
-		// 	Symbol: randomJp,
-		// })
+		s.GemSpin += 1
+		// roll jackpot
+		listSymbolJP := []pb.SiXiangSymbol{
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA,
+		}
+		randomJp := ShuffleSlice(listSymbolJP)[e.randomIntFn(0, len(listSymbolJP))]
+		switch randomJp {
+		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR:
+			s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR:
+			s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA:
+			s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+		}
 	}
 	return s, nil
 }
@@ -153,6 +161,9 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	}
 	chips := float64(s.RatioBonus) * float64(totalMcb*float64(s.GetBetInfo().Chips))
 	slotDesk.ChipsWin = int64(chips)
+	if s.WinJp != pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED {
+		slotDesk.ChipsWin = s.GetBetInfo().Chips * int64(s.WinJp)
+	}
 
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame

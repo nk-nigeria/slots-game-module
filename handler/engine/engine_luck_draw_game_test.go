@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -51,21 +52,33 @@ func Test_luckyDrawEngine_Process(t *testing.T) {
 				func(min, max float64) float64 { return min },
 			)
 			matchState := entity.NewSlotsMathState(nil)
-			mapTrackDraw := make(map[api.SiXiangSymbol]bool, 0)
+			trackSpinSymbol := make(map[api.SiXiangSymbol]int, 0)
+			var trackSpinSymbolExpect = map[api.SiXiangSymbol]int{
+				api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR:  3,
+				api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR:  3,
+				api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA:   3,
+				api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND:  3,
+				api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1: 1,
+				api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_2: 1,
+				api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_3: 1,
+			}
+
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
 			e.NewGame(matchState)
-			for i := int32(0); i < int32(matchState.MatrixSpecial.Size); i++ {
-				matchState.MatrixSpecial.List[i] = api.SiXiangSymbol(i)
-			}
+
 			for i := int32(0); i < int32(matchState.MatrixSpecial.Size); i++ {
 				e.Process(matchState)
-				if mapTrackDraw[matchState.SpinSymbols[0].Symbol] {
-					t.Fatalf("draw duplicate symbol")
-					break
+				for _, spin := range matchState.SpinSymbols {
+					num := trackSpinSymbol[spin.Symbol]
+					num++
+					trackSpinSymbol[spin.Symbol] = num
 				}
-				mapTrackDraw[api.SiXiangSymbol(matchState.SpinSymbols[0].Symbol)] = true
+
 			}
-			t.Log("Done")
+			assert.Equal(t, len(trackSpinSymbolExpect), len(trackSpinSymbol))
+			for k, v := range trackSpinSymbol {
+				assert.Equal(t, trackSpinSymbolExpect[k], v)
+			}
 		})
 	}
 }
@@ -186,7 +199,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			matchState.MatrixSpecial.TrackFlip[5] = true
 			matchState.MatrixSpecial.TrackFlip[8] = true
 
-			matchState.SpinSymbols[9].Symbol = symbol
+			matchState.SpinSymbols[0].Symbol = symbol
 			test := test{
 				name: "Test_luckyDrawEngine_Finish lucky symbok" + symbol.String(),
 
@@ -218,6 +231,107 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			assert.Equal(t, tt.want.WinJp, slotDesk.WinJp)
 			assert.Equal(t, tt.want.ChipsWin, slotDesk.ChipsWin)
 			assert.Equal(t, tt.want.ChipsMcb, slotDesk.ChipsMcb)
+		})
+	}
+}
+
+func Test_luckyDrawEngine_GetNextSiXiangGame(t *testing.T) {
+	type fields struct {
+		randomIntFn   func(min, max int) int
+		randomFloat64 func(min, max float64) float64
+	}
+	type args struct {
+		s *entity.SlotsMatchState
+	}
+	type test struct {
+		name   string
+		fields fields
+		args   args
+		want   pb.SiXiangGame
+	}
+	e := NewLuckyDrawEngine(func(min, max int) int { return min }, func(min, max float64) float64 { return min })
+	engine := e.(*luckyDrawEngine)
+	tests := make([]test, 0)
+	{
+		arr := []pb.SiXiangSymbol{
+			api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1,
+			api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_2,
+			api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_3,
+		}
+		for _, sym := range arr {
+			test := test{
+				name: "luckyDrawEngine_GetNextSiXiangGame not finish",
+				want: api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+			}
+			matchState := entity.NewSlotsMathState(nil)
+			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
+			engine.NewGame(matchState)
+			test.args = args{
+				s: matchState,
+			}
+			for id, symbol := range matchState.MatrixSpecial.List {
+				if symbol == sym {
+					matchState.MatrixSpecial.TrackFlip[id] = true
+				}
+			}
+			trackJP := make(map[api.SiXiangSymbol]int)
+			for id, symbol := range matchState.MatrixSpecial.List {
+				if int(symbol) < int(pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1) {
+					num := trackJP[symbol]
+					if num >= 2 {
+						continue
+					}
+					matchState.MatrixSpecial.TrackFlip[id] = true
+					num++
+					trackJP[symbol] = num
+				}
+			}
+			tests = append(tests, test)
+		}
+	}
+	{
+		arr := []pb.SiXiangSymbol{
+			api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR,
+			api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR,
+			api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR,
+		}
+		for _, sym := range arr {
+			test := test{
+				name: "luckyDrawEngine_GetNextSiXiangGame finish",
+				want: api.SiXiangGame_SI_XIANG_GAME_NORMAL,
+			}
+			matchState := entity.NewSlotsMathState(nil)
+			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
+			engine.NewGame(matchState)
+			test.args = args{
+				s: matchState,
+			}
+			for id, symbol := range matchState.MatrixSpecial.List {
+				if symbol == sym {
+					matchState.MatrixSpecial.TrackFlip[id] = true
+				}
+			}
+			trackJP := make(map[api.SiXiangSymbol]int)
+			for id, symbol := range matchState.MatrixSpecial.List {
+				if int(symbol) >= int(pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1) {
+					num := trackJP[symbol]
+					if num >= 2 {
+						continue
+					}
+					matchState.MatrixSpecial.TrackFlip[id] = true
+					num++
+					trackJP[symbol] = num
+				}
+			}
+			tests = append(tests, test)
+		}
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := engine.GetNextSiXiangGame(tt.args.s); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("luckyDrawEngine.GetNextSiXiangGame() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }

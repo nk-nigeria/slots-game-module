@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -48,14 +49,17 @@ func (e *luckyDrawEngine) Random(min, max int) int {
 func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	// bet := s.GetBetInfo()
-	listIdNotFlip := make([]int, 0)
-	for id, symbol := range s.MatrixSpecial.List {
-		if s.MatrixSpecial.TrackFlip[int(symbol)] == false {
-			listIdNotFlip = append(listIdNotFlip, id)
+	idsNotFlip := make([]int, 0)
+	for id := range s.MatrixSpecial.List {
+		if s.MatrixSpecial.TrackFlip[id] == false {
+			idsNotFlip = append(idsNotFlip, id)
 		}
 	}
-	id := e.Random(0, len(listIdNotFlip))
-	idFlip := listIdNotFlip[id]
+	if len(idsNotFlip) == 0 {
+		return s, errors.New("Spin all")
+	}
+	id := e.Random(0, len(idsNotFlip))
+	idFlip := idsNotFlip[id]
 	s.MatrixSpecial.TrackFlip[idFlip] = true
 	spinSymbol := &pb.SpinSymbol{
 		Symbol: s.MatrixSpecial.List[idFlip],
@@ -78,32 +82,33 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 			Cols:  int32(matrix.Cols),
 		},
 	}
+	mapUniqueSym := make(map[pb.SiXiangSymbol]pb.SiXiangSymbol)
 	for id, symbol := range matrix.List {
 		if s.MatrixSpecial.TrackFlip[id] {
 			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, symbol)
+			mapUniqueSym[symbol] = symbol
 		} else {
 			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)
 		}
 	}
-
 	// calc chip win
 	{
-		rangeRatio := entity.ListSymbolLuckyDraw[s.SpinSymbols[0].Symbol].Value
-		ratio := e.randomFloat64(float64(rangeRatio.Min), float64(rangeRatio.Max))
-		slotDesk.ChipsWin += int64(float64(ratio) * float64(s.GetBetInfo().GetChips()))
+		totalRatio := float64(0)
+		for _, symbol := range mapUniqueSym {
+			rangeRatio := entity.ListSymbolLuckyDraw[symbol].Value
+			totalRatio += e.randomFloat64(float64(rangeRatio.Min), float64(rangeRatio.Max))
+		}
+		slotDesk.ChipsWin += int64(totalRatio * float64(s.GetBetInfo().GetChips()))
 	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	// slotDesk.ChipsWinInSpecialGame = s.ChipsWinInSpecialGame
 	if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		// calc chip in special game
 		slotDesk.IsFinishGame = true
 		symbolWin := s.SpinSymbols[0].Symbol
 		slotDesk.BigWin, slotDesk.WinJp = LuckySymbolToReward(symbolWin)
 	}
-	// slotDesk.ChipsWinInSpecialGame = s.ChipsWinInSpecialGame
-	// slotDesk.ChipsWin = s.ChipsWinInSpecialGame
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.GetBetInfo().Chips
 	return slotDesk, nil
