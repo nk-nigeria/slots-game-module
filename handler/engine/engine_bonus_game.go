@@ -24,12 +24,10 @@ func NewBonusEngine(randomIntFn func(min, max int) int) lib.Engine {
 
 func (e *bonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := entity.NewSiXiangMatrixBonusGame()
+	matrix := entity.NewMatrixBonusGame()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
 	// s.ChipsWinInSpecialGame = 0
-	s.SpinSymbols = []*pb.SpinSymbol{
-		{Symbol: pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED},
-	}
+	s.SpinSymbols = []*pb.SpinSymbol{}
 	return s, nil
 }
 

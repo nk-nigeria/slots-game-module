@@ -20,9 +20,15 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 	matchStateExpect := entity.NewSlotsMathState(nil)
 	matchStateExpect.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
 	matchStateExpect.GemSpin = defaultDragonPearlGemSpin
-	matchStateExpect.EyeSiXiangRemain = entity.ListEyeSiXiang[:]
+	{
+		list := make([]api.SiXiangSymbol, 0)
+		for k := range entity.ListEyeSiXiang {
+			list = append(list, k)
+		}
+		matchStateExpect.EyeSiXiangRemain = ShuffleSlice(list)
+	}
 	matchStateExpect.EyeSiXiangSpined = make([]api.SiXiangSymbol, 0)
-	matchStateExpect.MatrixSpecial = entity.NewSiXiangMatrixDragonPearl()
+	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
 	tests := []struct {
 		name string
 		args args
@@ -45,7 +51,6 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want.CurrentSiXiangGame, tt.args.matchState.CurrentSiXiangGame)
 			assert.Equal(t, tt.want.GemSpin, tt.args.matchState.GemSpin)
-			assert.Equal(t, tt.want.RatioBonus, tt.args.matchState.RatioBonus)
 			assert.Equal(t, tt.want.EyeSiXiangRemain, tt.args.matchState.EyeSiXiangRemain)
 			assert.Equal(t, tt.want.EyeSiXiangSpined, tt.args.matchState.EyeSiXiangSpined)
 			trackSym := make(map[api.SiXiangSymbol]int)
@@ -86,9 +91,8 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 		trackSymbolSpinExpect[api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM4] = 2
 		trackSymbolSpinExpect[api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM5] = 1
 		e.NewGame(matchState)
-		ratioBonus := int64(1)
 		for {
-			gemSpinRemain := int64(3)
+			gemSpinRemain := 3
 			matchState.GemSpin = gemSpinRemain
 			got, err := e.Process(matchState)
 			assert.NotNil(t, got)
@@ -109,9 +113,7 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON: //todo
 				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
 			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
-				ratioBonus = 2
 				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
-				assert.Equal(t, ratioBonus, matchState.RatioBonus, msg)
 			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR:
 				assert.Equal(t, 4, len(matchState.SpinSymbols), msg)
 				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
@@ -120,7 +122,6 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 				assert.Equal(t, gemSpinRemain-1, matchState.GemSpin, msg)
 			}
 			// }
-			assert.Equal(t, ratioBonus, matchState.RatioBonus)
 		}
 		for k, v := range trackSymbolSpin {
 			t.Logf("symbol %s, spin %d time", k.String(), v)
@@ -163,7 +164,13 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 			})
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
 			matchState.GemSpin = 0
-			matchState.RatioBonus = 2
+			idFlip := 0
+			matchState.MatrixSpecial.ForEeach(func(idx, row, col int, symbol api.SiXiangSymbol) {
+				if symbol == gem {
+					idFlip = idx
+				}
+			})
+			matchState.MatrixSpecial.Flip(idFlip)
 			matchState.SpinSymbols = []*api.SpinSymbol{{
 				Symbol: gem,
 			}}
@@ -173,7 +180,14 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 				IsFinishGame:       true,
 				ChipsMcb:           matchState.GetBetInfo().GetChips(),
 			}
-			slotDesk.ChipsWin = int64(float64(matchState.RatioBonus) * float64(slotDesk.ChipsMcb) * float64(entity.ListSymbolDragonPearl[gem].Value.Min))
+			ratioBonus := float64(1)
+			for _, eyeSym := range matchState.EyeSiXiangSpined {
+				r := entity.ListEyeSiXiang[eyeSym].Value.Min
+				if float64(r) > ratioBonus {
+					ratioBonus = float64(r)
+				}
+			}
+			slotDesk.ChipsWin = int64(ratioBonus * float64(slotDesk.ChipsMcb) * float64(entity.ListSymbolDragonPearl[gem].Value.Min))
 			test.args = matchState
 			test.want.slotDesk = slotDesk
 			test.want.matchState = entity.NewSlotsMathState(nil)

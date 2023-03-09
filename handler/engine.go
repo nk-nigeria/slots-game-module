@@ -41,6 +41,11 @@ func newEngine(game pb.SiXiangGame) lib.Engine {
 		return engine.NewRapidPayEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS:
 		return engine.NewSixiangBonusEngine()
+	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
+		return engine.NewSixiangBonusInGameEngine(4)
 	}
 	return engine.NewNormalEngine()
 }
@@ -68,7 +73,6 @@ func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
 		return nil, status.Error(codes.Unimplemented, "not implement new game "+s.CurrentSiXiangGame.String())
 	}
 	engine.NewGame(s)
-	s.RatioBonus = 1
 	return nil, nil
 }
 

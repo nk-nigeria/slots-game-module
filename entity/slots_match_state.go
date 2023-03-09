@@ -144,11 +144,23 @@ var ListSymbolDragonPearl = map[pb.SiXiangSymbol]SymbolInfo{
 	},
 }
 
-var ListEyeSiXiang = []pb.SiXiangSymbol{
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON,
+var ListEyeSiXiang = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD: {
+		NumOccur: 1,
+		Value:    Range{1, 1},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER: {
+		NumOccur: 1,
+		Value:    Range{1, 1},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR: {
+		NumOccur: 1,
+		Value:    Range{2, 2},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON: {
+		NumOccur: 1,
+		Value:    Range{1, 1},
+	},
 }
 
 var ListSpecialGame = []pb.SiXiangGame{
@@ -156,7 +168,7 @@ var ListSpecialGame = []pb.SiXiangGame{
 	pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
 	pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 	pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
-	pb.SiXiangGame_SI_XIANG_GAME_BONUS,
+	pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS,
 }
 
 var ListSymbolGoldPick = map[pb.SiXiangSymbol]SymbolInfo{
@@ -215,6 +227,13 @@ var ListSymbolRapidPay = map[pb.SiXiangSymbol]SymbolInfo{
 		NumOccur: 1,
 		Value:    Range{3, 3},
 	},
+}
+
+var ListSymbolSiXiangBonusGame = []pb.SiXiangSymbol{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_DRAGONPEARL_GAME,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_LUCKYDRAW_GAME,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_GOLDPICK_GAME,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_RAPIDPAY_GAME,
 }
 
 type Range struct {
@@ -308,7 +327,7 @@ func NewSiXiangMatrixNormal() SlotMatrix {
 	return sm
 }
 
-func NewSiXiangMatrixBonusGame() SlotMatrix {
+func NewMatrixBonusGame() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, 0, len(ListSymbolBonusGame)),
 		Cols:      len(ListSymbolBonusGame) / 2,
@@ -322,7 +341,7 @@ func NewSiXiangMatrixBonusGame() SlotMatrix {
 	return sm
 }
 
-func NewSiXiangMatrixLuckyDraw() SlotMatrix {
+func NewMatrixLuckyDraw() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, 0, RowsMatrix*ColsMatrix),
 		Cols:      ColsMatrix,
@@ -338,7 +357,7 @@ func NewSiXiangMatrixLuckyDraw() SlotMatrix {
 	return sm
 }
 
-func NewSiXiangMatrixDragonPearl() SlotMatrix {
+func NewMatrixDragonPearl() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, 0, RowsMatrix*ColsMatrix),
 		Cols:      ColsMatrix,
@@ -354,7 +373,7 @@ func NewSiXiangMatrixDragonPearl() SlotMatrix {
 	return sm
 }
 
-func NewSiXiangMatrixGoldPick() SlotMatrix {
+func NewMatrixGoldPick() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, 0, RowsMatrixGoldPick*ColsMatrixGoldPick),
 		Cols:      RowsMatrixGoldPick,
@@ -375,7 +394,7 @@ func NewSiXiangMatrixGoldPick() SlotMatrix {
 // x2 x3 x4 END
 // x2 x3 X4 END
 // x2 x2 x3 x3 x4
-func NewSiXiangMatrixRapidPay() SlotMatrix {
+func NewMatrixRapidPay() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, 0, RowsMatrixRapidPay*ColsMatrixRapidPay),
 		Cols:      RowsMatrixGoldPick,
@@ -418,9 +437,22 @@ func NewSiXiangMatrixRapidPay() SlotMatrix {
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
 	)
 	sm.Size = sm.Cols * sm.Rows
+	return sm
+}
+
+func NewMatrixSiXiangBonus() SlotMatrix {
+	sm := SlotMatrix{
+		List:      make([]pb.SiXiangSymbol, 0, len(ListSymbolSiXiangBonusGame)),
+		Cols:      len(ListSymbolBonusGame) / 2,
+		Rows:      2,
+		TrackFlip: map[int]bool{},
+	}
+	sm.Size = sm.Cols * sm.Rows
+	for _, symbol := range ListSymbolSiXiangBonusGame {
+		sm.List = append(sm.List, symbol)
+	}
 	return sm
 }
 
@@ -493,7 +525,7 @@ func (sm *SlotMatrix) ToPbSlotMatrix() *pb.SlotMatrix {
 
 func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int, pb.SiXiangSymbol) {
 	listIdNotFlip := make([]int, 0)
-	for id, _ := range sm.List {
+	for id := range sm.List {
 		if sm.TrackFlip[id] == false {
 			listIdNotFlip = append(listIdNotFlip, id)
 		}
@@ -502,6 +534,11 @@ func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int,
 	idInList := listIdNotFlip[id]
 	symbol := sm.List[idInList]
 	return idInList, symbol
+}
+
+func (sm *SlotMatrix) Flip(idx int) pb.SiXiangSymbol {
+	sm.TrackFlip[idx] = true
+	return sm.List[idx]
 }
 
 type UserDataMatch struct {
@@ -528,9 +565,11 @@ type SlotsMatchState struct {
 	// ChipsWinInSpecialGame int64
 	SpinSymbols      []*pb.SpinSymbol
 	EyeSiXiangRemain []pb.SiXiangSymbol
-	GemSpin          int64 // gem using for spin in dragon perl
+	GemSpin          int // gem using for spin in dragon perl
+	// lần quay chắc chắn ra ngọc
+	TurnSureSpinEye  int
 	EyeSiXiangSpined []pb.SiXiangSymbol
-	RatioBonus       int64
+	// RatioBonus       int64
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {

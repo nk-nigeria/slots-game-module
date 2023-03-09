@@ -15,11 +15,11 @@ func Test_nluckyDrawEngine_ShuffleMatrix(t *testing.T) {
 	name := "Engine_ShuffleMatrix"
 	t.Run(name, func(t *testing.T) {
 		engine := &luckyDrawEngine{}
-		matrix1 := entity.NewSiXiangMatrixLuckyDraw()
+		matrix1 := entity.NewMatrixLuckyDraw()
 		ShuffleMatrix(matrix1)
 		t.Log("matrix 1")
 		engine.PrintMatrix(matrix1)
-		matrix2 := entity.NewSiXiangMatrixLuckyDraw()
+		matrix2 := entity.NewMatrixLuckyDraw()
 		ShuffleMatrix(matrix2)
 		t.Log("matrix 2")
 		engine.PrintMatrix(matrix2)
@@ -104,7 +104,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 		}
 		matchState := entity.NewSlotsMathState(nil)
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-		matchState.MatrixSpecial = entity.NewSiXiangMatrixLuckyDraw()
+		matchState.MatrixSpecial = entity.NewMatrixLuckyDraw()
 		matchState.SetBetInfo(bet)
 		engine := NewLuckyDrawEngine(
 			func(min, max int) int { return min },
@@ -138,7 +138,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			}
 			matchState := entity.NewSlotsMathState(nil)
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-			matchState.MatrixSpecial = entity.NewSiXiangMatrixLuckyDraw()
+			matchState.MatrixSpecial = entity.NewMatrixLuckyDraw()
 			engine := NewLuckyDrawEngine(
 				func(min, max int) int { return min },
 				func(min, max float64) float64 { return min },
@@ -179,7 +179,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			}
 			matchState := entity.NewSlotsMathState(nil)
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-			matchState.MatrixSpecial = entity.NewSiXiangMatrixLuckyDraw()
+			matchState.MatrixSpecial = entity.NewMatrixLuckyDraw()
 			matchState.SetBetInfo(bet)
 			engine := NewLuckyDrawEngine(
 				func(min, max int) int { return min },

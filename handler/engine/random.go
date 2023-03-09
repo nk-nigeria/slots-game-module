@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	ErrorSpinReadMax = errors.New("Spin reach max")
+	ErrorSpinReadMax       = errors.New("Spin reach max")
+	ErrorMissingSpinSymbol = errors.New("Missing spin symbol")
+	ErrorNoGameEngine      = errors.New("No game engine")
 )
 
 func RandomInt(min, max int) int {
@@ -53,17 +55,17 @@ func RandomFloat64(min, max float64) float64 {
 }
 
 func ShuffleMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
-	// rand.Seed(time.Now().UTC().UnixNano())
 	list := matrix.List
-	// rand.Shuffle(len(list), func(i, j int) { list[i], list[j] = list[j], list[i] })
 	matrix.List = ShuffleSlice(list)
 	return matrix
 }
 
 func ShuffleSlice[T any](slice []T) []T {
 	rand.Seed(time.Now().UTC().UnixNano())
-	rand.Shuffle(len(slice), func(i, j int) { slice[i], slice[j] = slice[j], slice[i] })
-	return slice
+	ml := make([]T, len(slice), len(slice))
+	copy(ml, slice)
+	rand.Shuffle(len(ml), func(i, j int) { ml[i], ml[j] = ml[j], ml[i] })
+	return ml
 }
 
 func LuckySymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {

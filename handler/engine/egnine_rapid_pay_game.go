@@ -9,7 +9,7 @@ import (
 var _ lib.Engine = &rapidPayEngine{}
 
 const (
-	defaultRapidPayGemSpin = 4
+	defaultRapidPayGemSpin = 5
 	defaultAddRatioMcb     = float64(0.1)
 )
 
@@ -19,7 +19,7 @@ type rapidPayEngine struct {
 }
 
 func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
-	engine := goldPickEngine{}
+	engine := rapidPayEngine{}
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
@@ -35,11 +35,9 @@ func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(mi
 
 func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := entity.NewSiXiangMatrixRapidPay()
+	matrix := entity.NewMatrixRapidPay()
 	s.MatrixSpecial = matrix
-	s.SpinSymbols = []*pb.SpinSymbol{
-		{Symbol: pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED},
-	}
+	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.GemSpin = defaultRapidPayGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	return s, nil
@@ -51,11 +49,11 @@ func (e *rapidPayEngine) Random(min, max int) int {
 
 func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	if s.GemSpin < 0 {
+	if s.GemSpin <= 0 {
 		return s, ErrorSpinReadMax
 	}
-	indexStart := s.GemSpin * int64(s.MatrixSpecial.Cols)
-	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+int64(s.MatrixSpecial.Cols)]
+	indexStart := s.GemSpin * s.MatrixSpecial.Cols
+	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]
 	var idRandom int
 	var symRandom pb.SiXiangSymbol
 	for {
@@ -66,13 +64,13 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 		}
 	}
 	row, col := s.MatrixSpecial.RowCol(int(indexStart) + idRandom)
-	s.MatrixSpecial.TrackFlip[int(indexStart)+idRandom] = true
+	s.MatrixSpecial.Flip(int(indexStart) + idRandom)
 	spin := &pb.SpinSymbol{
 		Symbol: symRandom,
 		Row:    int32(row),
 		Col:    int32(col),
 	}
-	s.SpinSymbols = append(s.SpinSymbols, spin)
+	s.SpinSymbols = []*pb.SpinSymbol{spin}
 	s.GemSpin--
 	return nil, nil
 }
@@ -80,9 +78,14 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
-	if s.GemSpin < 0 || s.SpinSymbols[0].Symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END {
+	if len(s.SpinSymbols) == 0 {
+		return slotDesk, ErrorMissingSpinSymbol
+	}
+	if s.GemSpin <= 0 || s.SpinSymbols[0].Symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END {
 		slotDesk.IsFinishGame = true
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+	} else {
+		s.NextSiXiangGame = s.CurrentSiXiangGame
 	}
 	ratio := defaultAddRatioMcb
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
@@ -92,7 +95,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 		}
 	}
 	slotDesk.ChipsMcb = s.GetBetInfo().Chips
-	slotDesk.ChipsMcb = int64(ratio * float64(slotDesk.ChipsMcb))
+	slotDesk.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	return slotDesk, nil

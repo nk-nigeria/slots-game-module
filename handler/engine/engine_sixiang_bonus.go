@@ -18,8 +18,9 @@ func NewSixiangBonusEngine() lib.Engine {
 
 func (e *sixiangBonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := entity.NewSiXiangMatrixBonusGame()
+	matrix := entity.NewMatrixSiXiangBonus()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
+	s.SpinSymbols = nil
 	return s, nil
 }
 
@@ -29,41 +30,33 @@ func (e *sixiangBonusEngine) Random(min, max int) int {
 
 func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	bet := s.GetBetInfo()
-	s.MatrixSpecial.TrackFlip[int(bet.GetId())] = true
+	idRamdom, sym := s.MatrixSpecial.RandomSymbolNotFlip(e.Random)
+	row, col := s.MatrixSpecial.RowCol(idRamdom)
+	s.SpinSymbols = []*pb.SpinSymbol{
+		{
+			Symbol: sym,
+			Row:    int32(row),
+			Col:    int32(col),
+		},
+	}
+	s.MatrixSpecial.Flip(idRamdom)
 	return s, nil
 }
 
 func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := s.MatrixSpecial
-	slotDesk := &pb.SlotDesk{
-		Matrix: &pb.SlotMatrix{
-			Rows: int32(matrix.Rows),
-			Cols: int32(matrix.Cols),
-		},
-	}
-	slotDesk.Matrix.Lists = make([]pb.SiXiangSymbol, slotDesk.Matrix.Cols*slotDesk.Matrix.Rows)
-	drawSymbol := pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
-	for k := range matrix.TrackFlip {
-		slotDesk.Matrix.Lists[k] = s.MatrixSpecial.List[k]
-		drawSymbol = matrix.List[k]
-	}
-
-	switch drawSymbol {
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL:
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_LUCKYDRAW:
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDPICK:
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_RAPIDPAY:
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	slotDesk := &pb.SlotDesk{}
+	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
+	switch s.SpinSymbols[0].Symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_DRAGONPEARL_GAME:
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_LUCKYDRAW_GAME:
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_GOLDPICK_GAME:
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_RAPIDPAY_GAME:
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY
 	default:
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-		ratio := entity.ListSymbolBonusGame[drawSymbol].Value.Min
-		slotDesk.ChipsWin = int64(float64(ratio) * float64(s.GetBetInfo().GetChips()))
-		// slotDesk.ChipsWin = slotDesk.ChipsWinInSpecialGame
 	}
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame

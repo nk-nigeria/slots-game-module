@@ -42,7 +42,7 @@ func TestNewSiXiangMatrixLuckyDraw(t *testing.T) {
 	name := "TestNewSiXiangMatrixLuckyDraw"
 	t.Run(name, func(t *testing.T) {
 		mapCountSymbol := make(map[pb.SiXiangSymbol]int)
-		matrix := NewSiXiangMatrixLuckyDraw()
+		matrix := NewMatrixLuckyDraw()
 		assert.Equal(t, len(matrix.List), RowsMatrix*ColsMatrix)
 		for _, symbol := range matrix.List {
 			num := mapCountSymbol[symbol]
@@ -134,7 +134,7 @@ func TestSlotMatrix_RowCol(t *testing.T) {
 func TestSlotMatrix_ToPbSlotMatrix(t *testing.T) {
 	name := "TestSlotMatrix_ToPbSlotMatrix"
 	t.Run(name, func(t *testing.T) {
-		sm := NewSiXiangMatrixDragonPearl()
+		sm := NewMatrixDragonPearl()
 		result := sm.ToPbSlotMatrix()
 		result.Lists[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		assert.NotEqual(t, sm.List[0], result.Lists[0])

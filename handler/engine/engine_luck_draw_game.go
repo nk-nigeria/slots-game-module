@@ -33,11 +33,9 @@ func NewLuckyDrawEngine(randomIntFn func(min, max int) int, randomFloat64 func(m
 
 func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := entity.NewSiXiangMatrixLuckyDraw()
+	matrix := entity.NewMatrixLuckyDraw()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
-	s.SpinSymbols = []*pb.SpinSymbol{
-		{Symbol: pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED},
-	}
+	s.SpinSymbols = []*pb.SpinSymbol{}
 	// s.ChipsWinInSpecialGame = 0
 	return s, nil
 }

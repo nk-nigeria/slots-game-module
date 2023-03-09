@@ -49,7 +49,7 @@ func TestRandomFloat64(t *testing.T) {
 
 func TestShuffleSlice(t *testing.T) {
 	type args struct {
-		slice []api.SiXiangSymbol
+		slice []api.SiXiangGame
 	}
 	tests := []struct {
 		name string
@@ -60,7 +60,7 @@ func TestShuffleSlice(t *testing.T) {
 		{
 			name: "TestShuffleSlice",
 			args: args{
-				slice: entity.ListEyeSiXiang[:],
+				slice: entity.ListSpecialGame[:],
 			},
 		},
 	}
@@ -68,7 +68,17 @@ func TestShuffleSlice(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ShuffleSlice(tt.args.slice)
 			assert.Equal(t, len(got), len(tt.args.slice))
-			assert.Equal(t, got, tt.args.slice)
+			numItemSame := 0
+			trackItem := make(map[int]api.SiXiangGame)
+			for i, v := range got {
+				trackItem[i] = v
+			}
+			for i, v := range tt.args.slice {
+				if trackItem[i] == v {
+					numItemSame++
+				}
+			}
+			assert.NotEqual(t, numItemSame, len(tt.args.slice))
 			t.Log(got)
 		})
 	}
