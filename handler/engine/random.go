@@ -1,8 +1,10 @@
 package engine
 
 import (
+	"crypto/rand"
 	"errors"
-	"math/rand"
+	"math/big"
+	mrand "math/rand"
 	"time"
 
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -24,9 +26,12 @@ func RandomInt(min, max int) int {
 		max = min + 1
 	}
 	n := max - min
-	rand.Seed(time.Now().UTC().UnixNano())
-	num := rand.Intn(n)
-	return num + min
+	nBig, err := rand.Int(rand.Reader, big.NewInt(int64(n)))
+	if err != nil {
+		mrand.Seed(time.Now().UTC().UnixNano())
+		return mrand.Intn(n) + min
+	}
+	return int(nBig.Int64()) + min
 }
 
 func RandomFloat64(min, max float64) float64 {
@@ -61,10 +66,10 @@ func ShuffleMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 }
 
 func ShuffleSlice[T any](slice []T) []T {
-	rand.Seed(time.Now().UTC().UnixNano())
+	mrand.Seed(time.Now().UTC().UnixNano())
 	ml := make([]T, len(slice), len(slice))
 	copy(ml, slice)
-	rand.Shuffle(len(ml), func(i, j int) { ml[i], ml[j] = ml[j], ml[i] })
+	mrand.Shuffle(len(ml), func(i, j int) { ml[i], ml[j] = ml[j], ml[i] })
 	return ml
 }
 
