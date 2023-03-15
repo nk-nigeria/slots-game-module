@@ -57,7 +57,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 
 	if state.GetPresenceSize() <= 0 {
 		procPkg.GetLogger().Info("no user in game")
-		s.Trigger(ctx, lib.TriggerPlayTimeout)
+		s.Trigger(ctx, lib.TriggerStateFinishFailed)
 		return nil
 	}
 

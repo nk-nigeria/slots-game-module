@@ -73,10 +73,10 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	}
 	if remain <= 0 {
 		if state.IsReadyToPlay() {
-			s.Trigger(ctx, lib.TriggerPreparingDone)
+			s.Trigger(ctx, lib.TriggerStateFinishSuccess)
 		} else {
 			// change to wait
-			s.Trigger(ctx, lib.TriggerPreparingFailed)
+			s.Trigger(ctx, lib.TriggerStateFinishFailed)
 		}
 		return nil
 	}

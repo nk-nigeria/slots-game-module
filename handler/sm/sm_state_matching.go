@@ -55,9 +55,9 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 	}
 
 	if state.IsReadyToPlay() {
-		s.Trigger(ctx, lib.TriggerPresenceReady)
+		s.Trigger(ctx, lib.TriggerStateFinishSuccess)
 	} else {
-		s.Trigger(ctx, lib.TriggerIdle)
+		s.Trigger(ctx, lib.TriggerStateFinishFailed)
 	}
 	return nil
 }

@@ -47,13 +47,13 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	if state.GetPresenceSize() > 0 {
-		s.Trigger(ctx, lib.TriggerMatching)
+		s.Trigger(ctx, lib.TriggerStateFinishSuccess)
 		return nil
 	}
 	if remain := state.GetRemainCountDown(); remain < 0 {
 		// Do finish here
 		procPkg.GetLogger().Info("[idle] idle timeout => exit")
-		s.Trigger(ctx, lib.TriggerNoOne)
+		s.Trigger(ctx, lib.TriggerExit)
 		return presenter.ErrGameFinish
 	}
 	return nil
