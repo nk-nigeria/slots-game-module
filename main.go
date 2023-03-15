@@ -29,6 +29,6 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		return err
 	}
 
-	logger.Info("Plugin loaded in '%d' msec.", time.Now().Sub(initStart).Milliseconds())
+	logger.Info("Plugin loaded in '%d' msec.", time.Since(initStart).Milliseconds())
 	return nil
 }

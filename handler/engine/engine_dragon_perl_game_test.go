@@ -27,7 +27,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 		}
 		matchStateExpect.EyeSiXiangRemain = ShuffleSlice(list)
 	}
-	matchStateExpect.EyeSiXiangSpined = make([]api.SiXiangSymbol, 0)
+	matchStateExpect.EyeSiXiangSpined = make(map[int][]api.SiXiangSymbol, 0)
 	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
 	tests := []struct {
 		name string
@@ -52,7 +52,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 			assert.Equal(t, tt.want.CurrentSiXiangGame, tt.args.matchState.CurrentSiXiangGame)
 			assert.Equal(t, tt.want.GemSpin, tt.args.matchState.GemSpin)
 			assert.Equal(t, tt.want.EyeSiXiangRemain, tt.args.matchState.EyeSiXiangRemain)
-			assert.Equal(t, tt.want.EyeSiXiangSpined, tt.args.matchState.EyeSiXiangSpined)
+			assert.Equal(t, tt.want.EyeSiXiangSpined[int(tt.args.matchState.GetBetInfo().Chips)], tt.args.matchState.EyeSiXiangSpined[int(tt.args.matchState.GetBetInfo().GetChips())])
 			trackSym := make(map[api.SiXiangSymbol]int)
 			trackSymExpect := make(map[api.SiXiangSymbol]int)
 			for _, sym := range tt.want.MatrixSpecial.List {
@@ -181,7 +181,8 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 				ChipsMcb:           matchState.GetBetInfo().GetChips(),
 			}
 			ratioBonus := float64(1)
-			for _, eyeSym := range matchState.EyeSiXiangSpined {
+			ml := matchState.EyeSiXiangSpined[int(matchState.GetBetInfo().GetChips())]
+			for _, eyeSym := range ml {
 				r := entity.ListEyeSiXiang[eyeSym].Value.Min
 				if float64(r) > ratioBonus {
 					ratioBonus = float64(r)

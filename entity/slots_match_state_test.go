@@ -139,8 +139,8 @@ func TestSlotMatrix_ToPbSlotMatrix(t *testing.T) {
 		result.Lists[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		assert.NotEqual(t, sm.List[0], result.Lists[0])
 		assert.Equal(t, len(result.Lists), len(sm.List))
-		assert.Equal(t, result.Rows, sm.Rows)
-		assert.Equal(t, result.Cols, sm.Cols)
+		assert.Equal(t, int(result.Rows), sm.Rows)
+		assert.Equal(t, int(result.Cols), sm.Cols)
 	})
 
 }

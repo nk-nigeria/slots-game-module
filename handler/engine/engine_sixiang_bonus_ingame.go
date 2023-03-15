@@ -61,5 +61,6 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	slotDesk.ChipsWin *= int64(e.ratioBonus)
+	slotDesk.IsInSixiangBonus = true
 	return slotDesk, nil
 }

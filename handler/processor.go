@@ -104,7 +104,6 @@ func (p *processor) ProcessGame(ctx context.Context,
 	s := matchState.(*entity.SlotsMatchState)
 	s.InitNewRound()
 	defer s.SetAllowSpin(true)
-	// s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
 		s.CurrentSiXiangGame = s.NextSiXiangGame
 		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {

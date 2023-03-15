@@ -567,9 +567,9 @@ type SlotsMatchState struct {
 	EyeSiXiangRemain []pb.SiXiangSymbol
 	GemSpin          int // gem using for spin in dragon perl
 	// lần quay chắc chắn ra ngọc
-	TurnSureSpinEye  int
-	EyeSiXiangSpined []pb.SiXiangSymbol
-	// RatioBonus       int64
+	TurnSureSpinEye int
+	// Danh sach ngoc tứ linh spin được theo chip bet.
+	EyeSiXiangSpined map[int][]pb.SiXiangSymbol
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {

@@ -50,7 +50,7 @@ func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error)
 	}
 
 	s.GemSpin = defaultDragonPearlGemSpin
-	s.EyeSiXiangSpined = make([]pb.SiXiangSymbol, 0)
+	s.EyeSiXiangSpined = make(map[int][]pb.SiXiangSymbol, 0)
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.TurnSureSpinEye = e.randomIntFn(1, s.GemSpin)
 	return s, nil
@@ -66,16 +66,15 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 		return s, errors.New("gem spin not enough")
 	}
 	if len(s.MatrixSpecial.TrackFlip) >= 15 {
-		return s, errors.New("Spin all")
+		return s, ErrorSpinReadMax
 	}
 	// Setup sao cho số lượt spins của user ít nhất được 8 ngọc và 1 phong bao
 	// nên đầu game random ra lân quay chắc chắn sẽ ra ngọc nếu tới lượt đó
 	// nhưng chưaquay ra ngọc
-	if s.GemSpin == s.TurnSureSpinEye && len(s.EyeSiXiangSpined) == 0 {
+	if s.GemSpin == s.TurnSureSpinEye && len(s.EyeSiXiangSpined[int(s.GetBetInfo().Chips)]) == 0 {
 		listIdEyeSymbol := make([]int, 0)
 		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_LUCKMONEY &&
-				s.MatrixSpecial.TrackFlip[idx] == false {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_LUCKMONEY && !s.MatrixSpecial.TrackFlip[idx] {
 				listIdEyeSymbol = append(listIdEyeSymbol, idx)
 			}
 		})
@@ -87,7 +86,9 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 			Row:    int32(row),
 			Col:    int32(col),
 		}
-		s.EyeSiXiangSpined = append(s.EyeSiXiangSpined, eyeRandom)
+		ml := s.EyeSiXiangSpined[int(s.GetBetInfo().GetChips())]
+		ml = append(ml, eyeRandom)
+		s.EyeSiXiangSpined[int(s.GetBetInfo().GetChips())] = ml
 		s.SpinSymbols = []*pb.SpinSymbol{spinSymbol}
 		s.GemSpin--
 	} else {
@@ -187,7 +188,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	// 	totalMcb += float64(e.randomFloat64(float64(v.Min), float64(v.Max)))
 	// }
 	ratioBonus := float64(1)
-	for _, eyeSym := range s.EyeSiXiangSpined {
+	for _, eyeSym := range s.EyeSiXiangSpined[int(s.GetBetInfo().GetChips())] {
 		r := entity.ListEyeSiXiang[eyeSym].Value.Min
 		if float64(r) > ratioBonus {
 			ratioBonus = float64(r)
@@ -227,7 +228,9 @@ func (e *dragonPearlEngine) randomPearl(
 	if acceptSymbol {
 		if eyeRandom != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 			s.EyeSiXiangRemain = s.EyeSiXiangRemain[1:]
-			s.EyeSiXiangSpined = append(s.EyeSiXiangSpined, symbolRandom)
+			ml := s.EyeSiXiangSpined[int(s.GetBetInfo().GetChips())]
+			ml = append(ml, symbolRandom)
+			s.EyeSiXiangSpined[int(s.GetBetInfo().GetChips())] = ml
 		}
 		// s.MatrixSpecial.TrackFlip[idRandom] = true
 		s.MatrixSpecial.Flip(idRandom)
