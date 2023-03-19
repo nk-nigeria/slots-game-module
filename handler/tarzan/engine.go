@@ -1,27 +1,49 @@
 package tarzan
 
-import "github.com/ciaolink-game-platform/cgp-common/lib"
+import (
+	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
+	"github.com/ciaolink-game-platform/cgp-common/lib"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+)
 
 var _ lib.Engine = &tarzanEngine{}
 
-type tarzanEngine struct{}
+type tarzanEngine struct {
+	engines map[pb.SiXiangGame]lib.Engine
+}
 
-// Finish implements lib.Engine
-func (*tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
-	panic("unimplemented")
+func NewEngine() lib.Engine {
+	e := &tarzanEngine{
+		engines: make(map[pb.SiXiangGame]lib.Engine),
+	}
+	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_NORMAL] = NewNormal()
+	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewNormal()
+	return e
 }
 
 // NewGame implements lib.Engine
-func (*tarzanEngine) NewGame(matchState interface{}) (interface{}, error) {
-	panic("unimplemented")
+func (e *tarzanEngine) NewGame(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.TarzanMatchState)
+	engine := e.engines[s.CurrentSiXiangGame]
+	engine.NewGame(matchState)
+	return matchState, nil
 }
 
 // Process implements lib.Engine
-func (*tarzanEngine) Process(matchState interface{}) (interface{}, error) {
-	panic("unimplemented")
+func (e *tarzanEngine) Process(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.TarzanMatchState)
+	engine := e.engines[s.CurrentSiXiangGame]
+	return engine.Process(matchState)
 }
 
 // Random implements lib.Engine
-func (*tarzanEngine) Random(min int, max int) int {
+func (e *tarzanEngine) Random(min int, max int) int {
 	panic("unimplemented")
+}
+
+// Finish implements lib.Engine
+func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.TarzanMatchState)
+	engine := e.engines[s.CurrentSiXiangGame]
+	return engine.Finish(matchState)
 }

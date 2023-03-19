@@ -56,7 +56,7 @@ func NewSlotsEngine() lib.Engine {
 	i := 1
 	for {
 		game := pb.SiXiangGame(i)
-		if game == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED ||
+		if game == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED || i > 100 ||
 			game.String() == strconv.Itoa(i) {
 			break
 		}

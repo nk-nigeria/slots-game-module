@@ -2,6 +2,14 @@ package entity
 
 import pb "github.com/ciaolink-game-platform/cgp-common/proto"
 
+const (
+	Row_1 = 0
+	Row_2 = 1
+	Row_3 = 2
+	Row_4 = 3
+	Row_5 = 4
+)
+
 type SlotMatrix struct {
 	List      []pb.SiXiangSymbol
 	Cols      int
