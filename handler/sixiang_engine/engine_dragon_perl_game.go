@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"errors"
@@ -36,7 +36,7 @@ func NewDragonPearlEngine(randomIntFn func(min, max int) int, randomFloat64 func
 }
 
 func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := entity.NewMatrixDragonPearl()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
 	// s.ChipsWinInSpecialGame = 0
@@ -61,7 +61,7 @@ func (e *dragonPearlEngine) Random(min, max int) int {
 }
 
 func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	if s.GemSpin <= 0 {
 		return s, errors.New("gem spin not enough")
 	}
@@ -160,7 +160,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 }
 
 func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	slotDesk := &pb.SlotDesk{}
 	if s.GemSpin <= 0 || len(s.MatrixSpecial.TrackFlip) == 15 {
 		slotDesk.IsFinishGame = true
@@ -207,7 +207,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	return slotDesk, nil
 }
 
-func (e *dragonPearlEngine) checkJackpot(s *entity.SlotsMatchState) bool {
+func (e *dragonPearlEngine) checkJackpot(s *entity.SixiangMatchState) bool {
 	if len(s.MatrixSpecial.TrackFlip) >= 15 {
 		return true
 	}
@@ -215,7 +215,7 @@ func (e *dragonPearlEngine) checkJackpot(s *entity.SlotsMatchState) bool {
 }
 
 func (e *dragonPearlEngine) randomPearl(
-	s *entity.SlotsMatchState,
+	s *entity.SixiangMatchState,
 	fn func(symbolRand, eyeRand pb.SiXiangSymbol, row, col int) bool,
 ) bool {
 	idRandom, symbolRandom := s.MatrixSpecial.RandomSymbolNotFlip(e.randomIntFn)

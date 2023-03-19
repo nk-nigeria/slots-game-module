@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"testing"
@@ -26,10 +26,10 @@ func Test_sixiangBonusIngameEngine_NewGame(t *testing.T) {
 	}
 	tests := make([]test, 0)
 	arrGame := []pb.SiXiangGame{
-		api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
-		api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
-		api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
-		api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY,
 	}
 	for _, game := range arrGame {
 		matchState := entity.NewSlotsMathState(nil)
@@ -40,13 +40,13 @@ func Test_sixiangBonusIngameEngine_NewGame(t *testing.T) {
 		entity.NewSlotsMathState(nil)
 		var expectEngine lib.Engine
 		switch game {
-		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL:
+		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL:
 			expectEngine = NewDragonPearlEngine(nil, nil)
-		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW:
+		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW:
 			expectEngine = NewLuckyDrawEngine(nil, nil)
-		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK:
+		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK:
 			expectEngine = NewGoldPickEngine(nil, nil)
-		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
+		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
 			expectEngine = NewRapidPayEngine(nil, nil)
 		}
 		tests = append(tests, test{

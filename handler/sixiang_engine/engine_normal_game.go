@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"fmt"
@@ -54,7 +54,7 @@ func NewNormalEngine() lib.Engine {
 }
 
 func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := entity.NewSiXiangMatrixNormal()
 	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
@@ -66,7 +66,7 @@ func (e *normalEngine) Random(min, max int) int {
 }
 
 func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := e.SpinMatrix(s.GetMatrix())
 	if s.GetBetInfo().GetReqSpecGame() != 0 {
 		matrix.List[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
@@ -96,7 +96,7 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	slotDesk := &pb.SlotDesk{}
 	// set matrix spin
 	{
@@ -155,7 +155,6 @@ func (e *normalEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 			matrix.List[idx] = symbol
 			break
 		}
-		return
 	})
 	return matrix
 }
@@ -181,7 +180,6 @@ func (e *normalEngine) SpreadWildInMatrix(matrix entity.SlotMatrix) entity.SlotM
 		if spreadMatrix.List[idx] != pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 			spreadMatrix.List[idx] = symbol
 		}
-		return
 	})
 	return spreadMatrix
 }
@@ -268,7 +266,7 @@ func (e *normalEngine) TotalRateToTypeBigWin(totalRate float64) pb.BigWin {
 	return bigWin
 }
 
-func (e *normalEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
+func (e *normalEngine) GetNextSiXiangGame(s *entity.SixiangMatchState) pb.SiXiangGame {
 	matrix := s.GetMatrix()
 	numScatter := 0
 	matrix.ForEeachLine(func(line int, symbols []pb.SiXiangSymbol) {
@@ -294,7 +292,6 @@ func (e *normalEngine) PrintMatrix(matrix entity.SlotMatrix) {
 			fmt.Println("")
 		}
 		fmt.Printf("%8d", symbol.Number())
-		return
 	})
 	fmt.Println("")
 }

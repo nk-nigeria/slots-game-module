@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"testing"
@@ -19,7 +19,7 @@ func Test_sixiangBonusEngine_NewGame(t *testing.T) {
 		assert.Equal(t, len(entity.ListSymbolSiXiangBonusGame), len(matchState.MatrixSpecial.List))
 		assert.Nil(t, matchState.SpinSymbols)
 		trackSymbol := make(map[api.SiXiangSymbol]int)
-		matchState.MatrixSpecial.ForEeach(func(idx, row, col int, symbol api.SiXiangSymbol) {
+		matchState.MatrixSpecial.ForEeach(func(_, _, _ int, symbol api.SiXiangSymbol) {
 			num := trackSymbol[symbol]
 			num++
 			trackSymbol[symbol] = num
@@ -54,7 +54,7 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 	}
 	type test struct {
 		name string
-		arg  *entity.SlotsMatchState
+		arg  *entity.SixiangMatchState
 		want *api.SlotDesk
 	}
 	engine := &sixiangBonusEngine{}
@@ -71,7 +71,7 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 		engine.NewGame(matchState)
 		idRandom := 0
-		matchState.MatrixSpecial.ForEeach(func(idx, row, col int, symbol api.SiXiangSymbol) {
+		matchState.MatrixSpecial.ForEeach(func(idx, _, _ int, symbol api.SiXiangSymbol) {
 			if symbol == sym {
 				idRandom = idx
 			}
@@ -80,7 +80,7 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 		matchState.SpinSymbols = []*api.SpinSymbol{
 			{Symbol: sym},
 		}
-		slotDesk := *&api.SlotDesk{
+		slotDesk := &api.SlotDesk{
 			CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS,
 			NextSixiangGame:    arrNextGame[idx],
 			IsFinishGame:       true,
@@ -88,7 +88,7 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 		test := test{
 			name: "Test_sixiangBonusEngine_Finish_" + sym.String(),
 			arg:  matchState,
-			want: &slotDesk,
+			want: slotDesk,
 		}
 		tests = append(tests, test)
 	}

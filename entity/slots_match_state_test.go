@@ -33,7 +33,7 @@ func TestSlotMatrix_ForEeachLine(t *testing.T) {
 				assert.Equal(t, sm.Cols, len(symbols), fmt.Sprintf("in line %d", line))
 				lastLine = line
 			})
-			assert.Equal(t, sm.Rows-1, lastLine, fmt.Sprintf("last line "))
+			assert.Equal(t, sm.Rows-1, lastLine, "last line ")
 		})
 	}
 }

@@ -27,7 +27,7 @@ type MatchHandler struct {
 
 func (m *MatchHandler) MatchSignal(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, data string) (interface{}, string) {
 	//panic("implement me")
-	s := state.(*entity.SlotsMatchState)
+	s := state.(*entity.SixiangMatchState)
 	return s, ""
 }
 

@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func Test_rapidPayEngine_NewGame(t *testing.T) {
 
 func Test_rapidPayEngine_Process(t *testing.T) {
 	type args struct {
-		s          *entity.SlotsMatchState
+		s          *entity.SixiangMatchState
 		numProcess int
 	}
 
@@ -85,7 +85,7 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 
 	type test struct {
 		name    string
-		args    *entity.SlotsMatchState
+		args    *entity.SixiangMatchState
 		want    *api.SlotDesk
 		wantErr bool
 	}

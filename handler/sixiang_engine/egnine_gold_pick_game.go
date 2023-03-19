@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -33,7 +33,7 @@ func NewGoldPickEngine(randomIntFn func(min, max int) int, randomFloat64 func(mi
 }
 
 func (e *goldPickEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := entity.NewMatrixGoldPick()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
 	s.SpinSymbols = []*pb.SpinSymbol{}
@@ -47,7 +47,7 @@ func (e *goldPickEngine) Random(min, max int) int {
 }
 
 func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	if s.GemSpin <= 0 {
 		return s, ErrorSpinReadMax
 	}
@@ -76,7 +76,7 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 
 func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk := &pb.SlotDesk{}
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	if s.GemSpin <= 0 {
 		slotDesk.IsFinishGame = true
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL

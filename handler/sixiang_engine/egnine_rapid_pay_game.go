@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -34,7 +34,7 @@ func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(mi
 }
 
 func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := entity.NewMatrixRapidPay()
 	s.MatrixSpecial = matrix
 	s.SpinSymbols = []*pb.SpinSymbol{}
@@ -48,7 +48,7 @@ func (e *rapidPayEngine) Random(min, max int) int {
 }
 
 func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	if s.GemSpin <= 0 {
 		return s, ErrorSpinReadMax
 	}
@@ -76,7 +76,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	slotDesk := &pb.SlotDesk{}
 	if len(s.SpinSymbols) == 0 {
 		return slotDesk, ErrorMissingSpinSymbol

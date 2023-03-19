@@ -44,7 +44,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	dispatcher runtime.MatchDispatcher,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	logger.WithField("size player", s.GetPresenceSize()).Info("ProcessNewGame")
 	s.InitNewRound()
 	s.SetupMatchPresence()
@@ -101,7 +101,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 	messages []runtime.MatchData,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	s.InitNewRound()
 	defer s.SetAllowSpin(true)
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
@@ -148,7 +148,7 @@ func (p *processor) ProcessApplyPresencesLeave(ctx context.Context,
 	dispatcher runtime.MatchDispatcher,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	pendingLeaves := s.GetLeavePresences()
 	if len(pendingLeaves) == 0 {
 		return
@@ -221,7 +221,7 @@ func (p *processor) ProcessPresencesJoin(ctx context.Context,
 	presences []runtime.Presence,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	logger.WithField("users", presences).Info("presences join")
 	// update new presence
 	newJoins := make([]runtime.Presence, 0)
@@ -255,7 +255,7 @@ func (p *processor) ProcessPresencesLeave(ctx context.Context,
 	presences []runtime.Presence,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	s.RemovePresence(presences...)
 	var listUserId []string
 	for _, p := range presences {
@@ -271,7 +271,7 @@ func (p *processor) ProcessPresencesLeavePending(ctx context.Context,
 	presences []runtime.Presence,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	logger.WithField("user", presences).Info("process presences leave pending")
 	for _, presence := range presences {
 		_, found := s.PlayingPresences.Get(presence.GetUserId())
@@ -289,7 +289,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
 	message runtime.MatchData,
-	s *entity.SlotsMatchState,
+	s *entity.SixiangMatchState,
 ) {
 	if !s.IsAllowSpin() {
 		return
@@ -358,7 +358,6 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		slotDesk,
 		s.GetPlayingPresences(),
 		nil, false)
-	return
 }
 
 func (p *processor) handlerRequestGetInfoTable(
@@ -368,7 +367,7 @@ func (p *processor) handlerRequestGetInfoTable(
 	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
 	userID string,
-	s *entity.SlotsMatchState,
+	s *entity.SixiangMatchState,
 ) {
 	logger.WithField("user", userID).Info("request info table")
 	slotdesk := &pb.SlotDesk{
@@ -486,7 +485,7 @@ func (p *processor) InitSpecialGameDesk(ctx context.Context,
 	// 	slotdesk, s.GetPlayingPresences(), nil, true)
 }
 
-func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet) bool {
+func (p *processor) checkValidBetInfo(s *entity.SixiangMatchState, bet *pb.InfoBet) bool {
 
 	switch s.CurrentSiXiangGame {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:

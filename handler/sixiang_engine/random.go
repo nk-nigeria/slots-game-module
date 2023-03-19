@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"crypto/rand"
@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	ErrorSpinReadMax       = errors.New("Spin reach max")
-	ErrorMissingSpinSymbol = errors.New("Missing spin symbol")
-	ErrorNoGameEngine      = errors.New("No game engine")
+	ErrorSpinReadMax       = errors.New("spin reach max")
+	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
+	ErrorNoGameEngine      = errors.New("no game engine")
 )
 
 func RandomInt(min, max int) int {
@@ -67,7 +67,7 @@ func ShuffleMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 
 func ShuffleSlice[T any](slice []T) []T {
 	mrand.Seed(time.Now().UTC().UnixNano())
-	ml := make([]T, len(slice), len(slice))
+	ml := make([]T, len(slice))
 	copy(ml, slice)
 	mrand.Shuffle(len(ml), func(i, j int) { ml[i], ml[j] = ml[j], ml[i] })
 	return ml

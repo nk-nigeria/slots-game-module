@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -23,7 +23,7 @@ func NewBonusEngine(randomIntFn func(min, max int) int) lib.Engine {
 }
 
 func (e *bonusEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := entity.NewMatrixBonusGame()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
 	// s.ChipsWinInSpecialGame = 0
@@ -36,11 +36,12 @@ func (e *bonusEngine) Random(min, max int) int {
 }
 
 func (e *bonusEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	id := e.Random(0, len(s.MatrixSpecial.List))
-	if s.GetBetInfo().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL) {
+	if s.GetBetInfo().ReqSpecGame > 0 {
+		reqBonusGame := pb.SiXiangSymbol(s.GetBetInfo().ReqSpecGame)
 		for idx, symbol := range s.MatrixSpecial.List {
-			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL {
+			if symbol == reqBonusGame {
 				id = idx
 				break
 			}
@@ -58,7 +59,7 @@ func (e *bonusEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := s.MatrixSpecial
 	slotDesk := &pb.SlotDesk{
 		Matrix: &pb.SlotMatrix{
@@ -83,7 +84,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	return slotDesk, nil
 }
 
-func (e *bonusEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
+func (e *bonusEngine) GetNextSiXiangGame(s *entity.SixiangMatchState) pb.SiXiangGame {
 	switch s.SpinSymbols[0].Symbol {
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX10,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX20,

@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 
 func Test_normalEngine_InitMatrix(t *testing.T) {
 	type args struct {
-		matchState *entity.SlotsMatchState
+		matchState *entity.SixiangMatchState
 	}
 	tests := []struct {
 		name string
@@ -68,7 +68,7 @@ func Test_normalEngine_Random(t *testing.T) {
 
 func Test_normalEngine_SpinMatrix(t *testing.T) {
 	type args struct {
-		matchState *entity.SlotsMatchState
+		matchState *entity.SixiangMatchState
 	}
 	tests := []struct {
 		name string
@@ -94,7 +94,7 @@ func Test_normalEngine_SpinMatrix(t *testing.T) {
 
 func Test_normalEngine_SpreadWildInMatrix(t *testing.T) {
 	type args struct {
-		matchState *entity.SlotsMatchState
+		matchState *entity.SixiangMatchState
 	}
 	tests := []struct {
 		name string

@@ -23,7 +23,7 @@ func NewStatePlay(fn lib.FireFn) lib.StateHandler {
 func (s *StatePlay) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	procPkg.GetLogger().Info("[playing] enter")
-	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
+	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
 	// Setup count down
 	// state.SetUpCountDown(playTimeout)
 	procPkg.GetProcessor().NotifyUpdateGameState(
@@ -53,7 +53,7 @@ func (s *StatePlay) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
-	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
+	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
 
 	if state.GetPresenceSize() <= 0 {
 		procPkg.GetLogger().Info("no user in game")

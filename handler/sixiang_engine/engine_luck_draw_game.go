@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"errors"
@@ -32,7 +32,7 @@ func NewLuckyDrawEngine(randomIntFn func(min, max int) int, randomFloat64 func(m
 }
 
 func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	matrix := entity.NewMatrixLuckyDraw()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
 	s.SpinSymbols = []*pb.SpinSymbol{}
@@ -45,7 +45,7 @@ func (e *luckyDrawEngine) Random(min, max int) int {
 }
 
 func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	// bet := s.GetBetInfo()
 	idsNotFlip := make([]int, 0)
 	for id := range s.MatrixSpecial.List {
@@ -70,7 +70,7 @@ func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 
 	matrix := s.MatrixSpecial
 	slotDesk := &pb.SlotDesk{
@@ -112,7 +112,7 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	return slotDesk, nil
 }
 
-func (e *luckyDrawEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
+func (e *luckyDrawEngine) GetNextSiXiangGame(s *entity.SixiangMatchState) pb.SiXiangGame {
 	matrix := s.MatrixSpecial
 	trackFlipSameSymbol := make(map[pb.SiXiangSymbol]int)
 	for id, symbol := range matrix.List {

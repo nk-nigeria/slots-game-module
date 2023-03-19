@@ -1,4 +1,4 @@
-package engine
+package sixiangengine
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 func Test_dragonPearlEngine_NewGame(t *testing.T) {
 
 	type args struct {
-		matchState *entity.SlotsMatchState
+		matchState *entity.SixiangMatchState
 	}
 	matchState := entity.NewSlotsMathState(nil)
 	matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
@@ -32,7 +32,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *entity.SlotsMatchState
+		want *entity.SixiangMatchState
 	}{
 		// TODO: Add test cases.
 		{
@@ -133,11 +133,11 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 func Test_dragonPearlEngine_Finish(t *testing.T) {
 	type want struct {
 		slotDesk   *api.SlotDesk
-		matchState *entity.SlotsMatchState
+		matchState *entity.SixiangMatchState
 	}
 	type test struct {
 		name    string
-		args    *entity.SlotsMatchState
+		args    *entity.SixiangMatchState
 		want    want
 		wantErr bool
 	}

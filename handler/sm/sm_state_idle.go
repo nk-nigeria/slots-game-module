@@ -21,7 +21,7 @@ func NewIdleState(fn lib.FireFn) lib.StateHandler {
 
 func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
-	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
+	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
 	state.SetUpCountDown(0 * time.Second)
 	dispatcher := procPkg.GetDispatcher()
 	if dispatcher == nil {
@@ -45,7 +45,7 @@ func (s *StateIdle) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
-	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
+	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
 	if state.GetPresenceSize() > 0 {
 		s.Trigger(ctx, lib.TriggerStateFinishSuccess)
 		return nil

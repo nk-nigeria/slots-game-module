@@ -13,7 +13,7 @@ import (
 )
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
-	s := state.(*entity.SlotsMatchState)
+	s := state.(*entity.SixiangMatchState)
 	logger.Info("match join attempt, state=%v, meta=%v", s, metadata)
 
 	// check password
@@ -66,7 +66,7 @@ func (m *MatchHandler) MatchJoin(
 	tick int64,
 	state interface{},
 	presences []runtime.Presence) interface{} {
-	s := state.(*entity.SlotsMatchState)
+	s := state.(*entity.SixiangMatchState)
 	logger.Info("match join, state=%v, presences=%v", s, presences)
 
 	m.processor.ProcessPresencesJoin(ctx,
@@ -89,7 +89,7 @@ func (m *MatchHandler) MatchLeave(ctx context.Context,
 	state interface{},
 	presences []runtime.Presence,
 ) interface{} {
-	s := state.(*entity.SlotsMatchState)
+	s := state.(*entity.SixiangMatchState)
 
 	logger.Info("match leave, state=%v, presences=%v", s, presences)
 
@@ -114,7 +114,7 @@ func (m *MatchHandler) MatchLeave(ctx context.Context,
 }
 
 func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, messages []runtime.MatchData) interface{} {
-	s := state.(*entity.SlotsMatchState)
+	s := state.(*entity.SixiangMatchState)
 
 	err := m.machine.FireProcessEvent(lib.GetContextWithProcessorPackager(
 		lib.NewProcessorPackage(

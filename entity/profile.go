@@ -62,7 +62,7 @@ func GetProfileUser(ctx context.Context, nk runtime.NakamaModule, userID string)
 		return nil, err
 	}
 	if len(listProfile) == 0 {
-		return nil, errors.New("Profile not found")
+		return nil, errors.New("profile not found")
 	}
 	return listProfile[0], nil
 }

@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine"
+	sixiangengine "github.com/ciaolink-game-platform/cgb-slots-game-module/handler/sixiang_engine"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/ciaolink-game-platform/cgp-common/utilities"
@@ -28,26 +28,26 @@ type slotsEngine struct {
 func newEngine(game pb.SiXiangGame) lib.Engine {
 	switch game {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
-		return engine.NewNormalEngine()
+		return sixiangengine.NewNormalEngine()
 	case pb.SiXiangGame_SI_XIANG_GAME_BONUS:
-		return engine.NewBonusEngine(nil)
+		return sixiangengine.NewBonusEngine(nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL:
-		return engine.NewDragonPearlEngine(nil, nil)
+		return sixiangengine.NewDragonPearlEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW:
-		return engine.NewLuckyDrawEngine(nil, nil)
+		return sixiangengine.NewLuckyDrawEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK:
-		return engine.NewGoldPickEngine(nil, nil)
+		return sixiangengine.NewGoldPickEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY:
-		return engine.NewRapidPayEngine(nil, nil)
+		return sixiangengine.NewRapidPayEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS:
-		return engine.NewSixiangBonusEngine()
+		return sixiangengine.NewSixiangBonusEngine()
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
-		return engine.NewSixiangBonusInGameEngine(4)
+		return sixiangengine.NewSixiangBonusInGameEngine(4)
 	}
-	return engine.NewNormalEngine()
+	return sixiangengine.NewNormalEngine()
 }
 
 func NewSlotsEngine() lib.Engine {
@@ -67,7 +67,7 @@ func NewSlotsEngine() lib.Engine {
 }
 
 func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	engine, ok := e.engines[s.CurrentSiXiangGame]
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement new game "+s.CurrentSiXiangGame.String())
@@ -81,7 +81,7 @@ func (e *slotsEngine) Random(min, max int) int {
 }
 
 func (e *slotsEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	engine, ok := e.engines[s.CurrentSiXiangGame]
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement process game "+s.CurrentSiXiangGame.String())
@@ -90,7 +90,7 @@ func (e *slotsEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
+	s := matchState.(*entity.SixiangMatchState)
 	engine, ok := e.engines[s.CurrentSiXiangGame]
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement fisnish game "+s.CurrentSiXiangGame.String())
@@ -100,12 +100,11 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 
 func (e *slotsEngine) PrintMatrix(matrix entity.SlotMatrix) {
 	// matrix := matchState.GetMatrix()
-	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	matrix.ForEeach(func(idx, _, col int, symbol pb.SiXiangSymbol) {
 		if idx != 0 && col == 0 {
 			fmt.Println("")
 		}
 		fmt.Printf("%8d", symbol.Number())
-		return
 	})
 	fmt.Println("")
 }
