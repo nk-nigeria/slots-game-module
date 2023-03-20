@@ -9,7 +9,7 @@ import (
 var _ lib.Engine = &rapidPayEngine{}
 
 const (
-	defaultRapidPayGemSpin = 5
+	defaultRapidPayGemSpin = 4
 	defaultAddRatioMcb     = float64(0.1)
 )
 
@@ -94,6 +94,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 			ratio += float64(entity.ListSymbolRapidPay[sym].Value.Min)
 		}
 	}
+	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.GetBetInfo().Chips
 	slotDesk.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame

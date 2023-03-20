@@ -92,8 +92,8 @@ func NewMatrixGoldPick() SlotMatrix {
 func NewMatrixRapidPay() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, 0, RowsMatrixRapidPay*ColsMatrixRapidPay),
-		Cols:      RowsMatrixGoldPick,
-		Rows:      ColsMatrixGoldPick,
+		Cols:      ColsMatrixRapidPay,
+		Rows:      RowsMatrixRapidPay,
 		TrackFlip: map[int]bool{},
 	}
 	// x4 END

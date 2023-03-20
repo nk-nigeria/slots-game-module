@@ -378,7 +378,9 @@ func (p *processor) handlerRequestGetInfoTable(
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		matrix := s.GetMatrix()
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-	} else if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL {
+	} else if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL ||
+		s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW ||
+		s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK {
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 		for idx, symbol := range matrix.List {

@@ -68,9 +68,10 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 		}
 		symbolRandom = ShuffleSlice(arr)[e.randomIntFn(0, len(arr))]
 		spin.Symbol = symbolRandom
-		s.MatrixSpecial.List[idRandom] = symbolRandom
 	}
-	s.SpinSymbols = append(s.SpinSymbols, spin)
+	s.MatrixSpecial.Flip(idRandom)
+	s.MatrixSpecial.List[idRandom] = symbolRandom
+	s.SpinSymbols = []*pb.SpinSymbol{spin}
 	return s, nil
 }
 
@@ -91,6 +92,7 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 			slotDesk.Matrix.Lists[id] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		}
 	}
+	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.ChipsMcb = s.GetBetInfo().GetChips()
