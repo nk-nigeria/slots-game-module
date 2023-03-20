@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	sixiangengine "github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
+	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/ciaolink-game-platform/cgp-common/utilities"
@@ -28,26 +28,27 @@ type slotsEngine struct {
 func newEngine(game pb.SiXiangGame) lib.Engine {
 	switch game {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
-		return sixiangengine.NewNormalEngine()
+		return sixiang.NewNormalEngine()
 	case pb.SiXiangGame_SI_XIANG_GAME_BONUS:
-		return sixiangengine.NewBonusEngine(nil)
+		return sixiang.NewBonusEngine(nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL:
-		return sixiangengine.NewDragonPearlEngine(nil, nil)
+		return sixiang.NewDragonPearlEngine(nil, nil)
+
 	case pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW:
-		return sixiangengine.NewLuckyDrawEngine(nil, nil)
+		return sixiang.NewLuckyDrawEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK:
-		return sixiangengine.NewGoldPickEngine(nil, nil)
+		return sixiang.NewGoldPickEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY:
-		return sixiangengine.NewRapidPayEngine(nil, nil)
+		return sixiang.NewRapidPayEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS:
-		return sixiangengine.NewSixiangBonusEngine()
+		return sixiang.NewSixiangBonusEngine()
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
-		return sixiangengine.NewSixiangBonusInGameEngine(4)
+		return sixiang.NewSixiangBonusInGameEngine(4)
 	}
-	return sixiangengine.NewNormalEngine()
+	return sixiang.NewNormalEngine()
 }
 
 func NewSlotsEngine() lib.Engine {

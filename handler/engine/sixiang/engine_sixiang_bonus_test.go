@@ -1,4 +1,4 @@
-package sixiangengine
+package sixiang
 
 import (
 	"testing"

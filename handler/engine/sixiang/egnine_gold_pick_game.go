@@ -1,4 +1,4 @@
-package sixiangengine
+package sixiang
 
 import (
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
