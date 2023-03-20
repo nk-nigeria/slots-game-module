@@ -9,15 +9,15 @@ import (
 var _ lib.Engine = &tarzanEngine{}
 
 type tarzanEngine struct {
-	engines map[pb.SiXiangGame]lib.Engine
+	engines     map[pb.SiXiangGame]lib.Engine
 }
 
 func NewEngine() lib.Engine {
 	e := &tarzanEngine{
 		engines: make(map[pb.SiXiangGame]lib.Engine),
 	}
-	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_NORMAL] = NewNormal()
-	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewNormal()
+	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_NORMAL] = NewNormal(nil)
+	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewJungleTrease()
 	return e
 }
 
@@ -47,3 +47,5 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 	engine := e.engines[s.CurrentSiXiangGame]
 	return engine.Finish(matchState)
 }
+
+

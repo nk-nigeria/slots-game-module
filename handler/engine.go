@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	sixiangengine "github.com/ciaolink-game-platform/cgb-slots-game-module/handler/sixiang_engine"
+	sixiangengine "github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/ciaolink-game-platform/cgp-common/utilities"

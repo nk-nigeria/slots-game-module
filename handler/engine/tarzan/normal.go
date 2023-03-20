@@ -9,10 +9,18 @@ import (
 var _ lib.Engine = &normal{}
 
 type normal struct {
+	randomIntFn func(int, int) int
 }
 
-func NewNormal() lib.Engine {
-	return &normal{}
+func NewNormal(randomIntFn func(int, int) int) lib.Engine {
+	e := &normal{
+	}
+	if randomIntFn == nil {
+		e.randomIntFn=RandomInt 
+	} else {
+		e.randomIntFn = randomIntFn
+	}
+	return e
 }
 
 // Finish implements lib.Engine
@@ -31,8 +39,8 @@ func (*normal) Process(matchState interface{}) (interface{}, error) {
 }
 
 // Random implements lib.Engine
-func (*normal) Random(min int, max int) int {
-	panic("unimplemented")
+func (e *normal) Random(min int, max int) int {
+	return e.randomIntFn(min, max)
 }
 
 func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
@@ -60,4 +68,35 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 		}
 	})
 	return matrix
+}
+
+func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
+	swingMatrix := entity.SlotMatrix{
+		List: make([]pb.SiXiangSymbol, 0, matrix.Size),
+		Cols: matrix.Cols,
+		Rows: matrix.Rows,
+		Size: matrix.Size,
+	}
+	hasTarzanSymbol := false
+	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
+			hasTarzanSymbol = true
+		}
+	})
+	if !hasTarzanSymbol {
+		copy(swingMatrix.List, matrix.List)
+		return swingMatrix
+	}
+	swingMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		isMidSymbol := entity.TarzanMidSymbol[symbol]
+		if isMidSymbol {
+			swingMatrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
+		}
+	})
+	return swingMatrix
+}
+
+func (e *normal) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
+
+	return nil
 }
