@@ -203,8 +203,9 @@ func (e *normalEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 	idx := 0
 	for pair := entity.MapPaylineIdx.Oldest(); pair != nil; pair = pair.Next() {
 		payline := &pb.Payline{
-			Id: int32(idx),
+			// Id: int32(idx),
 		}
+		payline.Id = int32(pair.Key)
 		idx++
 		symbols := matrix.ListFromIndexs(pair.Value)
 		for _, val := range entity.ListSymbol {

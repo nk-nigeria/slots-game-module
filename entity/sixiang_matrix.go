@@ -8,6 +8,12 @@ const (
 	Row_3 = 2
 	Row_4 = 3
 	Row_5 = 4
+
+	Col_1 = 0
+	Col_2 = 1
+	Col_3 = 2
+	Col_4 = 3
+	Col_5 = 4
 )
 
 type SlotMatrix struct {
@@ -189,7 +195,7 @@ func (sm *SlotMatrix) ForEeach(fn func(idx, row, col int, symbol pb.SiXiangSymbo
 	}
 }
 
-func (sm *SlotMatrix) ForEeachLine(fn func(line int, symbols []pb.SiXiangSymbol)) {
+func (sm *SlotMatrix) ForEachLine(fn func(line int, symbols []pb.SiXiangSymbol)) {
 	list := make([]pb.SiXiangSymbol, 0)
 	sm.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if idx != 0 && col == 0 {
@@ -199,6 +205,17 @@ func (sm *SlotMatrix) ForEeachLine(fn func(line int, symbols []pb.SiXiangSymbol)
 		list = append(list, symbol)
 	})
 	fn(sm.Rows-1, list)
+}
+
+func (sm *SlotMatrix) ForEachCol(fn func(col int, symbols []pb.SiXiangSymbol)) {
+	for col := 0; col < sm.Cols; col++ {
+		ml := make([]pb.SiXiangSymbol, 0, sm.Rows)
+		for row := 0; row < sm.Rows; row++ {
+			idx := row*sm.Cols + col
+			ml = append(ml, sm.List[idx])
+		}
+		fn(col, ml)
+	}
 }
 
 func (sm *SlotMatrix) ListFromIndexs(indexs []int) []pb.SiXiangSymbol {
@@ -240,4 +257,25 @@ func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int,
 func (sm *SlotMatrix) Flip(idx int) pb.SiXiangSymbol {
 	sm.TrackFlip[idx] = true
 	return sm.List[idx]
+}
+
+func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {
+	if len(paylineIndex) == 0 || len(sm.List) == 0 {
+		return nil, false
+	}
+	firstSymbol := sm.List[paylineIndex[0]]
+	validPaylineIndex := make([]int, 0)
+	for _, idx := range paylineIndex {
+		sym := sm.List[idx]
+		if firstSymbol == sym || sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD || sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
+			validPaylineIndex = append(validPaylineIndex, idx)
+			continue
+		}
+		break
+
+	}
+	if len(validPaylineIndex) >= sm.Cols {
+		return validPaylineIndex, true
+	}
+	return nil, false
 }
