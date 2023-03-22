@@ -18,8 +18,8 @@ func Test_rapidPayEngine_NewGame(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(matchState.SpinSymbols))
 		assert.Equal(t, api.WinJackpot_WIN_JACKPOT_UNSPECIFIED, matchState.WinJp)
-		assert.Equal(t, 25, len(matchState.MatrixSpecial.List))
-		assert.Equal(t, int64(defaultRapidPayGemSpin), matchState.GemSpin)
+		assert.Equal(t, int(25), len(matchState.MatrixSpecial.List))
+		assert.Equal(t, int(defaultRapidPayGemSpin), matchState.GemSpin)
 	})
 
 }
@@ -31,7 +31,7 @@ func Test_rapidPayEngine_Process(t *testing.T) {
 	}
 
 	type want struct {
-		gemSpin   []int64
+		gemSpin   []int
 		trackFlip map[int]bool
 	}
 	type test struct {
@@ -58,7 +58,7 @@ func Test_rapidPayEngine_Process(t *testing.T) {
 			numProcess: 6,
 		}
 		want := want{
-			gemSpin:   []int64{4, 3, 2, 1, 0},
+			gemSpin:   []int{4, 3, 2, 1, 0},
 			trackFlip: map[int]bool{0: true, 5: true, 10: true, 15: true, 20: true},
 		}
 		test.want = want

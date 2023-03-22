@@ -9,7 +9,7 @@ import (
 var _ lib.Engine = &rapidPayEngine{}
 
 const (
-	defaultRapidPayGemSpin = 4
+	defaultRapidPayGemSpin = entity.Row_5 + 1
 	defaultAddRatioMcb     = float64(0.1)
 )
 
@@ -52,7 +52,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	if s.GemSpin <= 0 {
 		return s, ErrorSpinReadMax
 	}
-	indexStart := s.GemSpin * s.MatrixSpecial.Cols
+	indexStart := (s.GemSpin - 1) * s.MatrixSpecial.Cols
 	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]
 	var idRandom int
 	var symRandom pb.SiXiangSymbol

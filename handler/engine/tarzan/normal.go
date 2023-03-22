@@ -9,11 +9,18 @@ import (
 var _ lib.Engine = &normal{}
 
 type normal struct {
-	randomIntFn func(int, int) int
+	allowSpinTarzanSymbol   bool
+	allowSpinFreeSpinSymbol bool
+	allowSpinLetterSymbol   bool
+	randomIntFn             func(int, int) int
 }
 
 func NewNormal(randomIntFn func(int, int) int) lib.Engine {
-	e := &normal{}
+	e := &normal{
+		allowSpinTarzanSymbol:   true,
+		allowSpinLetterSymbol:   true,
+		allowSpinFreeSpinSymbol: true,
+	}
 	if randomIntFn == nil {
 		e.randomIntFn = RandomInt
 	} else {
@@ -27,7 +34,6 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.TarzanMatchState)
 	s.Matrix = entity.NewTarzanMatrix()
 	s.Matrix = e.SpinMatrix(s.Matrix)
-	s.FreeSpinSymbolIndexs = make([]int, 0)
 	return s, nil
 }
 
@@ -36,13 +42,13 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.TarzanMatchState)
 	s.Matrix = e.SpinMatrix(s.Matrix)
 	s.SwingMatrix = e.TarzanSwing(s.Matrix)
-	s.FreeSpinSymbolIndexs = make([]int, 0)
+	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
 			s.AddCollectionSymbol(symbol)
 		}
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
-			s.FreeSpinSymbolIndexs = append(s.FreeSpinSymbolIndexs, idx)
+			s.TrackIndexFreeSpinSymbol[idx] = true
 		}
 	})
 	return matchState, nil
@@ -54,18 +60,19 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk := &pb.SlotDesk{}
 	slotDesk.Paylines = e.Paylines(s.SwingMatrix)
 	slotDesk.ChipsMcb = s.Bet.Chips
-	ratio := len(slotDesk.Paylines)
+	lineWin := len(slotDesk.Paylines)
 	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
-			ratio += 500
+			lineWin += 500
 		}
 	})
 
-	slotDesk.ChipsWin = int64(ratio) * slotDesk.ChipsMcb
-
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
+	slotDesk.ChipsWin = int64(lineWin/100) * slotDesk.ChipsMcb
+	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
+	slotDesk.IsFinishGame = true
 	return nil, nil
 }
 
@@ -85,19 +92,19 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 			switch randSymbol {
 			// Tarzan symbol chỉ xuất hiện ở row 5 và chỉ xuất hiện 1 lần
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
-				if col != entity.Row_5 || tarzanSymbolAppear {
+				if !e.allowSpinTarzanSymbol || col != entity.Row_5 || tarzanSymbolAppear {
 					continue loop
 				}
 			// chỉ xuất hiện free spin ở row 3, 4, 5
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN:
-				if row < entity.Row_3 {
+				if !e.allowSpinFreeSpinSymbol || row < entity.Row_3 {
 					continue loop
 				}
 			}
 			// Letter symbol only one per spin
 			if entity.TarzanLetterSymbol[randSymbol] {
-				if letterSymbolAppear {
-					continue
+				if !e.allowSpinLetterSymbol || letterSymbolAppear {
+					continue loop
 				}
 				letterSymbolAppear = true
 			}
@@ -110,7 +117,7 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 
 func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
 	swingMatrix := entity.SlotMatrix{
-		List: make([]pb.SiXiangSymbol, 0, matrix.Size),
+		List: make([]pb.SiXiangSymbol, matrix.Size),
 		Cols: matrix.Cols,
 		Rows: matrix.Rows,
 		Size: matrix.Size,
@@ -132,11 +139,6 @@ func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
 		}
 	})
 	return swingMatrix
-}
-
-func (e *normal) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
-
-	return nil
 }
 
 func (e *normal) GetNextSiXiangGame(s *entity.TarzanMatchState) pb.SiXiangGame {
@@ -170,10 +172,14 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 		}
 		payline := &pb.Payline{
 			// Id: int32(idx),
+			Indexs: make([]int32, 0),
 		}
 		payline.Id = int32(pair.Key)
 		payline.Symbol = matrix.List[paylineIndexs[0]]
 		payline.NumOccur = int32(len(paylineIndexs))
+		for _, val := range paylineIndexs {
+			payline.Indexs = append(payline.Indexs, int32(val))
+		}
 		paylines = append(paylines, payline)
 	}
 	return paylines

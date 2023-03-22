@@ -9,7 +9,7 @@ import (
 var _ lib.Engine = &tarzanEngine{}
 
 type tarzanEngine struct {
-	engines     map[pb.SiXiangGame]lib.Engine
+	engines map[pb.SiXiangGame]lib.Engine
 }
 
 func NewEngine() lib.Engine {
@@ -17,7 +17,7 @@ func NewEngine() lib.Engine {
 		engines: make(map[pb.SiXiangGame]lib.Engine),
 	}
 	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_NORMAL] = NewNormal(nil)
-	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewJungleTrease()
+	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewJungleTrease(nil)
 	return e
 }
 
@@ -33,6 +33,8 @@ func (e *tarzanEngine) NewGame(matchState interface{}) (interface{}, error) {
 func (e *tarzanEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.TarzanMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
+	s.PerlGreeForest++
+	s.ChipsBonus += s.Bet.GetChips() / 2
 	return engine.Process(matchState)
 }
 
@@ -45,7 +47,16 @@ func (e *tarzanEngine) Random(min int, max int) int {
 func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.TarzanMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
-	return engine.Finish(matchState)
+	result, err := engine.Finish(matchState)
+	if err != nil {
+		return result, err
+	}
+	if s.PerlGreeForest >= 100 {
+		slotDesk := result.(*pb.SlotDesk)
+		slotDesk.UpdateChipsBonus = true
+		slotDesk.ChipsBonus = s.ChipsBonus
+		s.ChipsBonus = 0
+		s.PerlGreeForest = 0
+	}
+	return result, err
 }
-
-

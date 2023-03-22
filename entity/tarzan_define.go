@@ -66,6 +66,37 @@ var TarzanLetterSymbol = map[pb.SiXiangSymbol]bool{
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_E: true,
 }
 
+var TarzanJungleTreasureSymbol = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX2: {
+		NumOccur: 2,
+		Value:    Range{Min: 2, Max: 2},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3: {
+		NumOccur: 2,
+		Value:    Range{Min: 3, Max: 3},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_1: {
+		NumOccur: 3,
+		Value:    Range{Min: 10, Max: 30},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_2: {
+		NumOccur: 3,
+		Value:    Range{Min: 50, Max: 120},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_3: {
+		NumOccur: 2,
+		Value:    Range{Min: 200, Max: 300},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_4: {
+		NumOccur: 2,
+		Value:    Range{Min: 500, Max: 700},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_5: {
+		NumOccur: 1,
+		Value:    Range{Min: 1000, Max: 1200},
+	},
+}
+
 var PaylineTarzanMapping = orderedmap.New[int, []int]()
 
 func init() {
@@ -273,11 +304,26 @@ func init() {
 
 func NewTarzanMatrix() SlotMatrix {
 	m := SlotMatrix{
-		List: make([]pb.SiXiangSymbol, 0, ColsTarzanMatrix*RowsTarzanMatrix),
+		List: make([]pb.SiXiangSymbol, ColsTarzanMatrix*RowsTarzanMatrix),
 		Cols: ColsTarzanMatrix,
 		Rows: RowsTarzanMatrix,
 		Size: RowsTarzanMatrix * ColsTarzanMatrix,
 	}
 
+	return m
+}
+
+func NewTarzanJungleTreasureMatrix() SlotMatrix {
+	m := SlotMatrix{
+		Cols: ColsTarzanMatrix,
+		Rows: RowsTarzanMatrix,
+	}
+	m.Size = m.Cols * m.Rows
+	m.List = make([]pb.SiXiangSymbol, 0, m.Size)
+	for sym, val := range TarzanJungleTreasureSymbol {
+		for i := 0; i < val.NumOccur; i++ {
+			m.List = append(m.List, sym)
+		}
+	}
 	return m
 }

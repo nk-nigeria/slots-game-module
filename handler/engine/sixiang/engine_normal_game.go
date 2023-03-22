@@ -200,13 +200,13 @@ func (e *normalEngine) CheckJpMatrix(matrix entity.SlotMatrix) bool {
 // return payline, and check jackpot if win
 func (e *normalEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 	paylines := make([]*pb.Payline, 0)
-	idx := 0
+	// idx := 0
 	for pair := entity.MapPaylineIdx.Oldest(); pair != nil; pair = pair.Next() {
 		payline := &pb.Payline{
 			// Id: int32(idx),
 		}
 		payline.Id = int32(pair.Key)
-		idx++
+		// idx++
 		symbols := matrix.ListFromIndexs(pair.Value)
 		for _, val := range entity.ListSymbol {
 			numOccur := 0
@@ -270,7 +270,7 @@ func (e *normalEngine) TotalRateToTypeBigWin(totalRate float64) pb.BigWin {
 func (e *normalEngine) GetNextSiXiangGame(s *entity.SixiangMatchState) pb.SiXiangGame {
 	matrix := s.GetMatrix()
 	numScatter := 0
-	matrix.ForEeachLine(func(line int, symbols []pb.SiXiangSymbol) {
+	matrix.ForEachLine(func(line int, symbols []pb.SiXiangSymbol) {
 		if !RellsAllowScatter[line] {
 			return
 		}

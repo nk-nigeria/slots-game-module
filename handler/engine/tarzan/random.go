@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	ErrorSpinReadMax       = errors.New("spin reach max")
+	ErrorSpinReachMaximum  = errors.New("spin reach max")
 	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
 	ErrorNoGameEngine      = errors.New("no game engine")
 )

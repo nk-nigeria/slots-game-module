@@ -29,7 +29,7 @@ func TestSlotMatrix_ForEeachLine(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			sm := tt.fields.Sm
 			lastLine := 0
-			sm.ForEeachLine(func(line int, symbols []pb.SiXiangSymbol) {
+			sm.ForEachLine(func(line int, symbols []pb.SiXiangSymbol) {
 				assert.Equal(t, sm.Cols, len(symbols), fmt.Sprintf("in line %d", line))
 				lastLine = line
 			})

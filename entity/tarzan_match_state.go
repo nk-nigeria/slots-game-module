@@ -15,11 +15,31 @@ type TarzanMatchState struct {
 	Matrix        SlotMatrix
 	SwingMatrix   SlotMatrix
 	MatrixSpecial SlotMatrix
+	SpinSymbols   []*pb.SpinSymbol
 
 	Bet      *pb.InfoBet
 	Paylines []*pb.Payline
 	// List idx of free symbol index
-	FreeSpinSymbolIndexs []int
+	TrackIndexFreeSpinSymbol     map[int]bool
+	ChipWinByGame                map[pb.SiXiangGame]int64
+	CountLineCrossFreeSpinSymbol int
+	GemSpin                      int // gem using for spin in freex9
+	// ngoc rung xanh
+	PerlGreeForest int
+	// chip tich luy
+	ChipsAccumulation int64
+}
+
+func NewTarzanMatchState(label *lib.MatchLabel) *TarzanMatchState {
+	m := TarzanMatchState{
+		MatchState: lib.NewMathState(label, NewMyPrecense),
+		Bet: &pb.InfoBet{
+			Chips: 0,
+		},
+		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+	}
+	return &m
 }
 
 func (m *TarzanMatchState) AddCollectionSymbol(sym pb.SiXiangSymbol) {
