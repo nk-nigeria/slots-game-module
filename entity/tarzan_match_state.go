@@ -25,9 +25,9 @@ type TarzanMatchState struct {
 	CountLineCrossFreeSpinSymbol int
 	GemSpin                      int // gem using for spin in freex9
 	// ngoc rung xanh
-	PerlGreeForest int
+	PerlGreenForest int
 	// chip tich luy
-	ChipsAccumulation int64
+	ChipsBonus int64
 }
 
 func NewTarzanMatchState(label *lib.MatchLabel) *TarzanMatchState {

@@ -33,7 +33,7 @@ func (e *tarzanEngine) NewGame(matchState interface{}) (interface{}, error) {
 func (e *tarzanEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.TarzanMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
-	s.PerlGreeForest++
+	s.PerlGreenForest++
 	s.ChipsBonus += s.Bet.GetChips() / 2
 	return engine.Process(matchState)
 }
@@ -51,12 +51,12 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 	if err != nil {
 		return result, err
 	}
-	if s.PerlGreeForest >= 100 {
+	if s.PerlGreenForest >= 100 {
 		slotDesk := result.(*pb.SlotDesk)
 		slotDesk.UpdateChipsBonus = true
 		slotDesk.ChipsBonus = s.ChipsBonus
 		s.ChipsBonus = 0
-		s.PerlGreeForest = 0
+		s.PerlGreenForest = 0
 	}
 	return result, err
 }
