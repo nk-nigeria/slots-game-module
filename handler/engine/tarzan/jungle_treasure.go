@@ -26,7 +26,7 @@ func NewJungleTrease(randomIntFn func(int, int) int) lib.Engine {
 
 // NewGame implements lib.Engine
 func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	s.MatrixSpecial = entity.NewTarzanJungleTreasureMatrix()
 	s.MatrixSpecial = ShuffleMatrix(s.MatrixSpecial)
 	s.SpinSymbols = nil
@@ -38,7 +38,7 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 
 // Process implements lib.Engine
 func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	if s.GemSpin == 0 {
 		return s, ErrorSpinReachMaximum
 	}
@@ -73,7 +73,7 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 
 // Finish implements lib.Engine
 func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	lineWin := 0
 	for _, spin := range s.SpinSymbols {
 		switch spin.Symbol {
@@ -87,12 +87,12 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 		}
 	}
 	if s.GemSpin == 0 {
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_NORMAL
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
 	slotDesk := &pb.SlotDesk{
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
-		ChipsMcb:           s.Bet.GetChips(),
+		ChipsMcb:           s.Bet().GetChips(),
 		IsFinishGame:       s.GemSpin == 0,
 	}
 	chipsWin := int64(lineWin/100) * slotDesk.ChipsMcb

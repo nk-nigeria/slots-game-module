@@ -13,7 +13,7 @@ import (
 func Test_dragonPearlEngine_NewGame(t *testing.T) {
 
 	type args struct {
-		matchState *entity.SixiangMatchState
+		matchState *entity.SlotsMatchState
 	}
 	matchState := entity.NewSlotsMathState(nil)
 	matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
@@ -25,14 +25,14 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 		for k := range entity.ListEyeSiXiang {
 			list = append(list, k)
 		}
-		matchStateExpect.EyeSiXiangRemain = ShuffleSlice(list)
+		matchStateExpect.CollectionSymbolRemain = ShuffleSlice(list)
 	}
-	matchStateExpect.EyeSiXiangSpined = make(map[int][]api.SiXiangSymbol, 0)
+	matchStateExpect.CollectionSymbol = make(map[int]map[api.SiXiangSymbol]int)
 	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
 	tests := []struct {
 		name string
 		args args
-		want *entity.SixiangMatchState
+		want *entity.SlotsMatchState
 	}{
 		// TODO: Add test cases.
 		{
@@ -51,8 +51,8 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want.CurrentSiXiangGame, tt.args.matchState.CurrentSiXiangGame)
 			assert.Equal(t, tt.want.GemSpin, tt.args.matchState.GemSpin)
-			assert.Equal(t, tt.want.EyeSiXiangRemain, tt.args.matchState.EyeSiXiangRemain)
-			assert.Equal(t, tt.want.EyeSiXiangSpined[int(tt.args.matchState.GetBetInfo().Chips)], tt.args.matchState.EyeSiXiangSpined[int(tt.args.matchState.GetBetInfo().GetChips())])
+			assert.Equal(t, tt.want.CollectionSymbolRemain, tt.args.matchState.CollectionSymbolRemain)
+			assert.Equal(t, tt.want.CollectionSymbol[int(tt.args.matchState.Bet().Chips)], tt.args.matchState.CollectionSymbol[int(tt.args.matchState.Bet().GetChips())])
 			trackSym := make(map[api.SiXiangSymbol]int)
 			trackSymExpect := make(map[api.SiXiangSymbol]int)
 			for _, sym := range tt.want.MatrixSpecial.List {
@@ -133,11 +133,11 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 func Test_dragonPearlEngine_Finish(t *testing.T) {
 	type want struct {
 		slotDesk   *api.SlotDesk
-		matchState *entity.SixiangMatchState
+		matchState *entity.SlotsMatchState
 	}
 	type test struct {
 		name    string
-		args    *entity.SixiangMatchState
+		args    *entity.SlotsMatchState
 		want    want
 		wantErr bool
 	}
@@ -178,10 +178,10 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 				CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
 				NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_NORMAL,
 				IsFinishGame:       true,
-				ChipsMcb:           matchState.GetBetInfo().GetChips(),
+				ChipsMcb:           matchState.Bet().GetChips(),
 			}
 			ratioBonus := float64(1)
-			ml := matchState.EyeSiXiangSpined[int(matchState.GetBetInfo().GetChips())]
+			ml := matchState.CollectionSymbolToSlice(int(matchState.Bet().Chips))
 			for _, eyeSym := range ml {
 				r := entity.ListEyeSiXiang[eyeSym].Value.Min
 				if float64(r) > ratioBonus {

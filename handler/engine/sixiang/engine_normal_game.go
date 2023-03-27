@@ -54,7 +54,7 @@ func NewNormalEngine() lib.Engine {
 }
 
 func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewSiXiangMatrixNormal()
 	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
@@ -66,16 +66,16 @@ func (e *normalEngine) Random(min, max int) int {
 }
 
 func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
-	matrix := e.SpinMatrix(s.GetMatrix())
-	if s.GetBetInfo().GetReqSpecGame() != 0 {
+	s := matchState.(*entity.SlotsMatchState)
+	matrix := e.SpinMatrix(s.Matrix)
+	if s.Bet().GetReqSpecGame() != 0 {
 		matrix.List[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 		matrix.List[2] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 		matrix.List[4] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 	}
 	s.SetMatrix(matrix)
 	spreadMatrix := e.SpreadWildInMatrix(matrix)
-	s.SetSpreadMMatrix(spreadMatrix)
+	s.SetWildMatrix(spreadMatrix)
 	// logic
 	if e.CheckJpMatrix(spreadMatrix) {
 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
@@ -86,9 +86,9 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 		})
 		s.SetPaylines(paylinesFilter)
 	}
-	chipsMcb := s.GetBetInfo().Chips
+	chipsMcb := s.Bet().Chips
 
-	for _, payline := range s.GetPaylines() {
+	for _, payline := range s.Paylines() {
 		payline.Rate = e.RatioPayline(payline)
 		payline.Chips = int64(payline.Rate * float64(chipsMcb))
 	}
@@ -96,26 +96,26 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
 	// set matrix spin
 	{
-		sm := s.GetMatrix()
+		sm := s.Matrix
 		slotDesk.Matrix = sm.ToPbSlotMatrix()
 	}
-	slotDesk.ChipsMcb = s.GetBetInfo().GetChips()
+	slotDesk.ChipsMcb = s.Bet().GetChips()
 	// set matrix spread matrix wild symbol
 	{
-		sm := s.GetSpreadMatrix()
+		sm := s.WildMatrix
 		slotDesk.SpreadMatrix = sm.ToPbSlotMatrix()
 	}
 	// add payline result
 	if s.WinJp == pb.WinJackpot_WIN_JACKPOT_GRAND {
-		slotDesk.ChipsWin = int64(s.WinJp) * s.GetBetInfo().Chips
+		slotDesk.ChipsWin = int64(s.WinJp) * s.Bet().Chips
 		slotDesk.BigWin = pb.BigWin_BIG_WIN_MEGA
 	} else {
 		totalRate := float64(0)
-		slotDesk.Paylines = s.GetPaylines()
+		slotDesk.Paylines = s.Paylines()
 		for _, payline := range slotDesk.Paylines {
 			slotDesk.ChipsWin += payline.GetChips()
 			totalRate += payline.Rate
@@ -267,8 +267,8 @@ func (e *normalEngine) TotalRateToTypeBigWin(totalRate float64) pb.BigWin {
 	return bigWin
 }
 
-func (e *normalEngine) GetNextSiXiangGame(s *entity.SixiangMatchState) pb.SiXiangGame {
-	matrix := s.GetMatrix()
+func (e *normalEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
+	matrix := s.Matrix
 	numScatter := 0
 	matrix.ForEachLine(func(line int, symbols []pb.SiXiangSymbol) {
 		if !RellsAllowScatter[line] {

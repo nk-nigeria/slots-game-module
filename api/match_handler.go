@@ -7,6 +7,8 @@ import (
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler"
+	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
+	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/tarzan"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/sm"
 
 	"github.com/ciaolink-game-platform/cgp-common/lib"
@@ -27,19 +29,30 @@ type MatchHandler struct {
 
 func (m *MatchHandler) MatchSignal(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, data string) (interface{}, string) {
 	//panic("implement me")
-	s := state.(*entity.SixiangMatchState)
-	return s, ""
+	return state, ""
 }
 
 func NewMatchHandler(
+	moduleName string,
 	marshaler *protojson.MarshalOptions,
 	unmarshaler *protojson.UnmarshalOptions,
 ) *MatchHandler {
-	return &MatchHandler{
-		processor: handler.NewMatchProcessor(marshaler, unmarshaler,
-			handler.NewSlotsEngine()),
-		machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
+	var matchHandler *MatchHandler
+	switch moduleName {
+	case entity.SixiangGameName:
+		matchHandler = &MatchHandler{
+			processor: handler.NewMatchProcessor(marshaler, unmarshaler,
+				sixiang.NewEngine()),
+			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
+		}
+	case entity.TarzanGameName:
+		matchHandler = &MatchHandler{
+			processor: handler.NewMatchProcessor(marshaler, unmarshaler,
+				tarzan.NewEngine()),
+			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
+		}
 	}
+	return matchHandler
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
@@ -53,6 +66,11 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	name, ok := params["name"].(string)
 	if !ok {
 		logger.Warn("invalid match init parameter \"name\"")
+		//return nil, 0, ""
+	}
+	code, ok := params["code"].(string)
+	if !ok {
+		logger.Warn("invalid match init parameter \"code\"")
 		//return nil, 0, ""
 	}
 
@@ -72,7 +90,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	label := &lib.MatchLabel{
 		Open:     open,
 		Bet:      bet,
-		Code:     entity.ModuleName,
+		Code:     code,
 		Name:     name,
 		Password: password,
 		MaxSize:  entity.MaxPresences,
@@ -85,8 +103,16 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	}
 
 	logger.Info("match init label= %s", string(labelJSON))
-
-	matchState := entity.NewSlotsMathState(label)
+	var matchState interface{}
+	switch label.Code {
+	case entity.SixiangGameName:
+		matchState = entity.NewSlotsMathState(label)
+	case entity.TarzanGameName:
+		matchState = entity.NewSlotsMathState(label)
+	}
+	if matchState == nil {
+		return nil, tickRate, string(labelJSON)
+	}
 
 	procPkg := lib.NewProcessorPackage(matchState, m.processor, logger, nil, nil, nil, nil, nil)
 	m.machine.TriggerIdle(lib.GetContextWithProcessorPackager(procPkg))

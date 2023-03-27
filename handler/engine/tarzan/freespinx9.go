@@ -1,6 +1,8 @@
 package tarzan
 
 import (
+	"math"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -15,9 +17,10 @@ type freespinx9 struct {
 func NewFreeSpinX9(randomIntFn func(int, int) int) lib.Engine {
 	e := NewNormal(randomIntFn)
 	engine := e.(*normal)
-	engine.allowSpinLetterSymbol = false
-	engine.allowSpinFreeSpinSymbol = false
-	engine.allowSpinTarzanSymbol = false
+	engine.maxDropLetterSymbol = 0
+	engine.maxDropFreeSpin = math.MaxInt
+	engine.maxDropTarzanSymbol = 1
+	engine.allowDropFreeSpinx9 = false
 	freespinx9Engine := &freespinx9{
 		normal: *engine,
 	}
@@ -26,7 +29,7 @@ func NewFreeSpinX9(randomIntFn func(int, int) int) lib.Engine {
 
 // NewGame implements lib.Engine
 func (*freespinx9) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
 	s.CountLineCrossFreeSpinSymbol = 0
 	s.GemSpin = 9
@@ -34,7 +37,7 @@ func (*freespinx9) NewGame(matchState interface{}) (interface{}, error) {
 }
 
 func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	if s.GemSpin <= 0 {
 		return nil, ErrorSpinReachMaximum
 	}
@@ -45,13 +48,15 @@ func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
 
 // Finish implements lib.Engine
 func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	prevChipWin := s.ChipWinByGame[s.CurrentSiXiangGame]
+	prevLineWin := s.LineWinByGame[s.CurrentSiXiangGame]
 	result, err := e.normal.Finish(matchState)
 	if err != nil {
 		return result, err
 	}
-	s := matchState.(*entity.TarzanMatchState)
 	// check if payline pass freespin symbol
-	for _, payline := range s.Paylines {
+	for _, payline := range s.Paylines() {
 		num := 0
 		for _, val := range payline.Indexs {
 			if s.TrackIndexFreeSpinSymbol[int(val)] {
@@ -62,8 +67,9 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 			s.CountLineCrossFreeSpinSymbol++
 		}
 	}
+	s.ChipWinByGame[s.CurrentSiXiangGame] += prevChipWin
+	s.LineWinByGame[s.CurrentSiXiangGame] += prevLineWin
 	slotDesk := result.(*pb.SlotDesk)
-	s.ChipWinByGame[s.CurrentSiXiangGame] += slotDesk.ChipsWin
 	// Finish when gem spin = 0
 	slotDesk.IsFinishGame = s.GemSpin <= 0
 	// tiền thưởng = (tổng số tiền thắng trong 9 Freespin) x (hệ số nhân bonus ở trên)

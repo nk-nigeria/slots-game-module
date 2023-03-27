@@ -26,7 +26,7 @@ func Test_rapidPayEngine_NewGame(t *testing.T) {
 
 func Test_rapidPayEngine_Process(t *testing.T) {
 	type args struct {
-		s          *entity.SixiangMatchState
+		s          *entity.SlotsMatchState
 		numProcess int
 	}
 
@@ -85,7 +85,7 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 
 	type test struct {
 		name    string
-		args    *entity.SixiangMatchState
+		args    *entity.SlotsMatchState
 		want    *api.SlotDesk
 		wantErr bool
 	}
@@ -119,11 +119,11 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 		s.MatrixSpecial.Flip(idFlip)
 		s.SpinSymbols = []*api.SpinSymbol{{Symbol: sym}}
 		slotDesk := &api.SlotDesk{
-			ChipsMcb:           s.GetBetInfo().Chips,
+			ChipsMcb:           s.Bet().Chips,
 			CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
 			NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
 		}
-		slotDesk.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.GetBetInfo().Chips))
+		slotDesk.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.Bet().Chips))
 
 		test := test{
 			name: "Test_rapidPayEngine_Finish" + sym.String(),
@@ -142,11 +142,11 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 		s.MatrixSpecial.TrackFlip[18] = true
 		s.SpinSymbols = []*api.SpinSymbol{{Symbol: sym}}
 		slotDesk := &api.SlotDesk{
-			ChipsMcb:           s.GetBetInfo().Chips,
+			ChipsMcb:           s.Bet().Chips,
 			CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
 			NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		}
-		slotDesk.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.GetBetInfo().Chips))
+		slotDesk.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.Bet().Chips))
 
 		test := test{
 			name: "Test_rapidPayEngine_Finish" + sym.String(),

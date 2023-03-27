@@ -34,7 +34,7 @@ func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(mi
 }
 
 func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixRapidPay()
 	s.MatrixSpecial = matrix
 	s.SpinSymbols = []*pb.SpinSymbol{}
@@ -48,7 +48,7 @@ func (e *rapidPayEngine) Random(min, max int) int {
 }
 
 func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	if s.GemSpin <= 0 {
 		return s, ErrorSpinReadMax
 	}
@@ -76,7 +76,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
 	if len(s.SpinSymbols) == 0 {
 		return slotDesk, ErrorMissingSpinSymbol
@@ -95,7 +95,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 		}
 	}
 	slotDesk.SpinSymbols = s.SpinSymbols
-	slotDesk.ChipsMcb = s.GetBetInfo().Chips
+	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame

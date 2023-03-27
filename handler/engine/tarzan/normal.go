@@ -1,6 +1,8 @@
 package tarzan
 
 import (
+	"math"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -9,17 +11,19 @@ import (
 var _ lib.Engine = &normal{}
 
 type normal struct {
-	allowSpinTarzanSymbol   bool
-	allowSpinFreeSpinSymbol bool
-	allowSpinLetterSymbol   bool
-	randomIntFn             func(int, int) int
+	maxDropTarzanSymbol int
+	maxDropFreeSpin     int
+	allowDropFreeSpinx9 bool
+	maxDropLetterSymbol int
+	randomIntFn         func(int, int) int
 }
 
 func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 	e := &normal{
-		allowSpinTarzanSymbol:   true,
-		allowSpinLetterSymbol:   true,
-		allowSpinFreeSpinSymbol: true,
+		maxDropTarzanSymbol: 1,
+		maxDropLetterSymbol: 1,
+		maxDropFreeSpin:     math.MaxInt,
+		allowDropFreeSpinx9: true,
 	}
 	if randomIntFn == nil {
 		e.randomIntFn = RandomInt
@@ -31,21 +35,24 @@ func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 
 // NewGame implements lib.Engine
 func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
-	s.Matrix = entity.NewTarzanMatrix()
-	s.Matrix = e.SpinMatrix(s.Matrix)
+	s := matchState.(*entity.SlotsMatchState)
+	matrix := entity.NewTarzanMatrix()
+	s.SetMatrix(e.SpinMatrix(matrix))
 	return s, nil
 }
 
 // Process implements lib.Engine
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
-	s.Matrix = e.SpinMatrix(s.Matrix)
-	s.SwingMatrix = e.TarzanSwing(s.Matrix)
+	s := matchState.(*entity.SlotsMatchState)
+	matrix := s.Matrix
+	matrix = e.SpinMatrix(matrix)
+	s.SetMatrix(matrix)
+	s.SetWildMatrix(e.TarzanSwing(matrix))
 	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
-	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+
+	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
-			s.AddCollectionSymbol(symbol)
+			s.AddCollectionSymbol(0, symbol)
 		}
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
 			s.TrackIndexFreeSpinSymbol[idx] = true
@@ -56,24 +63,30 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 
 // Finish implements lib.Engine
 func (e *normal) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.TarzanMatchState)
+	s := matchState.(*entity.SlotsMatchState)
+	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
+	s.LineWinByGame[s.CurrentSiXiangGame] = 0
 	slotDesk := &pb.SlotDesk{}
-	slotDesk.Paylines = e.Paylines(s.SwingMatrix)
-	slotDesk.ChipsMcb = s.Bet.Chips
+	slotDesk.Paylines = e.Paylines(s.WildMatrix)
+	slotDesk.ChipsMcb = s.Bet().Chips
 	lineWin := len(slotDesk.Paylines)
-	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		if entity.TarzanLetterSymbol[symbol] {
+	matrix := s.Matrix
+	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
 			lineWin += 500
 		}
 	})
-
+	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin/100) * slotDesk.ChipsMcb
+	s.LineWinByGame[s.CurrentSiXiangGame] = lineWin
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
-	slotDesk.ChipsWin = int64(lineWin/100) * slotDesk.ChipsMcb
+	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
+	slotDesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+	slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
 	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true
-	return nil, nil
+	return slotDesk, nil
 }
 
 // Random implements lib.Engine
@@ -82,8 +95,9 @@ func (e *normal) Random(min int, max int) int {
 }
 
 func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
-	tarzanSymbolAppear := false
-	letterSymbolAppear := false
+	numTarzanSymbolSpin := 0
+	numLetterSymbolSpin := 0
+	numFreeSpinSymbolSpin := 0
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 	loop:
 		for {
@@ -92,21 +106,28 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 			switch randSymbol {
 			// Tarzan symbol chỉ xuất hiện ở row 5 và chỉ xuất hiện 1 lần
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
-				if !e.allowSpinTarzanSymbol || col != entity.Row_5 || tarzanSymbolAppear {
+				if col != entity.Row_5 || numTarzanSymbolSpin >= e.maxDropTarzanSymbol {
 					continue loop
 				}
+				numTarzanSymbolSpin++
 			// chỉ xuất hiện free spin ở row 3, 4, 5
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN:
-				if !e.allowSpinFreeSpinSymbol || row < entity.Row_3 {
+				if row < entity.Row_3 || numFreeSpinSymbolSpin >= e.maxDropLetterSymbol {
 					continue loop
 				}
+				// kiểm tra điều kiện cho phép ra freespin symbol
+				// nhưng không cho phép ra freespinx9 game
+				if !e.allowDropFreeSpinx9 && e.countFreeSpinSymbolByCol(matrix) >= 2 {
+					continue loop
+				}
+				numFreeSpinSymbolSpin++
 			}
 			// Letter symbol only one per spin
 			if entity.TarzanLetterSymbol[randSymbol] {
-				if !e.allowSpinLetterSymbol || letterSymbolAppear {
+				if numLetterSymbolSpin >= e.maxDropLetterSymbol {
 					continue loop
 				}
-				letterSymbolAppear = true
+				numLetterSymbolSpin++
 			}
 			matrix.List[idx] = randSymbol
 			break
@@ -122,6 +143,7 @@ func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
 		Rows: matrix.Rows,
 		Size: matrix.Size,
 	}
+	copy(swingMatrix.List, matrix.List)
 	hasTarzanSymbol := false
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
@@ -129,7 +151,6 @@ func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
 		}
 	})
 	if !hasTarzanSymbol {
-		copy(swingMatrix.List, matrix.List)
 		return swingMatrix
 	}
 	swingMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -141,12 +162,13 @@ func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
 	return swingMatrix
 }
 
-func (e *normal) GetNextSiXiangGame(s *entity.TarzanMatchState) pb.SiXiangGame {
-	if s.SizeCollectionSymbol() == len(entity.TarzanLetterSymbol) {
+func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
+	if s.SizeCollectionSymbol(0) == len(entity.TarzanLetterSymbol) {
 		return pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 	}
+	matrix := s.Matrix
 	nummFreeSpinSymbolPerCol := 0
-	s.Matrix.ForEachCol(func(col int, symbols []pb.SiXiangSymbol) {
+	matrix.ForEachCol(func(col int, symbols []pb.SiXiangSymbol) {
 		if col < entity.Col_3 {
 			return
 		}
@@ -160,7 +182,7 @@ func (e *normal) GetNextSiXiangGame(s *entity.TarzanMatchState) pb.SiXiangGame {
 	if nummFreeSpinSymbolPerCol >= 3 {
 		return pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9
 	}
-	return pb.SiXiangGame_SI_XIANG_GAME_TARZAN_NORMAL
+	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }
 
 func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
@@ -183,4 +205,17 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 		paylines = append(paylines, payline)
 	}
 	return paylines
+}
+
+func (e *normal) countFreeSpinSymbolByCol(matrix entity.SlotMatrix) int {
+	count := 0
+	matrix.ForEachCol(func(col int, symbols []pb.SiXiangSymbol) {
+		for _, symbol := range symbols {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
+				count++
+				break
+			}
+		}
+	})
+	return count
 }

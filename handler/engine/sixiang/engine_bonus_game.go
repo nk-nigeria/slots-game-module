@@ -23,7 +23,7 @@ func NewBonusEngine(randomIntFn func(min, max int) int) lib.Engine {
 }
 
 func (e *bonusEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixBonusGame()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
 	// s.ChipsWinInSpecialGame = 0
@@ -36,10 +36,10 @@ func (e *bonusEngine) Random(min, max int) int {
 }
 
 func (e *bonusEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	id := e.Random(0, len(s.MatrixSpecial.List))
-	if s.GetBetInfo().ReqSpecGame > 0 {
-		reqBonusGame := pb.SiXiangSymbol(s.GetBetInfo().ReqSpecGame)
+	if s.Bet().ReqSpecGame > 0 {
+		reqBonusGame := pb.SiXiangSymbol(s.Bet().ReqSpecGame)
 		for idx, symbol := range s.MatrixSpecial.List {
 			if symbol == reqBonusGame {
 				id = idx
@@ -59,7 +59,7 @@ func (e *bonusEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	matrix := s.MatrixSpecial
 	slotDesk := &pb.SlotDesk{
 		Matrix: &pb.SlotMatrix{
@@ -71,7 +71,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	// cacl ratio chips by symbol, only goldx10,20,30,50 has ratio > 0
 	{
 		ratio := entity.ListSymbolBonusGame[s.SpinSymbols[0].Symbol].Value.Min
-		slotDesk.ChipsWin = int64(float64(ratio) * float64(s.GetBetInfo().GetChips()))
+		slotDesk.ChipsWin = int64(float64(ratio) * float64(s.Bet().GetChips()))
 	}
 	// slotDesk.ChipsWinInSpecialGame = s.ChipsWinInSpecialGame
 	// slotDesk.ChipsWin = slotDesk.ChipsWinInSpecialGame
@@ -80,11 +80,11 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.IsFinishGame = true
-	slotDesk.ChipsMcb = s.GetBetInfo().Chips
+	slotDesk.ChipsMcb = s.Bet().Chips
 	return slotDesk, nil
 }
 
-func (e *bonusEngine) GetNextSiXiangGame(s *entity.SixiangMatchState) pb.SiXiangGame {
+func (e *bonusEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	switch s.SpinSymbols[0].Symbol {
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX10,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX20,

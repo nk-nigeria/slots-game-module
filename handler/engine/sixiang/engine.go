@@ -1,11 +1,10 @@
-package handler
+package sixiang
 
 import (
 	"fmt"
 	"strconv"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/ciaolink-game-platform/cgp-common/utilities"
@@ -15,43 +14,37 @@ import (
 
 var _ lib.Engine = &slotsEngine{}
 
-var RellsAllowScatter = map[int]bool{0: true, 2: true, 4: true}
-
-func AllowScatter(col int) bool {
-	return RellsAllowScatter[col]
-}
-
 type slotsEngine struct {
 	engines map[pb.SiXiangGame]lib.Engine
 }
 
-func newEngine(game pb.SiXiangGame) lib.Engine {
+func newEngineByGame(game pb.SiXiangGame) lib.Engine {
 	switch game {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
-		return sixiang.NewNormalEngine()
+		return NewNormalEngine()
 	case pb.SiXiangGame_SI_XIANG_GAME_BONUS:
-		return sixiang.NewBonusEngine(nil)
+		return NewBonusEngine(nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL:
-		return sixiang.NewDragonPearlEngine(nil, nil)
+		return NewDragonPearlEngine(nil, nil)
 
 	case pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW:
-		return sixiang.NewLuckyDrawEngine(nil, nil)
+		return NewLuckyDrawEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK:
-		return sixiang.NewGoldPickEngine(nil, nil)
+		return NewGoldPickEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY:
-		return sixiang.NewRapidPayEngine(nil, nil)
+		return NewRapidPayEngine(nil, nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS:
-		return sixiang.NewSixiangBonusEngine()
+		return NewSixiangBonusEngine()
 	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
-		return sixiang.NewSixiangBonusInGameEngine(4)
+		return NewSixiangBonusInGameEngine(4)
 	}
-	return sixiang.NewNormalEngine()
+	return NewNormalEngine()
 }
 
-func NewSlotsEngine() lib.Engine {
+func NewEngine() lib.Engine {
 	slotEngine := slotsEngine{}
 	slotEngine.engines = make(map[pb.SiXiangGame]lib.Engine)
 	i := 1
@@ -61,14 +54,14 @@ func NewSlotsEngine() lib.Engine {
 			game.String() == strconv.Itoa(i) {
 			break
 		}
-		slotEngine.engines[game] = newEngine(game)
+		slotEngine.engines[game] = newEngineByGame(game)
 		i++
 	}
 	return &slotEngine
 }
 
 func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	engine, ok := e.engines[s.CurrentSiXiangGame]
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement new game "+s.CurrentSiXiangGame.String())
@@ -82,7 +75,7 @@ func (e *slotsEngine) Random(min, max int) int {
 }
 
 func (e *slotsEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	engine, ok := e.engines[s.CurrentSiXiangGame]
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement process game "+s.CurrentSiXiangGame.String())
@@ -91,7 +84,7 @@ func (e *slotsEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	engine, ok := e.engines[s.CurrentSiXiangGame]
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement fisnish game "+s.CurrentSiXiangGame.String())

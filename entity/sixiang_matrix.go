@@ -264,8 +264,14 @@ func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {
 		return nil, false
 	}
 	firstSymbol := sm.List[paylineIndex[0]]
-	if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
-		return nil, false
+	for _, idx := range paylineIndex {
+		if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
+			return nil, false
+		}
+		if firstSymbol != pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+			break
+		}
+		firstSymbol = sm.List[idx]
 	}
 	validPaylineIndex := make([]int, 0)
 	for _, idx := range paylineIndex {

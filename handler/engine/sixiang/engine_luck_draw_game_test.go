@@ -241,7 +241,7 @@ func Test_luckyDrawEngine_GetNextSiXiangGame(t *testing.T) {
 		randomFloat64 func(min, max float64) float64
 	}
 	type args struct {
-		s *entity.SixiangMatchState
+		s *entity.SlotsMatchState
 	}
 	type test struct {
 		name   string

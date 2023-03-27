@@ -32,7 +32,7 @@ func NewLuckyDrawEngine(randomIntFn func(min, max int) int, randomFloat64 func(m
 }
 
 func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixLuckyDraw()
 	s.MatrixSpecial = ShuffleMatrix(matrix)
 	s.SpinSymbols = []*pb.SpinSymbol{}
@@ -45,7 +45,7 @@ func (e *luckyDrawEngine) Random(min, max int) int {
 }
 
 func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	// bet := s.GetBetInfo()
 	idsNotFlip := make([]int, 0)
 	for id := range s.MatrixSpecial.List {
@@ -70,7 +70,7 @@ func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 
 	matrix := s.MatrixSpecial
 	slotDesk := &pb.SlotDesk{
@@ -96,7 +96,7 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 			rangeRatio := entity.ListSymbolLuckyDraw[symbol].Value
 			totalRatio += e.randomFloat64(float64(rangeRatio.Min), float64(rangeRatio.Max))
 		}
-		slotDesk.ChipsWin += int64(totalRatio * float64(s.GetBetInfo().GetChips()))
+		slotDesk.ChipsWin += int64(totalRatio * float64(s.Bet().GetChips()))
 	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
@@ -108,11 +108,11 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 		slotDesk.BigWin, slotDesk.WinJp = LuckySymbolToReward(symbolWin)
 	}
 	slotDesk.SpinSymbols = s.SpinSymbols
-	slotDesk.ChipsMcb = s.GetBetInfo().Chips
+	slotDesk.ChipsMcb = s.Bet().Chips
 	return slotDesk, nil
 }
 
-func (e *luckyDrawEngine) GetNextSiXiangGame(s *entity.SixiangMatchState) pb.SiXiangGame {
+func (e *luckyDrawEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	matrix := s.MatrixSpecial
 	trackFlipSameSymbol := make(map[pb.SiXiangSymbol]int)
 	for id, symbol := range matrix.List {

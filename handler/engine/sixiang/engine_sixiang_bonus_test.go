@@ -54,7 +54,7 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 	}
 	type test struct {
 		name string
-		arg  *entity.SixiangMatchState
+		arg  *entity.SlotsMatchState
 		want *api.SlotDesk
 	}
 	engine := &sixiangBonusEngine{}

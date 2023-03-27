@@ -12,7 +12,7 @@ import (
 
 func Test_normalEngine_InitMatrix(t *testing.T) {
 	type args struct {
-		matchState *entity.SixiangMatchState
+		matchState *entity.SlotsMatchState
 	}
 	tests := []struct {
 		name string
@@ -30,7 +30,7 @@ func Test_normalEngine_InitMatrix(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &normalEngine{}
-			matrix := e.SpinMatrix(tt.args.matchState.GetMatrix())
+			matrix := e.SpinMatrix(tt.args.matchState.Matrix)
 			assert.NotEmpty(t, matrix, "Matrix should not empty ")
 			e.PrintMatrix(matrix)
 		})
@@ -68,7 +68,7 @@ func Test_normalEngine_Random(t *testing.T) {
 
 func Test_normalEngine_SpinMatrix(t *testing.T) {
 	type args struct {
-		matchState *entity.SixiangMatchState
+		matchState *entity.SlotsMatchState
 	}
 	tests := []struct {
 		name string
@@ -86,7 +86,7 @@ func Test_normalEngine_SpinMatrix(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &normalEngine{}
-			matrix := e.SpinMatrix(tt.args.matchState.GetMatrix())
+			matrix := e.SpinMatrix(tt.args.matchState.Matrix)
 			e.PrintMatrix(matrix)
 		})
 	}
@@ -94,7 +94,7 @@ func Test_normalEngine_SpinMatrix(t *testing.T) {
 
 func Test_normalEngine_SpreadWildInMatrix(t *testing.T) {
 	type args struct {
-		matchState *entity.SixiangMatchState
+		matchState *entity.SlotsMatchState
 	}
 	tests := []struct {
 		name string
@@ -113,7 +113,7 @@ func Test_normalEngine_SpreadWildInMatrix(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			e := &normalEngine{}
-			matrix := e.SpinMatrix(tt.args.matchState.GetMatrix())
+			matrix := e.SpinMatrix(tt.args.matchState.Matrix)
 			e.PrintMatrix(matrix)
 			t.Log("Spread Matrix")
 			spreadMatrix := e.SpreadWildInMatrix(matrix)
@@ -127,7 +127,7 @@ func Test_normalEngine_PaylineMatrix(t *testing.T) {
 	t.Run(name, func(t *testing.T) {
 		engine := &normalEngine{}
 		matchState := entity.NewSlotsMathState(nil)
-		matrix := engine.SpinMatrix(matchState.GetMatrix())
+		matrix := engine.SpinMatrix(matchState.Matrix)
 		spreadMatrix := engine.SpreadWildInMatrix(matrix)
 		engine.PrintMatrix(spreadMatrix)
 		paylines := engine.PaylineMatrix(spreadMatrix)
@@ -143,7 +143,7 @@ func Test_normalEngine_FilterSymbol(t *testing.T) {
 	t.Run(name, func(t *testing.T) {
 		engine := &normalEngine{}
 		matchState := entity.NewSlotsMathState(nil)
-		matrix := engine.SpinMatrix(matchState.GetMatrix())
+		matrix := engine.SpinMatrix(matchState.Matrix)
 		spreadMatrix := engine.SpreadWildInMatrix(matrix)
 		engine.PrintMatrix(spreadMatrix)
 		paylines := engine.PaylineMatrix(spreadMatrix)
@@ -178,11 +178,11 @@ func Test_normalEngine_Process(t *testing.T) {
 		})
 		matchState.SetPaylines(paylinesFilter)
 		chipsMcb := int64(22222)
-		for _, payline := range matchState.GetPaylines() {
+		for _, payline := range matchState.Paylines() {
 			payline.Rate = engine.RatioPayline(payline)
 			payline.Chips = int64(payline.Rate * float64(chipsMcb))
 		}
-		for _, payline := range matchState.GetPaylines() {
+		for _, payline := range matchState.Paylines() {
 			t.Logf("payline id %d, symbol %d occur %d ratio %v chips %d",
 				payline.Id, payline.Symbol, payline.NumOccur, payline.Rate, payline.Chips)
 		}
@@ -201,7 +201,7 @@ func Test_normalEngine_Process_2(t *testing.T) {
 		engine.NewGame(matchState)
 		engine.Process(matchState)
 		result, _ := engine.Finish(matchState)
-		engine.PrintMatrix(matchState.GetMatrix())
+		engine.PrintMatrix(matchState.Matrix)
 		slotdesk := result.(*pb.SlotDesk)
 		t.Logf("%v", slotdesk)
 	})

@@ -1,4 +1,4 @@
-package handler
+package sixiang
 
 import (
 	"testing"
@@ -9,7 +9,7 @@ import (
 func TestNewSlotsEngine(t *testing.T) {
 	name := "TestNewSlotsEngine"
 	t.Run(name, func(t *testing.T) {
-		got := NewSlotsEngine()
+		got := NewEngine()
 		assert.NotNil(t, got)
 	})
 }

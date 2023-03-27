@@ -21,7 +21,7 @@ func NewStatePreparing(fn lib.FireFn) lib.StateHandler {
 }
 func (s *StatePreparing) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
-	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
+	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	procPkg.GetLogger().Info("state %v", state.Presences)
 	state.SetUpCountDown(preparingTimeout)
 	// remove all user not interact 2 game conti
@@ -60,7 +60,7 @@ func (s *StatePreparing) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
-	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
+	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	remain := state.GetRemainCountDown()
 	message := procPkg.GetMessages()
 	if len(message) > 0 {
