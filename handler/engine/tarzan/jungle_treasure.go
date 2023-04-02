@@ -14,7 +14,7 @@ type jungleTreasure struct {
 	sureTurnSpinSymboTurnX3 int
 }
 
-func NewJungleTrease(randomIntFn func(int, int) int) lib.Engine {
+func NewJungTreasure(randomIntFn func(int, int) int) lib.Engine {
 	e := &jungleTreasure{}
 	if randomIntFn == nil {
 		e.randomIntFn = RandomInt
@@ -32,6 +32,7 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = nil
 	s.GemSpin = 5
 	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
+	s.LineWinByGame[s.CurrentSiXiangGame] = 0
 	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.GemSpin+1)
 	return s, nil
 }
@@ -86,6 +87,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 			lineWin += e.randomIntFn(int(symInfo.Value.Min), int(symInfo.Value.Max))
 		}
 	}
+
 	if s.GemSpin == 0 {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
@@ -97,6 +99,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	}
 	chipsWin := int64(lineWin/100) * slotDesk.ChipsMcb
 	s.ChipWinByGame[s.CurrentSiXiangGame] += chipsWin
+	s.LineWinByGame[s.CurrentSiXiangGame] += lineWin
 	slotDesk.ChipsWin = chipsWin
 	slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
 	return slotDesk, nil

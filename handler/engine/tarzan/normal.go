@@ -18,6 +18,7 @@ type normal struct {
 	randomIntFn         func(int, int) int
 }
 
+// todo save JUNGLE when exit
 func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 	e := &normal{
 		maxDropTarzanSymbol: 1,
@@ -38,6 +39,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewTarzanMatrix()
 	s.SetMatrix(e.SpinMatrix(matrix))
+	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 	return s, nil
 }
 
@@ -48,14 +50,11 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
-	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
+	// s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
 			s.AddCollectionSymbol(0, symbol)
-		}
-		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
-			s.TrackIndexFreeSpinSymbol[idx] = true
 		}
 	})
 	return matchState, nil
@@ -79,6 +78,14 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin/100) * slotDesk.ChipsMcb
 	s.LineWinByGame[s.CurrentSiXiangGame] = lineWin
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
+	// if next game is freex9, save index freespin symbol
+	if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
+		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
+				s.TrackIndexFreeSpinSymbol[idx] = true
+			}
+		})
+	}
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
 	slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
@@ -104,15 +111,15 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 			numRandom := e.Random(0, len(entity.TarzanSymbols)-1)
 			randSymbol := entity.TarzanSymbols[numRandom]
 			switch randSymbol {
-			// Tarzan symbol chỉ xuất hiện ở row 5 và chỉ xuất hiện 1 lần
+			// Tarzan symbol chỉ xuất hiện ở col 5 và chỉ xuất hiện 1 lần
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
-				if col != entity.Row_5 || numTarzanSymbolSpin >= e.maxDropTarzanSymbol {
+				if col != entity.Col_5 || numTarzanSymbolSpin >= e.maxDropTarzanSymbol {
 					continue loop
 				}
 				numTarzanSymbolSpin++
-			// chỉ xuất hiện free spin ở row 3, 4, 5
+			// chỉ xuất hiện free spin ở col 3, 4, 5
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN:
-				if row < entity.Row_3 || numFreeSpinSymbolSpin >= e.maxDropLetterSymbol {
+				if row < entity.Col_3 || numFreeSpinSymbolSpin >= e.maxDropLetterSymbol {
 					continue loop
 				}
 				// kiểm tra điều kiện cho phép ra freespin symbol

@@ -142,3 +142,29 @@ func Test_normal_Paylines(t *testing.T) {
 		assert.Equal(t, api.SiXiangSymbol_SI_XIANG_SYMBOL_JANE, paylines[0].Symbol)
 	})
 }
+
+func Test_normal_Finish(t *testing.T) {
+	name := "Tarzan Normal Finish"
+	matchState := entity.NewSlotsMathState(nil)
+	engine := NewNormal(func(i1, i2 int) int {
+		return i1
+	})
+	matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_NORMAL
+	matchState.SetBetInfo(&api.InfoBet{
+		Chips: 100,
+	})
+	engine.NewGame(matchState)
+	engine.Process(matchState)
+	t.Run(name, func(t *testing.T) {
+		result, err := engine.Finish(matchState)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		slotdesk := result.(*api.SlotDesk)
+		assert.Equal(t, matchState.Bet().Chips, slotdesk.ChipsMcb)
+		assert.Equal(t, matchState.CurrentSiXiangGame, slotdesk.CurrentSixiangGame)
+		assert.Equal(t, matchState.NextSiXiangGame, slotdesk.NextSixiangGame)
+		assert.NotZero(t, len(slotdesk.Matrix.Lists))
+		assert.NotZero(t, len(slotdesk.Paylines))
+		assert.NotZero(t, len(slotdesk.SpreadMatrix.Lists))
+	})
+}
