@@ -50,8 +50,19 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
-	// s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 
+	switch s.Bet().ReqSpecGame {
+	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
+		s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			if col >= entity.Col_3 {
+				s.Matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
+			}
+		})
+	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
+		for sym := range entity.TarzanLetterSymbol {
+			s.AddCollectionSymbol(0, sym)
+		}
+	}
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
 			s.AddCollectionSymbol(0, symbol)
@@ -68,15 +79,15 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk := &pb.SlotDesk{}
 	slotDesk.Paylines = e.Paylines(s.WildMatrix)
 	slotDesk.ChipsMcb = s.Bet().Chips
-	lineWin := len(slotDesk.Paylines)
+	lineWin := int64(len(slotDesk.Paylines))
 	matrix := s.Matrix
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
 			lineWin += 500
 		}
 	})
-	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin/100) * slotDesk.ChipsMcb
-	s.LineWinByGame[s.CurrentSiXiangGame] = lineWin
+	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin * slotDesk.ChipsMcb / 100)
+	s.LineWinByGame[s.CurrentSiXiangGame] = int(lineWin)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	// if next game is freex9, save index freespin symbol
 	if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {

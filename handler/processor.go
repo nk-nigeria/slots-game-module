@@ -385,12 +385,14 @@ func (p *processor) handlerRequestGetInfoTable(
 		NextSixiangGame:    s.NextSiXiangGame,
 		TsUnix:             time.Now().Unix(),
 	}
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9:
 		matrix := s.Matrix
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-	} else if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL ||
-		s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW ||
-		s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK {
+	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE:
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 		for idx, symbol := range matrix.List {
@@ -400,9 +402,10 @@ func (p *processor) handlerRequestGetInfoTable(
 				slotdesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 			}
 		}
-	} else {
+	default:
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
+
 	}
 	slotdesk.NextSixiangGame = s.NextSiXiangGame
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())

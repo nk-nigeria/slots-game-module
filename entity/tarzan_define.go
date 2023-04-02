@@ -325,5 +325,6 @@ func NewTarzanJungleTreasureMatrix() SlotMatrix {
 			m.List = append(m.List, sym)
 		}
 	}
+	m.TrackFlip = make(map[int]bool)
 	return m
 }

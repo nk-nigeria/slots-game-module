@@ -17,6 +17,7 @@ func NewEngine() lib.Engine {
 		engines: make(map[pb.SiXiangGame]lib.Engine),
 	}
 	e.engines[pb.SiXiangGame_SI_XIANG_GAME_NORMAL] = NewNormal(nil)
+	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9] = NewFreeSpinX9(nil)
 	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewJungTreasure(nil)
 	return e
 }
@@ -58,6 +59,7 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		s.ChipsBonus = 0
 		s.PerlGreenForest = 0
 	}
+
 	slotDesk.BigWin = e.transformLineWinToBigWin(s.LineWinByGame[s.CurrentSiXiangGame])
 	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(0)
 	return slotDesk, err

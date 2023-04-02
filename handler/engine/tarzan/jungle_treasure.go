@@ -97,11 +97,17 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 		ChipsMcb:           s.Bet().GetChips(),
 		IsFinishGame:       s.GemSpin == 0,
 	}
-	chipsWin := int64(lineWin/100) * slotDesk.ChipsMcb
-	s.ChipWinByGame[s.CurrentSiXiangGame] += chipsWin
-	s.LineWinByGame[s.CurrentSiXiangGame] += lineWin
+	chipsWin := int64(lineWin * int(slotDesk.ChipsMcb) / 100)
+	s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + chipsWin
+	s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + lineWin
 	slotDesk.ChipsWin = chipsWin
 	slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
+	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if !s.MatrixSpecial.TrackFlip[idx] {
+			slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+		}
+	})
 	return slotDesk, nil
 }
 
