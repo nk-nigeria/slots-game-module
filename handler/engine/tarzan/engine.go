@@ -17,7 +17,7 @@ func NewEngine() lib.Engine {
 		engines: make(map[pb.SiXiangGame]lib.Engine),
 	}
 	e.engines[pb.SiXiangGame_SI_XIANG_GAME_NORMAL] = NewNormal(nil)
-	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewJungleTrease(nil)
+	e.engines[pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE] = NewJungTreasure(nil)
 	return e
 }
 
