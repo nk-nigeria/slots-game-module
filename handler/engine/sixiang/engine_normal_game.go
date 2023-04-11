@@ -162,7 +162,7 @@ func (e *normalEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 func (e *normalEngine) SpreadWildInMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	// matrix := matchState.GetMatrix()
 	spreadMatrix := entity.SlotMatrix{
-		List: make([]pb.SiXiangSymbol, len(matrix.List), len(matrix.List)),
+		List: make([]pb.SiXiangSymbol, len(matrix.List)),
 		Cols: matrix.Cols,
 		Rows: matrix.Rows,
 	}

@@ -392,7 +392,8 @@ func (p *processor) handlerRequestGetInfoTable(
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
-		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE:
+		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 		for idx, symbol := range matrix.List {

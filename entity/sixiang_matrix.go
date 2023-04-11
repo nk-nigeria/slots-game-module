@@ -24,6 +24,17 @@ type SlotMatrix struct {
 	TrackFlip map[int]bool
 }
 
+func NewSlotMatrix(row, col int) SlotMatrix {
+	s := SlotMatrix{
+		Rows: row,
+		Cols: col,
+	}
+	s.Size = s.Rows * s.Cols
+	s.List = make([]pb.SiXiangSymbol, 0, s.Size)
+	s.TrackFlip = make(map[int]bool)
+	return s
+}
+
 func NewSiXiangMatrixNormal() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, RowsMatrix*ColsMatrix, RowsMatrix*ColsMatrix),
