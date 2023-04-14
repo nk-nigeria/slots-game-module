@@ -49,3 +49,16 @@ func TestSlotMatrix_IsPayline(t *testing.T) {
 		}
 	})
 }
+
+func TestNewSlotMatrix(t *testing.T) {
+	name := "TestNewSlotMatrix"
+	t.Run(name, func(t *testing.T) {
+		rows := 5
+		cols := 3
+		matrix := NewSlotMatrix(rows, cols)
+
+		assert.Equal(t, rows*cols, matrix.Size)
+		assert.NotNil(t, matrix.List)
+		assert.NotNil(t, matrix.TrackFlip)
+	})
+}

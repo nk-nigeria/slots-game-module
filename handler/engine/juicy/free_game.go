@@ -54,7 +54,30 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	if s.GemSpin <= 0 {
 		return matchState, ErrorSpinReadMax
 	}
-	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
+	var matrix entity.SlotMatrix
+	for {
+		matrix = e.SpinMatrix(s.Matrix, ratioWild1_0)
+		// không cho phép xuất hiện các loại bonus khác (Free tiếp, 6 giỏ, Scatter 345, hoặc JP)
+		numScatterSeq := e.countScattersSequent(matrix)
+		if numScatterSeq >= 3 {
+			continue
+		}
+		numFruitBasket := e.countFruitBasket(matrix)
+		if numFruitBasket >= 6 {
+			continue
+		}
+		numJpSymbol := 0
+		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			if entity.IsFruitJPSymbol(symbol) {
+				numJpSymbol++
+			}
+		})
+		if numJpSymbol > 0 {
+			continue
+		}
+		break
+	}
+
 	s.MatrixSpecial = (matrix)
 	s.SetWildMatrix(e.WildMatrix(matrix))
 	s.SetPaylines(e.Paylines(s.WildMatrix))
@@ -92,8 +115,12 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	}
 	return slotDesk, nil
 }
+
 func (e *freeGame) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	if s.GemSpin <= 0 {
+		if s.NumFruitBasket >= 6 {
+			return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
+		}
 		return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
 	return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME

@@ -34,7 +34,8 @@ func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 // NewGame implements lib.Engine
 func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
+	matrix := entity.NewSlotMatrix(entity.RowsJuicynMatrix, entity.ColsJuicyMatrix)
+	matrix = e.SpinMatrix(matrix, ratioWild1_0)
 	s.SetMatrix(matrix)
 	return matchState, nil
 }
@@ -63,9 +64,18 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	for _, payline := range s.Paylines() {
 		lineWin += int(payline.GetRate())
 	}
+	s.RatioFruitBasket = 1
+	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
 	if s.NumScatterSeq >= 3 {
 		lineWin *= s.NumScatterSeq
+		s.RatioFruitBasket = s.NumScatterSeq
 	}
+	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if entity.IsFruitBasketSymbol(symbol) {
+			val := entity.JuicyBasketSymbol[symbol]
+			lineWin += int(val.Value.Min) * s.RatioFruitBasket
+		}
+	})
 	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin) * s.Bet().Chips / 100
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
@@ -73,7 +83,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
 
-	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
+	s.NextSiXiangGame = e.GetNextSiXiangGame(s.Matrix)
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	s.NumFruitBasket = e.countFruitBasket(s.Matrix)
@@ -93,6 +103,8 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 		list = ShuffleSlice(entity.JuiceAllSymbolsWildRatio1_5)
 	case ratioWild2_0:
 		list = ShuffleSlice(entity.JuiceAllSymbolsWildRatio2_0)
+	default:
+		list = ShuffleSlice(entity.JuiceAllSymbols)
 	}
 	// list = ShuffleSlice(entity.JuiceAllSymbols)
 	lenList := len(list)
@@ -124,8 +136,8 @@ func (e *normal) WildMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	return matrix
 }
 
-func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	numScatterSeq := e.countScattersSequent(s.Matrix)
+func (e *normal) GetNextSiXiangGame(matrix entity.SlotMatrix) pb.SiXiangGame {
+	numScatterSeq := e.countScattersSequent(matrix)
 	if numScatterSeq >= 3 {
 		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
 	}
@@ -150,7 +162,7 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 		}
 		numSameSymbol := 0
 		for _, symbol := range symbols {
-			if symbol == firstSymbol {
+			if symbol == firstSymbol || symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 				numSameSymbol++
 				continue
 			}

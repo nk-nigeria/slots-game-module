@@ -43,6 +43,15 @@ func IsFruitBasketSymbol(symbol pb.SiXiangSymbol) bool {
 	_, exist := JuicyBasketSymbol[symbol]
 	return exist
 }
+func IsFruitJPSymbol(symbol pb.SiXiangSymbol) bool {
+	if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_GRAND ||
+		symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR ||
+		symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR ||
+		symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI {
+		return true
+	}
+	return false
+}
 
 var JuicyBasketSymbol = map[pb.SiXiangSymbol]SymbolInfo{
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_1: {

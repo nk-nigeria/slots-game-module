@@ -33,6 +33,16 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	e.autoRefillGemSpin = true
 	m := entity.NewJuicyFruitRainMaxtrix()
 	e.matrixFruitRainBasket = m.List
+	switch s.NumScatterSeq {
+	case 3:
+		s.RatioFruitBasket = 1
+	case 4:
+		s.RatioFruitBasket = 2
+	case 5:
+		s.RatioFruitBasket = 4
+	default:
+		s.RatioFruitBasket = 1
+	}
 	return s, nil
 }
 
@@ -41,7 +51,6 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := s.MatrixSpecial
 	matrix = e.SpinMatrix(matrix)
-	s.GemSpin--
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.IsFruitBasketSymbol(symbol) {
 			return
@@ -66,6 +75,7 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 			e.autoRefillGemSpin = false
 		}
 	})
+	s.GemSpin--
 	if s.GemSpin == 0 && e.autoRefillGemSpin {
 		s.GemSpin = 3
 		e.autoRefillGemSpin = false
@@ -108,6 +118,7 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		chipWin = int64(lineWin) * s.Bet().Chips / 100
 		slotDesk.ChipsWin = chipWin
 		slotDesk.TotalChipsWinByGame = chipWin
+		s.NumFruitBasket = 0
 	}
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
