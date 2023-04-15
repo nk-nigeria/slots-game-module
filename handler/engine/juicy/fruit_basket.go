@@ -41,7 +41,7 @@ func (*fruitBasket) Random(min int, max int) int {
 
 // Finish implements lib.Engine
 func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
-	slotDesk := pb.SlotDesk{}
+	slotDesk := &pb.SlotDesk{}
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk.ChipsMcb = s.Bet().Chips
 	for idx := range s.MatrixSpecial.TrackFlip {

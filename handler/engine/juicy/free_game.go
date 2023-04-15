@@ -41,7 +41,10 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 		s.GemSpin = 15
 	default:
 		s.RatioFruitBasket = 1
+		s.GemSpin = 3
+		e.ratioWild = ratioWild1_0
 	}
+	s.MatrixSpecial = entity.NewJuicyMatrix()
 	matrix := e.SpinMatrix(s.MatrixSpecial, e.ratioWild)
 	s.MatrixSpecial = matrix
 	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
@@ -56,7 +59,7 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	}
 	var matrix entity.SlotMatrix
 	for {
-		matrix = e.SpinMatrix(s.Matrix, ratioWild1_0)
+		matrix = e.SpinMatrix(s.MatrixSpecial, ratioWild1_0)
 		// không cho phép xuất hiện các loại bonus khác (Free tiếp, 6 giỏ, Scatter 345, hoặc JP)
 		numScatterSeq := e.countScattersSequent(matrix)
 		if numScatterSeq >= 3 {
@@ -80,7 +83,7 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 
 	s.MatrixSpecial = (matrix)
 	s.SetWildMatrix(e.WildMatrix(matrix))
-	s.SetPaylines(e.Paylines(s.WildMatrix))
+	s.SetPaylines(e.Paylines(matrix))
 	s.GemSpin--
 	return matchState, nil
 }
@@ -98,6 +101,18 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	for _, payline := range s.Paylines() {
 		lineWin += int(payline.GetRate())
 	}
+	s.RatioFruitBasket = 1
+	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
+	if s.NumScatterSeq >= 3 {
+		lineWin *= s.NumScatterSeq
+	}
+	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if entity.IsFruitBasketSymbol(symbol) {
+			val := entity.JuicyBasketSymbol[symbol]
+			lineWin += int(val.Value.Min) * s.RatioFruitBasket
+		}
+	})
 
 	slotDesk.ChipsWin = int64(lineWin) * s.Bet().Chips / 100
 	slotDesk.ChipsMcb = s.Bet().Chips
@@ -124,4 +139,14 @@ func (e *freeGame) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame 
 		return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
 	return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
+}
+
+func (e *freeGame) transformNumScaterSeqToRationFruitBasket(numScatterSeq int) int {
+	switch numScatterSeq {
+	case 4:
+		return 2
+	case 5:
+		return 4
+	}
+	return 1
 }

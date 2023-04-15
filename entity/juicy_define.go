@@ -43,6 +43,7 @@ func IsFruitBasketSymbol(symbol pb.SiXiangSymbol) bool {
 	_, exist := JuicyBasketSymbol[symbol]
 	return exist
 }
+
 func IsFruitJPSymbol(symbol pb.SiXiangSymbol) bool {
 	if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_GRAND ||
 		symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR ||

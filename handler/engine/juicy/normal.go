@@ -64,12 +64,11 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	for _, payline := range s.Paylines() {
 		lineWin += int(payline.GetRate())
 	}
-	s.RatioFruitBasket = 1
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
 	if s.NumScatterSeq >= 3 {
 		lineWin *= s.NumScatterSeq
-		s.RatioFruitBasket = s.NumScatterSeq
 	}
+	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
 	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.IsFruitBasketSymbol(symbol) {
 			val := entity.JuicyBasketSymbol[symbol]
@@ -77,17 +76,18 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		}
 	})
 	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin) * s.Bet().Chips / 100
+	s.LineWinByGame[s.CurrentSiXiangGame] = lineWin
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
 	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
 
-	s.NextSiXiangGame = e.GetNextSiXiangGame(s.Matrix)
+	s.NumFruitBasket = e.countFruitBasket(s.Matrix)
+	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	s.NumFruitBasket = e.countFruitBasket(s.Matrix)
-	slotDesk.RatioFruitBasket = int32(s.RatioFruitBasket)
+	slotDesk.RatioFruitBasket = int64(s.RatioFruitBasket)
 	slotDesk.IsFinishGame = true
 	return slotDesk, nil
 }
@@ -136,10 +136,12 @@ func (e *normal) WildMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	return matrix
 }
 
-func (e *normal) GetNextSiXiangGame(matrix entity.SlotMatrix) pb.SiXiangGame {
-	numScatterSeq := e.countScattersSequent(matrix)
-	if numScatterSeq >= 3 {
+func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
+	if s.NumScatterSeq >= 3 {
 		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
+	}
+	if s.NumFruitBasket >= 6 {
+		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
 	}
 	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }
@@ -153,10 +155,10 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 		payline.Id = int32(pair.Key)
 		// idx++
 		symbols := matrix.ListFromIndexs(pair.Value)
-		firstSymbol := symbols[0]
-		if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+		if len(symbols) == 0 {
 			continue
 		}
+		firstSymbol := symbols[0]
 		if entity.IsFruitBasketSymbol(firstSymbol) {
 			continue
 		}
@@ -203,4 +205,11 @@ func (e *normal) countFruitBasket(matrix entity.SlotMatrix) int {
 		}
 	})
 	return numFruitBasket
+}
+
+func (e *normal) transformNumScaterSeqToRationFruitBasket(numScatterSeq int) int {
+	if numScatterSeq < 3 {
+		return 1
+	}
+	return numScatterSeq
 }
