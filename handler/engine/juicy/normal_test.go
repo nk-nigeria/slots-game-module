@@ -38,9 +38,20 @@ func Test_normal_SpinMatrix(t *testing.T) {
 			}
 		})
 	}
+	numUnspecSymbol := func(matrix entity.SlotMatrix) int {
+		num := 0
+		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			if symbol == api.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
+				num++
+			}
+		})
+		return num
+	}
 	t.Run(name, func(t *testing.T) {
 		for i := 0; i < 10000; i++ {
 			matrix := engine.SpinMatrix(m, ratioWild1_0)
+			numUnspecSymbol := numUnspecSymbol(matrix)
+			assert.Equal(t, int(0), int(numUnspecSymbol))
 			numWildRatio1_0 += countWildSymbol(matrix)
 			checkWildPositition(matrix)
 

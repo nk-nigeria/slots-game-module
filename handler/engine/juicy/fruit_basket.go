@@ -56,5 +56,6 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
+	slotDesk.IsFinishGame = true
 	return slotDesk, nil
 }

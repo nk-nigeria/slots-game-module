@@ -46,6 +46,7 @@ func Test_fruitBasket_Finish(t *testing.T) {
 				assert.Equal(t, false, exist)
 				mapSymbol[symbol] = true
 			}
+			assert.Equal(t, true, slotDesk.IsFinishGame)
 		}
 	})
 }

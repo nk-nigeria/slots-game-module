@@ -116,7 +116,7 @@ func init() {
 	JuiceAllSymbols = append(JuiceAllSymbols, JuicyHighSymbol...)
 	JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
 
-	list := make([]pb.SiXiangSymbol, len(JuiceAllSymbols)*10)
+	list := make([]pb.SiXiangSymbol, 0, len(JuiceAllSymbols)*10)
 	// for i := 0; i < 10; i++ {
 	// 	JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
 	// }
@@ -129,7 +129,7 @@ func init() {
 	for i := 0; i < 10; i++ {
 		list = append(list, JuiceAllSymbols...)
 	}
-	JuiceAllSymbols = list
+	// JuiceAllSymbols = list
 
 	JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, list...)
 	JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, SliceRepeat(2, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)

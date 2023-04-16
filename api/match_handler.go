@@ -7,6 +7,7 @@ import (
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler"
+	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/juicy"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/tarzan"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/sm"
@@ -50,6 +51,13 @@ func NewMatchHandler(
 			processor: handler.NewMatchProcessor(marshaler, unmarshaler,
 				tarzan.NewEngine()),
 			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
+		}
+	case entity.JuicyGarden:
+		{
+			matchHandler = &MatchHandler{
+				processor: handler.NewMatchProcessor(marshaler, unmarshaler, juicy.NewEngine()),
+				machine:   lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
+			}
 		}
 	}
 	return matchHandler
@@ -103,13 +111,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 	}
 
 	logger.Info("match init label= %s", string(labelJSON))
-	var matchState interface{}
-	switch label.Code {
-	case entity.SixiangGameName:
-		matchState = entity.NewSlotsMathState(label)
-	case entity.TarzanGameName:
-		matchState = entity.NewSlotsMathState(label)
-	}
+	matchState := entity.NewSlotsMathState(label)
 	if matchState == nil {
 		return nil, tickRate, string(labelJSON)
 	}

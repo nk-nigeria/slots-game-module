@@ -10,6 +10,7 @@ import (
 const (
 	SixiangGameName   = "sixiang"
 	TarzanGameName    = "tarzan"
+	JuicyGarden       = "juicygarden"
 	MaxPresenceCard   = 13
 	JackpotPercentTax = 1 // 1%
 )

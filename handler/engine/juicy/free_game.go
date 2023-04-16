@@ -117,6 +117,7 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.ChipsWin = int64(lineWin) * s.Bet().Chips / 100
 	slotDesk.ChipsMcb = s.Bet().Chips
 	s.ChipWinByGame[s.CurrentSiXiangGame] += slotDesk.ChipsWin
+	s.LineWinByGame[s.CurrentSiXiangGame] += lineWin
 	slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()

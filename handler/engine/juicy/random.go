@@ -70,10 +70,15 @@ func ShuffleMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 
 func ShuffleSlice[T any](slice []T) []T {
 	// mrand.Seed(time.Now().UTC().UnixNano())
-	mrand.NewSource(time.Now().UTC().UnixNano())
 	ml := make([]T, len(slice))
 	copy(ml, slice)
-	mrand.Shuffle(len(ml), func(i, j int) { ml[i], ml[j] = ml[j], ml[i] })
+	// mrand.NewSource(time.Now().UTC().UnixNano())
+	// mrand.Shuffle(len(ml), func(i, j int) { ml[i], ml[j] = ml[j], ml[i] })
+	lenSl := len(slice)
+	for i := 0; i < lenSl; i++ {
+		j := RandomInt(0, lenSl)
+		ml[i], ml[j] = ml[j], ml[i]
+	}
 	return ml
 }
 

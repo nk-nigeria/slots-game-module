@@ -1,6 +1,8 @@
 package juicy
 
 import (
+	"fmt"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -129,6 +131,9 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 			}
 		}
 	})
+
+	fmt.Printf("spin matrix %v", spinMatrix)
+	fmt.Printf("list %v", list)
 	return spinMatrix
 }
 
@@ -137,12 +142,12 @@ func (e *normal) WildMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 }
 
 func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	if s.NumScatterSeq >= 3 {
-		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
-	}
-	if s.NumFruitBasket >= 6 {
-		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
-	}
+	// if s.NumScatterSeq >= 3 {
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
+	// }
+	// if s.NumFruitBasket >= 6 {
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
+	// }
 	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }
 
@@ -159,6 +164,9 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 			continue
 		}
 		firstSymbol := symbols[0]
+		if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
+			continue
+		}
 		if entity.IsFruitBasketSymbol(firstSymbol) {
 			continue
 		}
