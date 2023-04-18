@@ -46,7 +46,7 @@ func Test_freeGame_NewGame(t *testing.T) {
 				gemSpin = 15
 			}
 			assert.Equal(t, int(ratioFruitBasket), s.RatioFruitBasket)
-			assert.Equal(t, int(gemSpin), s.GemSpin)
+			assert.Equal(t, int(gemSpin), s.NumSpinLeft)
 			assert.Equal(t, ratioWild, engine.ratioWild)
 			assert.Equal(t, int(entity.RowsJuicynMatrix*entity.ColsJuicyMatrix), int(len(s.MatrixSpecial.List)))
 			assert.Equal(t, int(0), s.ChipWinByGame[s.CurrentSiXiangGame])
@@ -85,7 +85,7 @@ func Test_freeGame_maxSpin_Process(t *testing.T) {
 		e := NewFreeGame(nil)
 		s := entity.NewSlotsMathState(nil)
 		e.NewGame(s)
-		s.GemSpin = 3
+		s.NumSpinLeft = 3
 		for i := 0; i < 3; i++ {
 			_, err := e.Process(s)
 			assert.NoError(t, err)
@@ -117,10 +117,10 @@ func Test_freeGame_GetNextSiXiangGame(t *testing.T) {
 		s := entity.NewSlotsMathState(nil)
 		e.NewGame(s)
 		s.NumFruitBasket = 0
-		s.GemSpin = 3
+		s.NumSpinLeft = 3
 		nextGame := engine.GetNextSiXiangGame(s)
 		assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, nextGame)
-		s.GemSpin = 0
+		s.NumSpinLeft = 0
 		for i := 0; i < 6; i++ {
 			s.NumFruitBasket = i
 			nextGame = engine.GetNextSiXiangGame(s)
@@ -163,7 +163,7 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 			})
 			s.Matrix = entity.NewJuicyMatrix()
 			s.NumFruitBasket = 0
-			s.GemSpin = 2
+			s.NumSpinLeft = 2
 			s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
 			s.NumScatterSeq = numScatterSeq
 			s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -187,7 +187,7 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 			assert.NotNil(t, result)
 			slotDesk := result.(*api.SlotDesk)
 			assert.Equal(t, false, slotDesk.IsFinishGame)
-			assert.Less(t, int(0), int(s.GemSpin))
+			assert.Less(t, int(0), int(s.NumSpinLeft))
 			assert.NotNil(t, slotDesk)
 			assert.Equal(t, int(100), int(slotDesk.ChipsMcb))
 			ratioFruitBasket := engine.transformNumScaterSeqToRationFruitBasket(numScatterSeq)

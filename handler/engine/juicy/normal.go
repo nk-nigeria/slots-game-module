@@ -1,8 +1,6 @@
 package juicy
 
 import (
-	"fmt"
-
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -28,7 +26,7 @@ func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 	if randomIntFn != nil {
 		e.randomFn = randomIntFn
 	} else {
-		e.randomFn = RandomInt
+		e.randomFn = entity.RandomInt
 	}
 	return e
 }
@@ -39,6 +37,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	matrix := entity.NewSlotMatrix(entity.RowsJuicynMatrix, entity.ColsJuicyMatrix)
 	matrix = e.SpinMatrix(matrix, ratioWild1_0)
 	s.SetMatrix(matrix)
+	s.NumSpinLeft = -1
 	return matchState, nil
 }
 
@@ -46,6 +45,15 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
+	if s.Bet().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET) {
+		for i := 0; i < 3; i++ {
+			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		}
+	} else if s.Bet().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN) {
+		for i := 0; i < 6; i++ {
+			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI
+		}
+	}
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.WildMatrix(matrix))
 	s.SetPaylines(e.Paylines(s.WildMatrix))
@@ -91,6 +99,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.RatioFruitBasket = int64(s.RatioFruitBasket)
 	slotDesk.IsFinishGame = true
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
 
@@ -98,31 +107,28 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 	var list []pb.SiXiangSymbol
 	switch ratioWild {
 	case ratioWild1_0:
-		list = ShuffleSlice(entity.JuiceAllSymbols)
+		list = entity.ShuffleSlice(entity.JuiceAllSymbols)
 	case ratioWild1_2:
-		list = ShuffleSlice(entity.JuiceAllSymbolsWildRatio1_2)
+		list = entity.ShuffleSlice(entity.JuiceAllSymbolsWildRatio1_2)
 	case ratioWild1_5:
-		list = ShuffleSlice(entity.JuiceAllSymbolsWildRatio1_5)
+		list = entity.ShuffleSlice(entity.JuiceAllSymbolsWildRatio1_5)
 	case ratioWild2_0:
-		list = ShuffleSlice(entity.JuiceAllSymbolsWildRatio2_0)
+		list = entity.ShuffleSlice(entity.JuiceAllSymbolsWildRatio2_0)
 	default:
-		list = ShuffleSlice(entity.JuiceAllSymbols)
+		list = entity.ShuffleSlice(entity.JuiceAllSymbols)
 	}
 	// list = ShuffleSlice(entity.JuiceAllSymbols)
-	lenList := len(list)
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	for i := 0; i < spinMatrix.Size; i++ {
-		idx := e.randomFn(0, lenList)
-		randSymbol := list[idx]
+		randSymbol := entity.JuicySpintSymbol(list)
 		spinMatrix.List[i] = randSymbol
 	}
 	//  Wild (reel 2 3 4 5)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD && col == entity.Col_1 {
 			for {
-				randomId := e.randomFn(0, lenList)
-				randSymbol := list[randomId]
+				randSymbol := entity.JuicySpintSymbol(list)
 				if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 					continue
 				}
@@ -131,9 +137,6 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 			}
 		}
 	})
-
-	fmt.Printf("spin matrix %v", spinMatrix)
-	fmt.Printf("list %v", list)
 	return spinMatrix
 }
 
@@ -142,12 +145,12 @@ func (e *normal) WildMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 }
 
 func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	// if s.NumScatterSeq >= 3 {
-	// 	return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
-	// }
-	// if s.NumFruitBasket >= 6 {
-	// 	return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
-	// }
+	if s.NumScatterSeq >= 3 {
+		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
+	}
+	if s.NumFruitBasket >= 6 {
+		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
+	}
 	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }
 

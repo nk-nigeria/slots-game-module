@@ -19,13 +19,13 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 	matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
 	matchStateExpect := entity.NewSlotsMathState(nil)
 	matchStateExpect.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
-	matchStateExpect.GemSpin = defaultDragonPearlGemSpin
+	matchStateExpect.NumSpinLeft = defaultDragonPearlGemSpin
 	{
 		list := make([]api.SiXiangSymbol, 0)
 		for k := range entity.ListEyeSiXiang {
 			list = append(list, k)
 		}
-		matchStateExpect.CollectionSymbolRemain = ShuffleSlice(list)
+		matchStateExpect.CollectionSymbolRemain = entity.ShuffleSlice(list)
 	}
 	matchStateExpect.CollectionSymbol = make(map[int]map[api.SiXiangSymbol]int)
 	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
@@ -50,7 +50,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 			assert.NotNil(t, got)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want.CurrentSiXiangGame, tt.args.matchState.CurrentSiXiangGame)
-			assert.Equal(t, tt.want.GemSpin, tt.args.matchState.GemSpin)
+			assert.Equal(t, tt.want.NumSpinLeft, tt.args.matchState.NumSpinLeft)
 			assert.Equal(t, tt.want.CollectionSymbolRemain, tt.args.matchState.CollectionSymbolRemain)
 			assert.Equal(t, tt.want.CollectionSymbol[int(tt.args.matchState.Bet().Chips)], tt.args.matchState.CollectionSymbol[int(tt.args.matchState.Bet().GetChips())])
 			trackSym := make(map[api.SiXiangSymbol]int)
@@ -93,7 +93,7 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 		e.NewGame(matchState)
 		for {
 			gemSpinRemain := 3
-			matchState.GemSpin = gemSpinRemain
+			matchState.NumSpinLeft = gemSpinRemain
 			got, err := e.Process(matchState)
 			assert.NotNil(t, got)
 			if err != nil {
@@ -109,17 +109,17 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 			msg := fmt.Sprintf("symbol %s", spin.Symbol)
 			switch spin.Symbol {
 			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD:
-				assert.Equal(t, gemSpinRemain-1+3, matchState.GemSpin, msg)
+				assert.Equal(t, gemSpinRemain-1+3, matchState.NumSpinLeft, msg)
 			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON: //todo
-				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
+				assert.Equal(t, gemSpinRemain, matchState.NumSpinLeft, msg)
 			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
-				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
+				assert.Equal(t, gemSpinRemain, matchState.NumSpinLeft, msg)
 			case api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR:
 				assert.Equal(t, 4, len(matchState.SpinSymbols), msg)
-				assert.Equal(t, gemSpinRemain, matchState.GemSpin, msg)
+				assert.Equal(t, gemSpinRemain, matchState.NumSpinLeft, msg)
 			default:
 				assert.Equal(t, 1, len(matchState.SpinSymbols), msg)
-				assert.Equal(t, gemSpinRemain-1, matchState.GemSpin, msg)
+				assert.Equal(t, gemSpinRemain-1, matchState.NumSpinLeft, msg)
 			}
 			// }
 		}
@@ -163,7 +163,7 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 				Chips: 100,
 			})
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
-			matchState.GemSpin = 0
+			matchState.NumSpinLeft = 0
 			idFlip := 0
 			matchState.MatrixSpecial.ForEeach(func(idx, row, col int, symbol api.SiXiangSymbol) {
 				if symbol == gem {

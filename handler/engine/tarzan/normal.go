@@ -27,11 +27,12 @@ func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 		allowDropFreeSpinx9: true,
 	}
 	if randomIntFn == nil {
-		e.randomIntFn = RandomInt
+		e.randomIntFn = entity.RandomInt
 	} else {
 		e.randomIntFn = randomIntFn
 	}
 	return e
+
 }
 
 // NewGame implements lib.Engine
@@ -40,6 +41,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	matrix := entity.NewTarzanMatrix()
 	s.SetMatrix(e.SpinMatrix(matrix))
 	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
+	s.NumSpinLeft = -1
 	return s, nil
 }
 
@@ -104,6 +106,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true
+	slotDesk.NumSpinLeft = -1
 	return slotDesk, nil
 }
 

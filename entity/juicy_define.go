@@ -33,10 +33,25 @@ var JuicyHighSymbol = []pb.SiXiangSymbol{
 var JuicySpecialSymbol = []pb.SiXiangSymbol{
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN,
+}
+
+var JuicyFruitBasektSymbol = []pb.SiXiangSymbol{
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_GRAND,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI,
+}
+
+var JuicyFruitRainSybol = []pb.SiXiangSymbol{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_1,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_2,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_3,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_4,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_5,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_6,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_7,
 }
 
 func IsFruitBasketSymbol(symbol pb.SiXiangSymbol) bool {
@@ -55,6 +70,11 @@ func IsFruitJPSymbol(symbol pb.SiXiangSymbol) bool {
 }
 
 var JuicyBasketSymbol = map[pb.SiXiangSymbol]SymbolInfo{
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN: {
+		NumOccur: 0,
+		Value:    Range{Min: 0, Max: 0},
+	},
+
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_1: {
 		NumOccur: 3,
 		Value:    Range{Min: 10, Max: 15},
@@ -111,11 +131,13 @@ var MapJuicyPaylineIdx = orderedmap.New[int, []int]()
 var RatioJuicyPaylineMap map[pb.SiXiangSymbol]map[int32]float64
 
 func init() {
-	JuiceAllSymbols = append(JuiceAllSymbols, JuicyLowSymbols...)
-	JuiceAllSymbols = append(JuiceAllSymbols, JuicyMidSymbol...)
-	JuiceAllSymbols = append(JuiceAllSymbols, JuicyHighSymbol...)
-	JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
+	for i := 0; i < 5; i++ {
 
+		JuiceAllSymbols = append(JuiceAllSymbols, JuicyLowSymbols...)
+		JuiceAllSymbols = append(JuiceAllSymbols, JuicyMidSymbol...)
+		JuiceAllSymbols = append(JuiceAllSymbols, JuicyHighSymbol...)
+	}
+	JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
 	list := make([]pb.SiXiangSymbol, 0, len(JuiceAllSymbols)*10)
 	// for i := 0; i < 10; i++ {
 	// 	JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
@@ -217,10 +239,11 @@ func init() {
 
 func NewJuicyMatrix() SlotMatrix {
 	m := SlotMatrix{
-		List: make([]pb.SiXiangSymbol, ColsJuicyMatrix*RowsJuicynMatrix),
-		Cols: ColsJuicyMatrix,
-		Rows: RowsJuicynMatrix,
-		Size: ColsJuicyMatrix * RowsJuicynMatrix,
+		List:      make([]pb.SiXiangSymbol, ColsJuicyMatrix*RowsJuicynMatrix),
+		Cols:      ColsJuicyMatrix,
+		Rows:      RowsJuicynMatrix,
+		Size:      ColsJuicyMatrix * RowsJuicynMatrix,
+		TrackFlip: make(map[int]bool),
 	}
 	return m
 }
@@ -230,5 +253,35 @@ func NewJuicyFruitRainMaxtrix() SlotMatrix {
 	for sym, val := range JuicyBasketSymbol {
 		m.List = append(m.List, SliceRepeat(val.NumOccur, sym)...)
 	}
+	m.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_7 {
+			arr := []pb.SiXiangSymbol{
+				pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_7,
+				pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI,
+				pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
+				pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
+			}
+			m.List[idx] = ShuffleSlice(arr)[0]
+		}
+	})
 	return m
+}
+
+func JuicySpintSymbol(list []pb.SiXiangSymbol) pb.SiXiangSymbol {
+	lenList := len(list)
+	if lenList == 0 {
+		return pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+	}
+	idx := RandomInt(0, lenList)
+	randSymbol := list[idx]
+
+	if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
+		arr := []pb.SiXiangSymbol{
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
+		}
+		randSymbol = ShuffleSlice(arr)[RandomInt(0, len(arr))]
+	}
+	return randSymbol
 }

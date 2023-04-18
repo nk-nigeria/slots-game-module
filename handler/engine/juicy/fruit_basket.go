@@ -22,7 +22,8 @@ func (*fruitBasket) NewGame(matchState interface{}) (interface{}, error) {
 	s.MatrixSpecial = entity.NewSlotMatrix(1, 2)
 	s.MatrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FREE_GAME)
 	s.MatrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FRUIT_RAIN)
-	s.MatrixSpecial = ShuffleMatrix(s.MatrixSpecial)
+	s.MatrixSpecial = entity.ShuffleMatrix(s.MatrixSpecial)
+	s.NumSpinLeft = 1
 	return matchState, nil
 }
 
@@ -31,12 +32,13 @@ func (e *fruitBasket) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	randIdx := e.Random(0, s.MatrixSpecial.Size)
 	s.MatrixSpecial.Flip(randIdx)
+	s.NumSpinLeft--
 	return matchState, nil
 }
 
 // Random implements lib.Engine
 func (*fruitBasket) Random(min int, max int) int {
-	return RandomInt(min, max)
+	return entity.RandomInt(min, max)
 }
 
 // Finish implements lib.Engine
@@ -57,5 +59,6 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }

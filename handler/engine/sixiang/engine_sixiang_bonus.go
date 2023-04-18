@@ -19,13 +19,14 @@ func NewSixiangBonusEngine() lib.Engine {
 func (e *sixiangBonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixSiXiangBonus()
-	s.MatrixSpecial = ShuffleMatrix(matrix)
+	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
 	s.SpinSymbols = nil
+	s.NumSpinLeft = 1
 	return s, nil
 }
 
 func (e *sixiangBonusEngine) Random(min, max int) int {
-	return RandomInt(min, max)
+	return entity.RandomInt(min, max)
 }
 
 func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error) {
@@ -40,6 +41,7 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 		},
 	}
 	s.MatrixSpecial.Flip(idRamdom)
+	s.NumSpinLeft--
 	return s, nil
 }
 
@@ -61,5 +63,6 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.IsFinishGame = true
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }

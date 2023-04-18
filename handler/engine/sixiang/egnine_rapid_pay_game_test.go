@@ -19,7 +19,7 @@ func Test_rapidPayEngine_NewGame(t *testing.T) {
 		assert.Equal(t, 0, len(matchState.SpinSymbols))
 		assert.Equal(t, api.WinJackpot_WIN_JACKPOT_UNSPECIFIED, matchState.WinJp)
 		assert.Equal(t, int(25), len(matchState.MatrixSpecial.List))
-		assert.Equal(t, int(defaultRapidPayGemSpin), matchState.GemSpin)
+		assert.Equal(t, int(defaultRapidPayGemSpin), matchState.NumSpinLeft)
 	})
 
 }
@@ -69,10 +69,10 @@ func Test_rapidPayEngine_Process(t *testing.T) {
 			for i := 0; i < tt.args.numProcess; i++ {
 				_, err := engine.Process(tt.args.s)
 				if err != nil {
-					assert.Equal(t, ErrorSpinReadMax, err)
+					assert.Equal(t, entity.ErrorSpinReadMax, err)
 					continue
 				}
-				assert.Equal(t, tt.want.gemSpin[i], tt.args.s.GemSpin)
+				assert.Equal(t, tt.want.gemSpin[i], tt.args.s.NumSpinLeft)
 				assert.Equal(t, 1, len(tt.args.s.SpinSymbols))
 				assert.Equal(t, i+1, len(tt.args.s.MatrixSpecial.TrackFlip))
 			}

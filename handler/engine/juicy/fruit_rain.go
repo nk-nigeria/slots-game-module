@@ -18,7 +18,7 @@ type fruitRain struct {
 func NewFruitRain(randomIntFn func(min, max int) int) lib.Engine {
 	e := &fruitRain{}
 	if randomIntFn == nil {
-		e.randomIntFn = RandomInt
+		e.randomIntFn = entity.RandomInt
 	} else {
 		e.randomIntFn = randomIntFn
 	}
@@ -29,7 +29,7 @@ func NewFruitRain(randomIntFn func(min, max int) int) lib.Engine {
 func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.MatrixSpecial = entity.NewJuicyMatrix()
-	s.GemSpin = 3
+	s.NumSpinLeft = 3
 	e.autoRefillGemSpin = true
 	m := entity.NewJuicyFruitRainMaxtrix()
 	e.matrixFruitRainBasket = m.List
@@ -52,32 +52,24 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 	matrix := s.MatrixSpecial
 	matrix = e.SpinMatrix(matrix)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		// keep symbol if fruitbasket
 		if entity.IsFruitBasketSymbol(symbol) {
 			return
 		}
 		newSymbol := matrix.List[idx]
-		if entity.IsFruitBasketSymbol(newSymbol) {
+		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
 			newSymbol = e.matrixFruitRainBasket[idx]
-			if newSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_7 {
-				arr := []pb.SiXiangSymbol{
-					pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_RANDOM_7,
-					pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI,
-					pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
-					pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
-				}
-				newSymbol = ShuffleSlice(arr)[e.randomIntFn(0, len(arr))]
-			}
 		}
 		s.MatrixSpecial.List[idx] = newSymbol
 		s.MatrixSpecial.Flip(idx)
 		if entity.IsFruitBasketSymbol(newSymbol) {
-			s.GemSpin = 3
+			s.NumSpinLeft = 3
 			e.autoRefillGemSpin = false
 		}
 	})
-	s.GemSpin--
-	if s.GemSpin == 0 && e.autoRefillGemSpin {
-		s.GemSpin = 3
+	s.NumSpinLeft--
+	if s.NumSpinLeft == 0 && e.autoRefillGemSpin {
+		s.NumSpinLeft = 3
 		e.autoRefillGemSpin = false
 	}
 	return s, nil
@@ -95,7 +87,7 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		ChipsMcb: s.Bet().Chips,
 		Matrix:   s.MatrixSpecial.ToPbSlotMatrix(),
 	}
-	isFinish := s.GemSpin == 0
+	isFinish := s.NumSpinLeft == 0
 	if !isFinish {
 		numFruitBasket := 0
 		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -109,19 +101,19 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 	}
 	if isFinish {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-		chipWin := int64(0)
 		lineWin := 0
 		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 			val := entity.JuicyBasketSymbol[symbol]
 			lineWin += e.randomIntFn(int(val.Value.Min), int(val.Value.Max))
 		})
-		chipWin = int64(lineWin) * s.Bet().Chips / 100
+		chipWin := int64(lineWin) * s.Bet().Chips / 100
 		slotDesk.ChipsWin = chipWin
 		slotDesk.TotalChipsWinByGame = chipWin
 		s.NumFruitBasket = 0
 	}
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
 
@@ -129,11 +121,9 @@ func (e *fruitRain) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		for {
-			randomIdx := e.randomIntFn(0, len(entity.JuiceAllSymbols))
-			randomSymbol := entity.JuiceAllSymbols[randomIdx]
-			spinMatrix.List[idx] = randomSymbol
-		}
+		randomSymbol := entity.JuicySpintSymbol(entity.JuiceAllSymbols)
+		spinMatrix.Flip(idx)
+		spinMatrix.List[idx] = randomSymbol
 	})
 	return spinMatrix
 }

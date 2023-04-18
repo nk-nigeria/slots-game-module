@@ -21,7 +21,7 @@ func Test_jungleTreasure_Process_Num_Spin(t *testing.T) {
 
 			for {
 				_, err := engine.Process(matchState)
-				if err == ErrorSpinReachMaximum {
+				if err == entity.ErrorSpinReadMax {
 					break
 				}
 				engine.Finish(matchState)
@@ -45,7 +45,7 @@ func Test_jungleTreasure_Process(t *testing.T) {
 			result, err := engine.Process(matchState)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
-			assert.Equal(t, 4, matchState.GemSpin)
+			assert.Equal(t, 4, matchState.NumSpinLeft)
 			assert.NotZero(t, len(matchState.SpinSymbols))
 			assert.NotZero(t, len(matchState.MatrixSpecial.TrackFlip))
 		}
@@ -54,15 +54,15 @@ func Test_jungleTreasure_Process(t *testing.T) {
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 			engine.NewGame(matchState)
 			for {
-				prevGemSpin := matchState.GemSpin
+				prevGemSpin := matchState.NumSpinLeft
 				result, err := engine.Process(matchState)
-				if err == ErrorSpinReachMaximum {
+				if err == entity.ErrorSpinReadMax {
 					break
 				}
 
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
-				assert.Equal(t, prevGemSpin-1, matchState.GemSpin)
+				assert.Equal(t, prevGemSpin-1, matchState.NumSpinLeft)
 				assert.NotZero(t, len(matchState.SpinSymbols))
 				assert.NotZero(t, len(matchState.MatrixSpecial.TrackFlip))
 			}
@@ -89,7 +89,7 @@ func Test_jungleTreasure_Finish(t *testing.T) {
 	}
 	t.Run(name, func(t *testing.T) {
 		for _, s := range matchStates {
-			prevGemspin := s.GemSpin
+			prevGemspin := s.NumSpinLeft
 			result, err := engine.Finish(&s)
 			assert.NoError(t, err)
 			assert.NotNil(t, result)
@@ -104,7 +104,7 @@ func Test_jungleTreasure_Finish(t *testing.T) {
 				assert.Equal(t, true, s.LineWinByGame[s.CurrentSiXiangGame] >= int(symInfo.Value.Min), fmt.Sprintf("sym %s val %d, expext > %v", s.SpinSymbols[0].Symbol.String(), s.LineWinByGame[s.CurrentSiXiangGame], symInfo.Value.Min))
 				assert.Equal(t, true, s.LineWinByGame[s.CurrentSiXiangGame] <= int(symInfo.Value.Max), fmt.Sprintf("sym  %s val %d, expext < %v", s.SpinSymbols[0].Symbol.String(), s.LineWinByGame[s.CurrentSiXiangGame], symInfo.Value.Max))
 			}
-			assert.Equal(t, prevGemspin, s.GemSpin)
+			assert.Equal(t, prevGemspin, s.NumSpinLeft)
 			assert.Equal(t, slotDesk.CurrentSixiangGame, s.CurrentSiXiangGame)
 			assert.Equal(t, slotDesk.NextSixiangGame, s.NextSiXiangGame)
 		}

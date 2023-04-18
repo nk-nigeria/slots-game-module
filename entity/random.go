@@ -1,21 +1,10 @@
-package juicy
+package entity
 
 import (
 	"crypto/rand"
-	"errors"
 	"math/big"
 	mrand "math/rand"
 	"time"
-
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
-
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-)
-
-var (
-	ErrorSpinReadMax       = errors.New("spin reach max")
-	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
-	ErrorNoGameEngine      = errors.New("no game engine")
 )
 
 func RandomInt(min, max int) int {
@@ -62,7 +51,7 @@ func RandomFloat64(min, max float64) float64 {
 	return num
 }
 
-func ShuffleMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
+func ShuffleMatrix(matrix SlotMatrix) SlotMatrix {
 	list := matrix.List
 	matrix.List = ShuffleSlice(list)
 	return matrix
@@ -80,24 +69,4 @@ func ShuffleSlice[T any](slice []T) []T {
 		ml[i], ml[j] = ml[j], ml[i]
 	}
 	return ml
-}
-
-func LuckySymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
-	var bigWin pb.BigWin
-	var winJp pb.WinJackpot
-	switch symbol {
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR:
-		bigWin = pb.BigWin_BIG_WIN_NICE
-		winJp = pb.WinJackpot_WIN_JACKPOT_MINOR
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR:
-		bigWin = pb.BigWin_BIG_WIN_MEGA
-		winJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA:
-		bigWin = pb.BigWin_BIG_WIN_MEGA
-		winJp = pb.WinJackpot_WIN_JACKPOT_MEGA
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND:
-		bigWin = pb.BigWin_BIG_WIN_MEGA
-		winJp = pb.WinJackpot_WIN_JACKPOT_GRAND
-	}
-	return bigWin, winJp
 }

@@ -18,7 +18,7 @@ func NewFreeGame(randomIntFn func(int, int) int) lib.Engine {
 	if randomIntFn != nil {
 		e.randomFn = randomIntFn
 	} else {
-		e.randomFn = RandomInt
+		e.randomFn = entity.RandomInt
 	}
 	return e
 }
@@ -30,18 +30,18 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 	case 3:
 		s.RatioFruitBasket = 1
 		e.ratioWild = ratioWild1_2
-		s.GemSpin = 6
+		s.NumSpinLeft = 6
 	case 4:
 		s.RatioFruitBasket = 2
 		e.ratioWild = ratioWild1_5
-		s.GemSpin = 9
+		s.NumSpinLeft = 9
 	case 5:
 		s.RatioFruitBasket = 4
 		e.ratioWild = ratioWild2_0
-		s.GemSpin = 15
+		s.NumSpinLeft = 15
 	default:
 		s.RatioFruitBasket = 1
-		s.GemSpin = 3
+		s.NumSpinLeft = 3
 		e.ratioWild = ratioWild1_0
 	}
 	s.MatrixSpecial = entity.NewJuicyMatrix()
@@ -54,8 +54,8 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	if s.GemSpin <= 0 {
-		return matchState, ErrorSpinReadMax
+	if s.NumSpinLeft <= 0 {
+		return matchState, entity.ErrorSpinReadMax
 	}
 	var matrix entity.SlotMatrix
 	for {
@@ -84,7 +84,7 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	s.MatrixSpecial = (matrix)
 	s.SetWildMatrix(e.WildMatrix(matrix))
 	s.SetPaylines(e.Paylines(matrix))
-	s.GemSpin--
+	s.NumSpinLeft--
 	return matchState, nil
 }
 
@@ -125,15 +125,16 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.IsFinishGame = s.GemSpin <= 0
+	slotDesk.IsFinishGame = s.NumSpinLeft <= 0
 	if slotDesk.IsFinishGame {
 		s.RatioFruitBasket = 1
 	}
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
 
 func (e *freeGame) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	if s.GemSpin <= 0 {
+	if s.NumSpinLeft <= 0 {
 		if s.NumFruitBasket >= 6 {
 			return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
 		}

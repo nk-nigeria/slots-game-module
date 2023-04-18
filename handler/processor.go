@@ -386,7 +386,11 @@ func (p *processor) handlerRequestGetInfoTable(
 		TsUnix:             time.Now().Unix(),
 	}
 	switch s.CurrentSiXiangGame {
-	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9:
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
+
 		matrix := s.Matrix
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,

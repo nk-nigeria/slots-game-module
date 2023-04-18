@@ -31,20 +31,20 @@ func (e *sixiangBonusIngameEngine) NewGame(matchState interface{}) (interface{},
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.enginesGame[s.CurrentSiXiangGame]
 	if engine == nil {
-		return matchState, ErrorNoGameEngine
+		return matchState, entity.ErrorNoGameEngine
 	}
 	return engine.NewGame(matchState)
 }
 
 func (e *sixiangBonusIngameEngine) Random(min, max int) int {
-	return RandomInt(min, max)
+	return entity.RandomInt(min, max)
 }
 
 func (e *sixiangBonusIngameEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.enginesGame[s.CurrentSiXiangGame]
 	if engine == nil {
-		return matchState, ErrorNoGameEngine
+		return matchState, entity.ErrorNoGameEngine
 	}
 	return engine.Process(matchState)
 }
@@ -53,7 +53,7 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.enginesGame[s.CurrentSiXiangGame]
 	if engine == nil {
-		return matchState, ErrorNoGameEngine
+		return matchState, entity.ErrorNoGameEngine
 	}
 	result, err := engine.Finish(matchState)
 	if err != nil {

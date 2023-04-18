@@ -58,11 +58,12 @@ func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
 	matrix := entity.NewSiXiangMatrixNormal()
 	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
+	s.NumSpinLeft = -1
 	return s, nil
 }
 
 func (e *normalEngine) Random(min, max int) int {
-	return RandomInt(min, max)
+	return entity.RandomInt(min, max)
 }
 
 func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
@@ -131,6 +132,7 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
 

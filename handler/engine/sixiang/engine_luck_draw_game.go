@@ -21,12 +21,12 @@ func NewLuckyDrawEngine(randomIntFn func(min, max int) int, randomFloat64 func(m
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
-		engine.randomIntFn = RandomInt
+		engine.randomIntFn = entity.RandomInt
 	}
 	if randomFloat64 != nil {
 		engine.randomFloat64 = randomFloat64
 	} else {
-		engine.randomFloat64 = RandomFloat64
+		engine.randomFloat64 = entity.RandomFloat64
 	}
 	return &engine
 }
@@ -34,14 +34,15 @@ func NewLuckyDrawEngine(randomIntFn func(min, max int) int, randomFloat64 func(m
 func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixLuckyDraw()
-	s.MatrixSpecial = ShuffleMatrix(matrix)
+	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
 	s.SpinSymbols = []*pb.SpinSymbol{}
+	s.NumSpinLeft = -1
 	// s.ChipsWinInSpecialGame = 0
 	return s, nil
 }
 
 func (e *luckyDrawEngine) Random(min, max int) int {
-	return RandomInt(min, max)
+	return entity.RandomInt(min, max)
 }
 
 func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
@@ -105,8 +106,9 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 		// calc chip in special game
 		slotDesk.IsFinishGame = true
 		symbolWin := s.SpinSymbols[0].Symbol
-		slotDesk.BigWin, slotDesk.WinJp = LuckySymbolToReward(symbolWin)
+		slotDesk.BigWin, slotDesk.WinJp = entity.LuckySymbolToReward(symbolWin)
 	}
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.Bet().Chips
 	return slotDesk, nil

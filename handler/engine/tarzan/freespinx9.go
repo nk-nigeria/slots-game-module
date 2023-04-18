@@ -35,17 +35,17 @@ func (e *freespinx9) NewGame(matchState interface{}) (interface{}, error) {
 	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
 	s.LineWinByGame[s.CurrentSiXiangGame] = 0
 	s.CountLineCrossFreeSpinSymbol = 0
-	s.GemSpin = maxGemSpinFreeSpinX9
+	s.NumSpinLeft = maxGemSpinFreeSpinX9
 	return matchState, nil
 }
 
 func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	if s.GemSpin <= 0 {
-		return nil, ErrorSpinReachMaximum
+	if s.NumSpinLeft <= 0 {
+		return nil, entity.ErrorSpinReadMax
 	}
 	e.normal.Process(matchState)
-	s.GemSpin--
+	s.NumSpinLeft--
 	return matchState, nil
 }
 
@@ -72,7 +72,7 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	}
 
 	slotDesk := result.(*pb.SlotDesk)
-	slotDesk.IsFinishGame = s.GemSpin <= 0
+	slotDesk.IsFinishGame = s.NumSpinLeft <= 0
 	if slotDesk.IsFinishGame {
 		// clean
 		s.TrackIndexFreeSpinSymbol = make(map[int]bool)
@@ -92,5 +92,6 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 		slotDesk.TotalChipsWinByGame *= int64(s.CountLineCrossFreeSpinSymbol)
 	}
 	slotDesk.ChipsWin = slotDesk.TotalChipsWinByGame
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, err
 }

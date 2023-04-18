@@ -299,3 +299,23 @@ func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {
 	}
 	return nil, false
 }
+
+func LuckySymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
+	var bigWin pb.BigWin
+	var winJp pb.WinJackpot
+	switch symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR:
+		bigWin = pb.BigWin_BIG_WIN_NICE
+		winJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_GRAND
+	}
+	return bigWin, winJp
+}

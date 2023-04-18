@@ -23,12 +23,12 @@ func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(mi
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
-		engine.randomIntFn = RandomInt
+		engine.randomIntFn = entity.RandomInt
 	}
 	if randomFloat64 != nil {
 		engine.randomFloat64 = randomFloat64
 	} else {
-		engine.randomFloat64 = RandomFloat64
+		engine.randomFloat64 = entity.RandomFloat64
 	}
 	return &engine
 }
@@ -38,7 +38,7 @@ func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	matrix := entity.NewMatrixRapidPay()
 	s.MatrixSpecial = matrix
 	s.SpinSymbols = []*pb.SpinSymbol{}
-	s.GemSpin = defaultRapidPayGemSpin
+	s.NumSpinLeft = defaultRapidPayGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	return s, nil
 }
@@ -49,16 +49,16 @@ func (e *rapidPayEngine) Random(min, max int) int {
 
 func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	if s.GemSpin <= 0 {
-		return s, ErrorSpinReadMax
+	if s.NumSpinLeft <= 0 {
+		return s, entity.ErrorSpinReadMax
 	}
-	indexStart := (s.GemSpin - 1) * s.MatrixSpecial.Cols
+	indexStart := (s.NumSpinLeft - 1) * s.MatrixSpecial.Cols
 	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]
 	var idRandom int
 	var symRandom pb.SiXiangSymbol
 	for {
 		idRandom = e.randomIntFn(0, len(arrSpin))
-		symRandom = ShuffleSlice(arrSpin)[idRandom]
+		symRandom = entity.ShuffleSlice(arrSpin)[idRandom]
 		if symRandom != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 			break
 		}
@@ -71,7 +71,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 		Col:    int32(col),
 	}
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
-	s.GemSpin--
+	s.NumSpinLeft--
 	return nil, nil
 }
 
@@ -79,9 +79,9 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
 	if len(s.SpinSymbols) == 0 {
-		return slotDesk, ErrorMissingSpinSymbol
+		return slotDesk, entity.ErrorMissingSpinSymbol
 	}
-	if s.GemSpin <= 0 || s.SpinSymbols[0].Symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END {
+	if s.NumSpinLeft <= 0 || s.SpinSymbols[0].Symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END {
 		slotDesk.IsFinishGame = true
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	} else {
@@ -99,5 +99,6 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }

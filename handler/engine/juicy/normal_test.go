@@ -368,7 +368,7 @@ func Test_normal_Only_fruitbasket_Finish(t *testing.T) {
 				s.NumScatterSeq = numScatterSeq
 				lineWin := 0
 				for i := 0; i < numFruitbasket; i++ {
-					symbol := ShuffleSlice(listFruitbasket)[0]
+					symbol := entity.ShuffleSlice(listFruitbasket)[0]
 					s.Matrix.List[i] = symbol
 					val := entity.JuicyBasketSymbol[symbol]
 					lineWin += int(val.Value.Min) * rationFruitBasket

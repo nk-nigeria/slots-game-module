@@ -42,6 +42,6 @@ func (e *engine) Process(matchState interface{}) (interface{}, error) {
 }
 
 // Random implements lib.Engine
-func (*engine) Random(min int, max int) int {
-	return RandomInt(min, max)
+func (e *engine) Random(min int, max int) int {
+	return e.Random(min, max)
 }

@@ -16,11 +16,11 @@ func Test_nluckyDrawEngine_ShuffleMatrix(t *testing.T) {
 	t.Run(name, func(t *testing.T) {
 		engine := &luckyDrawEngine{}
 		matrix1 := entity.NewMatrixLuckyDraw()
-		ShuffleMatrix(matrix1)
+		entity.ShuffleMatrix(matrix1)
 		t.Log("matrix 1")
 		engine.PrintMatrix(matrix1)
 		matrix2 := entity.NewMatrixLuckyDraw()
-		ShuffleMatrix(matrix2)
+		entity.ShuffleMatrix(matrix2)
 		t.Log("matrix 2")
 		engine.PrintMatrix(matrix2)
 		countSameSymbol := 0
@@ -144,7 +144,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 				func(min, max float64) float64 { return min },
 			)
 			engine.NewGame(matchState)
-			idFlip := RandomInt(0, matchState.MatrixSpecial.Size)
+			idFlip := entity.RandomInt(0, matchState.MatrixSpecial.Size)
 			matchState.MatrixSpecial.List[idFlip] = symbol
 			matchState.MatrixSpecial.TrackFlip[idFlip] = true
 			matchState.SetBetInfo(bet)
@@ -211,7 +211,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 					ChipsMcb: bet.Chips,
 				},
 			}
-			test.want.BigWin, test.want.WinJp = LuckySymbolToReward(symbol)
+			test.want.BigWin, test.want.WinJp = entity.LuckySymbolToReward(symbol)
 			test.args.matchState = matchState
 			test.fields.engine = engine
 			tests = append(tests, test)

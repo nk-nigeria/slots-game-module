@@ -17,7 +17,7 @@ func NewBonusEngine(randomIntFn func(min, max int) int) lib.Engine {
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
-		engine.randomIntFn = RandomInt
+		engine.randomIntFn = entity.RandomInt
 	}
 	return &engine
 }
@@ -25,9 +25,10 @@ func NewBonusEngine(randomIntFn func(min, max int) int) lib.Engine {
 func (e *bonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixBonusGame()
-	s.MatrixSpecial = ShuffleMatrix(matrix)
+	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
 	// s.ChipsWinInSpecialGame = 0
 	s.SpinSymbols = []*pb.SpinSymbol{}
+	s.NumSpinLeft = 1
 	return s, nil
 }
 
@@ -54,6 +55,7 @@ func (e *bonusEngine) Process(matchState interface{}) (interface{}, error) {
 	row, col := s.MatrixSpecial.RowCol(id)
 	spinSymbol.Row = int32(row)
 	spinSymbol.Col = int32(col)
+	s.NumSpinLeft--
 	s.SpinSymbols = []*pb.SpinSymbol{spinSymbol}
 	return s, nil
 }
@@ -81,6 +83,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.IsFinishGame = true
 	slotDesk.ChipsMcb = s.Bet().Chips
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
 

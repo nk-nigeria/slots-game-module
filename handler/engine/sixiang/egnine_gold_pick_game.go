@@ -22,12 +22,12 @@ func NewGoldPickEngine(randomIntFn func(min, max int) int, randomFloat64 func(mi
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
-		engine.randomIntFn = RandomInt
+		engine.randomIntFn = entity.RandomInt
 	}
 	if randomFloat64 != nil {
 		engine.randomFloat64 = randomFloat64
 	} else {
-		engine.randomFloat64 = RandomFloat64
+		engine.randomFloat64 = entity.RandomFloat64
 	}
 	return &engine
 }
@@ -35,9 +35,9 @@ func NewGoldPickEngine(randomIntFn func(min, max int) int, randomFloat64 func(mi
 func (e *goldPickEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixGoldPick()
-	s.MatrixSpecial = ShuffleMatrix(matrix)
+	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
 	s.SpinSymbols = []*pb.SpinSymbol{}
-	s.GemSpin = defaultGoldPickGemSpin
+	s.NumSpinLeft = defaultGoldPickGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	return s, nil
 }
@@ -48,8 +48,8 @@ func (e *goldPickEngine) Random(min, max int) int {
 
 func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	if s.GemSpin <= 0 {
-		return s, ErrorSpinReadMax
+	if s.NumSpinLeft <= 0 {
+		return s, entity.ErrorSpinReadMax
 	}
 	idRandom, symbolRandom := s.MatrixSpecial.RandomSymbolNotFlip(e.randomIntFn)
 	row, col := s.MatrixSpecial.RowCol(idRandom)
@@ -58,7 +58,7 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 		Row:    int32(row),
 		Col:    int32(col),
 	}
-	s.GemSpin--
+	s.NumSpinLeft--
 	if symbolRandom == pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD5 {
 		arr := []pb.SiXiangSymbol{
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD5,
@@ -66,7 +66,7 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MAJOR,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MEGA,
 		}
-		symbolRandom = ShuffleSlice(arr)[e.randomIntFn(0, len(arr))]
+		symbolRandom = entity.ShuffleSlice(arr)[e.randomIntFn(0, len(arr))]
 		spin.Symbol = symbolRandom
 	}
 	s.MatrixSpecial.Flip(idRandom)
@@ -78,7 +78,7 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk := &pb.SlotDesk{}
 	s := matchState.(*entity.SlotsMatchState)
-	if s.GemSpin <= 0 {
+	if s.NumSpinLeft <= 0 {
 		slotDesk.IsFinishGame = true
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
@@ -97,5 +97,6 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.ChipsMcb = s.Bet().GetChips()
 	slotDesk.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }

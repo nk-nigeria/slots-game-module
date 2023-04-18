@@ -22,6 +22,6 @@ func Test_freespinx9_Process(t *testing.T) {
 			assert.NoError(t, err)
 		}
 		_, err := engine.Process(matchState)
-		assert.ErrorIs(t, ErrorSpinReachMaximum, err)
+		assert.ErrorIs(t, entity.ErrorSpinReadMax, err)
 	})
 }

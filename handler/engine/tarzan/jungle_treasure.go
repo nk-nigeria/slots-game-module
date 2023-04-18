@@ -17,7 +17,7 @@ type jungleTreasure struct {
 func NewJungTreasure(randomIntFn func(int, int) int) lib.Engine {
 	e := &jungleTreasure{}
 	if randomIntFn == nil {
-		e.randomIntFn = RandomInt
+		e.randomIntFn = entity.RandomInt
 	} else {
 		e.randomIntFn = randomIntFn
 	}
@@ -28,24 +28,24 @@ func NewJungTreasure(randomIntFn func(int, int) int) lib.Engine {
 func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.MatrixSpecial = entity.NewTarzanJungleTreasureMatrix()
-	s.MatrixSpecial = ShuffleMatrix(s.MatrixSpecial)
+	s.MatrixSpecial = entity.ShuffleMatrix(s.MatrixSpecial)
 	s.SpinSymbols = nil
-	s.GemSpin = 5
+	s.NumSpinLeft = 5
 	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
 	s.LineWinByGame[s.CurrentSiXiangGame] = 0
-	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.GemSpin+1)
+	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.NumSpinLeft+1)
 	return s, nil
 }
 
 // Process implements lib.Engine
 func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	if s.GemSpin == 0 {
-		return s, ErrorSpinReachMaximum
+	if s.NumSpinLeft == 0 {
+		return s, entity.ErrorSpinReadMax
 	}
 	var randIdx int
 	var randSymbol pb.SiXiangSymbol
-	if s.GemSpin != e.sureTurnSpinSymboTurnX3 {
+	if s.NumSpinLeft != e.sureTurnSpinSymboTurnX3 {
 		randIdx, randSymbol = s.MatrixSpecial.RandomSymbolNotFlip(e.randomIntFn)
 	} else {
 		randSymbol = pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3
@@ -68,7 +68,7 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 		Col:    int32(col),
 	}
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
-	s.GemSpin--
+	s.NumSpinLeft--
 	return matchState, nil
 }
 
@@ -79,23 +79,23 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	for _, spin := range s.SpinSymbols {
 		switch spin.Symbol {
 		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX2:
-			s.GemSpin += 2
+			s.NumSpinLeft += 2
 		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3:
-			s.GemSpin += 3
+			s.NumSpinLeft += 3
 		default:
 			symInfo := entity.TarzanJungleTreasureSymbol[spin.Symbol]
 			lineWin += e.randomIntFn(int(symInfo.Value.Min), int(symInfo.Value.Max))
 		}
 	}
 
-	if s.GemSpin == 0 {
+	if s.NumSpinLeft == 0 {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
 	slotDesk := &pb.SlotDesk{
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 		ChipsMcb:           s.Bet().GetChips(),
-		IsFinishGame:       s.GemSpin == 0,
+		IsFinishGame:       s.NumSpinLeft == 0,
 	}
 	chipsWin := int64(lineWin * int(slotDesk.ChipsMcb) / 100)
 	s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + chipsWin
@@ -108,6 +108,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 			slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		}
 	})
+	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
 

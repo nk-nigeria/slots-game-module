@@ -36,7 +36,7 @@ type SlotsMatchState struct {
 	MatrixSpecial SlotMatrix
 	// ChipsWinInSpecialGame int64
 	SpinSymbols []*pb.SpinSymbol
-	GemSpin     int // gem using for spin in dragon perl
+	NumSpinLeft int // gem using for spin in dragon perl
 	// lần quay chắc chắn ra ngọc
 	TurnSureSpin           int
 	CollectionSymbolRemain []pb.SiXiangSymbol
