@@ -42,7 +42,7 @@ func (e *freespinx9) NewGame(matchState interface{}) (interface{}, error) {
 func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	if s.NumSpinLeft <= 0 {
-		return nil, entity.ErrorSpinReadMax
+		return nil, entity.ErrorSpinReachMax
 	}
 	e.normal.Process(matchState)
 	s.NumSpinLeft--

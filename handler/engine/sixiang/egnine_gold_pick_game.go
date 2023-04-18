@@ -49,7 +49,7 @@ func (e *goldPickEngine) Random(min, max int) int {
 func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	if s.NumSpinLeft <= 0 {
-		return s, entity.ErrorSpinReadMax
+		return s, entity.ErrorSpinReachMax
 	}
 	idRandom, symbolRandom := s.MatrixSpecial.RandomSymbolNotFlip(e.randomIntFn)
 	row, col := s.MatrixSpecial.RowCol(idRandom)

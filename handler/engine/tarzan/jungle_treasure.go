@@ -41,7 +41,7 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	if s.NumSpinLeft == 0 {
-		return s, entity.ErrorSpinReadMax
+		return s, entity.ErrorSpinReachMax
 	}
 	var randIdx int
 	var randSymbol pb.SiXiangSymbol

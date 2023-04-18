@@ -50,7 +50,7 @@ func (e *rapidPayEngine) Random(min, max int) int {
 func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	if s.NumSpinLeft <= 0 {
-		return s, entity.ErrorSpinReadMax
+		return s, entity.ErrorSpinReachMax
 	}
 	indexStart := (s.NumSpinLeft - 1) * s.MatrixSpecial.Cols
 	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]

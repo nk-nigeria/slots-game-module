@@ -423,6 +423,7 @@ func (p *processor) handlerRequestGetInfoTable(
 		slotdesk.BalanceChipsWalletBefore = wallet.Chips
 		slotdesk.BalanceChipsWalletAfter = slotdesk.BalanceChipsWalletBefore
 	}
+	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }

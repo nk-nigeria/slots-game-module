@@ -91,7 +91,7 @@ func Test_freeGame_maxSpin_Process(t *testing.T) {
 			assert.NoError(t, err)
 		}
 		_, err := e.Process(s)
-		assert.Equal(t, ErrorSpinReadMax, err)
+		assert.Equal(t, entity.ErrorSpinReachMax, err)
 	})
 
 }

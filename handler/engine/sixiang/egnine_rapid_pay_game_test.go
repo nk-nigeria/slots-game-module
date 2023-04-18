@@ -69,7 +69,7 @@ func Test_rapidPayEngine_Process(t *testing.T) {
 			for i := 0; i < tt.args.numProcess; i++ {
 				_, err := engine.Process(tt.args.s)
 				if err != nil {
-					assert.Equal(t, entity.ErrorSpinReadMax, err)
+					assert.Equal(t, entity.ErrorSpinReachMax, err)
 					continue
 				}
 				assert.Equal(t, tt.want.gemSpin[i], tt.args.s.NumSpinLeft)

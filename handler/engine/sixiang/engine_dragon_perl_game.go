@@ -66,7 +66,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 		return s, errors.New("gem spin not enough")
 	}
 	if len(s.MatrixSpecial.TrackFlip) >= 15 {
-		return s, entity.ErrorSpinReadMax
+		return s, entity.ErrorSpinReachMax
 	}
 	// Setup sao cho số lượt spins của user ít nhất được 8 ngọc và 1 phong bao
 	// nên đầu game random ra lân quay chắc chắn sẽ ra ngọc nếu tới lượt đó

@@ -55,7 +55,7 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	if s.NumSpinLeft <= 0 {
-		return matchState, entity.ErrorSpinReadMax
+		return matchState, entity.ErrorSpinReachMax
 	}
 	var matrix entity.SlotMatrix
 	for {

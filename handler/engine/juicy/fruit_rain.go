@@ -49,6 +49,9 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	if s.NumSpinLeft <= 0 {
+		return s, entity.ErrorSpinReachMax
+	}
 	matrix := s.MatrixSpecial
 	matrix = e.SpinMatrix(matrix)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {

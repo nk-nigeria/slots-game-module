@@ -21,7 +21,7 @@ func Test_jungleTreasure_Process_Num_Spin(t *testing.T) {
 
 			for {
 				_, err := engine.Process(matchState)
-				if err == entity.ErrorSpinReadMax {
+				if err == entity.ErrorSpinReachMax {
 					break
 				}
 				engine.Finish(matchState)
@@ -56,7 +56,7 @@ func Test_jungleTreasure_Process(t *testing.T) {
 			for {
 				prevGemSpin := matchState.NumSpinLeft
 				result, err := engine.Process(matchState)
-				if err == entity.ErrorSpinReadMax {
+				if err == entity.ErrorSpinReachMax {
 					break
 				}
 

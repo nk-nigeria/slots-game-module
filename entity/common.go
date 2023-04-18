@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	ErrorSpinReadMax       = errors.New("spin reach max")
+	ErrorSpinReachMax       = errors.New("spin reach max")
 	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
 	ErrorNoGameEngine      = errors.New("no game engine")
 )
