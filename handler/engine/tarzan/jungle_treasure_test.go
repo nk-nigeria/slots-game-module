@@ -101,8 +101,8 @@ func Test_jungleTreasure_Finish(t *testing.T) {
 				prevGemspin += int(v.Value.Min)
 			default:
 				symInfo := entity.TarzanJungleTreasureSymbol[s.SpinSymbols[0].Symbol]
-				assert.Equal(t, true, s.LineWinByGame[s.CurrentSiXiangGame] >= int(symInfo.Value.Min), fmt.Sprintf("sym %s val %d, expext > %v", s.SpinSymbols[0].Symbol.String(), s.LineWinByGame[s.CurrentSiXiangGame], symInfo.Value.Min))
-				assert.Equal(t, true, s.LineWinByGame[s.CurrentSiXiangGame] <= int(symInfo.Value.Max), fmt.Sprintf("sym  %s val %d, expext < %v", s.SpinSymbols[0].Symbol.String(), s.LineWinByGame[s.CurrentSiXiangGame], symInfo.Value.Max))
+				assert.Equal(t, true, int(s.ChipStat.ChipWin(s.CurrentSiXiangGame)) >= int(symInfo.Value.Min), fmt.Sprintf("sym %s val %d, expext > %v", s.SpinSymbols[0].Symbol.String(), int(s.ChipStat.ChipWin(s.CurrentSiXiangGame)), int(symInfo.Value.Min)))
+				assert.Equal(t, true, int(s.ChipStat.LineWin(s.CurrentSiXiangGame)) <= int(symInfo.Value.Max), fmt.Sprintf("sym  %s val %d, expext < %v", s.SpinSymbols[0].Symbol.String(), s.ChipStat.LineWin(s.CurrentSiXiangGame), symInfo.Value.Max))
 			}
 			assert.Equal(t, prevGemspin, s.NumSpinLeft)
 			assert.Equal(t, slotDesk.CurrentSixiangGame, s.CurrentSiXiangGame)

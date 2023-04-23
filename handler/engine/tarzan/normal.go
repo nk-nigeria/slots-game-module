@@ -76,8 +76,10 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 // Finish implements lib.Engine
 func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	s.LineWinByGame[s.CurrentSiXiangGame] = 0
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
+	s.ChipStat.ResetChipWin(0)
+	// s.LineWinByGame[s.CurrentSiXiangGame] = 0
+	s.ChipStat.ResetLineWin(0)
 	slotDesk := &pb.SlotDesk{}
 	slotDesk.Paylines = e.Paylines(s.WildMatrix)
 	slotDesk.ChipsMcb = s.Bet().Chips
@@ -88,8 +90,11 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 			lineWin += 500
 		}
 	})
-	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin * slotDesk.ChipsMcb / 100)
-	s.LineWinByGame[s.CurrentSiXiangGame] = int(lineWin)
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin * slotDesk.ChipsMcb / 100)
+	chipWin := int64(lineWin * slotDesk.ChipsMcb / 100)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipWin)
+	// s.LineWinByGame[s.CurrentSiXiangGame] = int(lineWin)
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, lineWin)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	// if next game is freex9, save index freespin symbol
 	if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
@@ -101,7 +106,8 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	}
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
-	slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
+	// slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
+	slotDesk.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame

@@ -47,7 +47,8 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 	s.MatrixSpecial = entity.NewJuicyMatrix()
 	matrix := e.SpinMatrix(s.MatrixSpecial, e.ratioWild)
 	s.MatrixSpecial = matrix
-	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
+	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	return matchState, nil
 }
 
@@ -116,9 +117,12 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 
 	slotDesk.ChipsWin = int64(lineWin) * s.Bet().Chips / 100
 	slotDesk.ChipsMcb = s.Bet().Chips
-	s.ChipWinByGame[s.CurrentSiXiangGame] += slotDesk.ChipsWin
-	s.LineWinByGame[s.CurrentSiXiangGame] += lineWin
-	slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
+	// ts.ChipWinByGame[s.CurrentSiXiangGame] += slotDesk.ChipsWin
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
+	// s.LineWinByGame[s.CurrentSiXiangGame] += lineWin
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
+	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
+	slotDesk.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
 

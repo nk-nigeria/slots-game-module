@@ -31,8 +31,10 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s.MatrixSpecial = entity.ShuffleMatrix(s.MatrixSpecial)
 	s.SpinSymbols = nil
 	s.NumSpinLeft = 5
-	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	s.LineWinByGame[s.CurrentSiXiangGame] = 0
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
+	// s.LineWinByGame[s.CurrentSiXiangGame] = 0
+	s.ChipStat.ResetChipWin(0)
+	s.ChipStat.ResetLineWin(0)
 	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.NumSpinLeft+1)
 	return s, nil
 }
@@ -98,10 +100,13 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 		IsFinishGame:       s.NumSpinLeft == 0,
 	}
 	chipsWin := int64(lineWin * int(slotDesk.ChipsMcb) / 100)
-	s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + chipsWin
-	s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + lineWin
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + chipsWin
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipsWin)
+	// s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + lineWin
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
 	slotDesk.ChipsWin = chipsWin
-	slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
+	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
+	slotDesk.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if !s.MatrixSpecial.TrackFlip[idx] {

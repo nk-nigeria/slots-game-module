@@ -60,7 +60,8 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		s.PerlGreenForest = 0
 	}
 
-	slotDesk.BigWin = e.transformLineWinToBigWin(s.LineWinByGame[s.CurrentSiXiangGame])
+	// slotDesk.BigWin = e.transformLineWinToBigWin(s.LineWinByGame[s.CurrentSiXiangGame])
+	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
 	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(0)
 	return slotDesk, err
 }

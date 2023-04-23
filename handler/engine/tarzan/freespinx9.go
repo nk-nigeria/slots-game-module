@@ -32,8 +32,10 @@ func NewFreeSpinX9(randomIntFn func(int, int) int) lib.Engine {
 // NewGame implements lib.Engine
 func (e *freespinx9) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	s.LineWinByGame[s.CurrentSiXiangGame] = 0
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
+	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+	// s.LineWinByGame[s.CurrentSiXiangGame] = 0
+	s.ChipStat.ResetLineWin(s.CurrentSiXiangGame)
 	s.CountLineCrossFreeSpinSymbol = 0
 	s.NumSpinLeft = maxGemSpinFreeSpinX9
 	return matchState, nil
@@ -52,8 +54,10 @@ func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
 // Finish implements lib.Engine
 func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	prevChipWin := s.ChipWinByGame[s.CurrentSiXiangGame]
-	prevLineWin := s.LineWinByGame[s.CurrentSiXiangGame]
+	// prevChipWin := s.ChipWinByGame[s.CurrentSiXiangGame]
+	prevChipWin := s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	// prevLineWin := s.LineWinByGame[s.CurrentSiXiangGame]
+	prevLineWin := s.ChipStat.LineWin(s.CurrentSiXiangGame)
 	result, err := e.normal.Finish(matchState)
 	if err != nil {
 		return result, err
@@ -83,11 +87,14 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + prevChipWin
-	s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + prevLineWin
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + prevChipWin
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, prevChipWin)
+	// s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + prevLineWin
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, prevLineWin)
 	// Finish when gem spin = 0
 	// tiền thưởng = (tổng số tiền thắng trong 9 Freespin) x (hệ số nhân bonus ở trên)
-	slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
+	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
+	slotDesk.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	if s.CountLineCrossFreeSpinSymbol > 0 {
 		slotDesk.TotalChipsWinByGame *= int64(s.CountLineCrossFreeSpinSymbol)
 	}

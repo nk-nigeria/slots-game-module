@@ -46,8 +46,9 @@ type SlotsMatchState struct {
 	// tarzan
 	// List idx of free symbol index
 	TrackIndexFreeSpinSymbol map[int]bool
-	ChipWinByGame            map[pb.SiXiangGame]int64
-	LineWinByGame            map[pb.SiXiangGame]int
+	// ChipWinByGame            map[pb.SiXiangGame]int64
+	// LineWinByGame map[pb.SiXiangGame]int
+	ChipStat *chipStat
 	// so luong payline di qua free spin tarzan
 	CountLineCrossFreeSpinSymbol int
 	// ngoc rung xanh
@@ -70,9 +71,10 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		CollectionSymbol:   make(map[int]map[pb.SiXiangSymbol]int, 0),
-		ChipWinByGame:      make(map[pb.SiXiangGame]int64, 0),
-		LineWinByGame:      make(map[pb.SiXiangGame]int, 0),
-		RatioFruitBasket:   1,
+		// ChipWinByGame:      make(map[pb.SiXiangGame]int64, 0),
+		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
+		ChipStat:         NewChipStat(),
+		RatioFruitBasket: 1,
 	}
 
 	return &m

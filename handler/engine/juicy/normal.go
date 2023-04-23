@@ -44,6 +44,8 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	s.ChipStat.ResetChipWin(0)
+	s.ChipStat.ResetLineWin(0)
 	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
 	if s.Bet().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET) {
 		for i := 0; i < 3; i++ {
@@ -85,10 +87,14 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 			lineWin += int(val.Value.Min) * s.RatioFruitBasket
 		}
 	})
-	s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin) * s.Bet().Chips / 100
-	s.LineWinByGame[s.CurrentSiXiangGame] = lineWin
+	// s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin) * s.Bet().Chips / 100
+	chipWin := int64(lineWin) * s.Bet().Chips / 100
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipWin)
+	// s.LineWinByGame[s.CurrentSiXiangGame] = lineWin
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
 	slotDesk.ChipsMcb = s.Bet().Chips
-	slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
+	// slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
+	slotDesk.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
