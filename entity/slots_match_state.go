@@ -17,13 +17,13 @@ type UserDataMatch struct {
 	RRSpecialGame bool `json:"rr_spec_game"`
 }
 
-type SixiangMatchState struct {
+type SlotsMatchState struct {
 	lib.MatchState
 	allowSpin     bool // allow user submit new bet
 	balanceResult *pb.BalanceResult
 	// UserDataMatch  UserDataMatch
-	matrix         SlotMatrix
-	spreadMatrix   SlotMatrix
+	Matrix         SlotMatrix
+	WildMatrix     SlotMatrix
 	paylines       []*pb.Payline
 	WaitSpinMatrix bool
 
@@ -35,17 +35,33 @@ type SixiangMatchState struct {
 
 	MatrixSpecial SlotMatrix
 	// ChipsWinInSpecialGame int64
-	SpinSymbols      []*pb.SpinSymbol
-	EyeSiXiangRemain []pb.SiXiangSymbol
-	GemSpin          int // gem using for spin in dragon perl
+	SpinSymbols []*pb.SpinSymbol
+	NumSpinLeft int // gem using for spin in dragon perl
 	// lần quay chắc chắn ra ngọc
-	TurnSureSpinEye int
+	TurnSureSpin           int
+	CollectionSymbolRemain []pb.SiXiangSymbol
 	// Danh sach ngoc tứ linh spin được theo chip bet.
-	EyeSiXiangSpined map[int][]pb.SiXiangSymbol
+	CollectionSymbol map[int]map[pb.SiXiangSymbol]int
+
+	// tarzan
+	// List idx of free symbol index
+	TrackIndexFreeSpinSymbol map[int]bool
+	// ChipWinByGame            map[pb.SiXiangGame]int64
+	// LineWinByGame map[pb.SiXiangGame]int
+	ChipStat *chipStat
+	// so luong payline di qua free spin tarzan
+	CountLineCrossFreeSpinSymbol int
+	// ngoc rung xanh
+	PerlGreenForest int
+	// chip tich luy
+	ChipsBonus       int64
+	NumScatterSeq    int
+	NumFruitBasket   int
+	RatioFruitBasket int
 }
 
-func NewSlotsMathState(label *lib.MatchLabel) *SixiangMatchState {
-	m := SixiangMatchState{
+func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
+	m := SlotsMatchState{
 		MatchState:     lib.NewMathState(label, NewMyPrecense),
 		balanceResult:  nil,
 		WaitSpinMatrix: false,
@@ -54,74 +70,98 @@ func NewSlotsMathState(label *lib.MatchLabel) *SixiangMatchState {
 		},
 		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+		CollectionSymbol:   make(map[int]map[pb.SiXiangSymbol]int, 0),
+		// ChipWinByGame:      make(map[pb.SiXiangGame]int64, 0),
+		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
+		ChipStat:         NewChipStat(),
+		RatioFruitBasket: 1,
 	}
 
 	return &m
 }
 
-func (s *SixiangMatchState) GetMatrix() SlotMatrix {
-	return s.matrix
+func (s *SlotsMatchState) SetMatrix(matrix SlotMatrix) {
+	s.Matrix = matrix
 }
 
-func (s *SixiangMatchState) SetMatrix(matrix SlotMatrix) {
-	s.matrix = matrix
+func (s *SlotsMatchState) SetWildMatrix(matrix SlotMatrix) {
+	s.WildMatrix = matrix
 }
 
-func (s *SixiangMatchState) GetSpreadMatrix() SlotMatrix {
-	return s.spreadMatrix
-}
-
-func (s *SixiangMatchState) SetSpreadMMatrix(matrix SlotMatrix) {
-	s.spreadMatrix = matrix
-}
-
-func (s *SixiangMatchState) GetPaylines() []*pb.Payline {
+func (s *SlotsMatchState) Paylines() []*pb.Payline {
 	return s.paylines
 }
 
-func (s *SixiangMatchState) SetPaylines(paylines []*pb.Payline) {
+func (s *SlotsMatchState) SetPaylines(paylines []*pb.Payline) {
 	s.paylines = paylines
 }
 
-func (s *SixiangMatchState) GetBetInfo() *pb.InfoBet {
+func (s *SlotsMatchState) Bet() *pb.InfoBet {
 	return s.bet
 }
 
-func (s *SixiangMatchState) SetBetInfo(bet *pb.InfoBet) {
+func (s *SlotsMatchState) SetBetInfo(bet *pb.InfoBet) {
 	s.bet = bet
 }
 
-func (s *SixiangMatchState) InitNewRound() {
+func (s *SlotsMatchState) InitNewRound() {
 	s.WaitSpinMatrix = false
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.paylines = nil
-	s.spreadMatrix = SlotMatrix{}
+	s.WildMatrix = SlotMatrix{}
 }
-func (s *SixiangMatchState) IsAllowSpin() bool {
+func (s *SlotsMatchState) IsAllowSpin() bool {
 	return s.allowSpin
 }
 
-func (s *SixiangMatchState) SetAllowSpin(val bool) {
+func (s *SlotsMatchState) SetAllowSpin(val bool) {
 	s.allowSpin = val
 }
 
-func (s *SixiangMatchState) SetUpCountDown(duration time.Duration) {
+func (s *SlotsMatchState) SetUpCountDown(duration time.Duration) {
 	s.CountDownReachTime = time.Now().Add(duration)
 	s.LastCountDown = -1
 }
 
-func (s *SixiangMatchState) ResetBalanceResult() {
+func (s *SlotsMatchState) ResetBalanceResult() {
 	s.SetBalanceResult(nil)
 }
 
-func (s *SixiangMatchState) GetBalanceResult() *pb.BalanceResult {
+func (s *SlotsMatchState) GetBalanceResult() *pb.BalanceResult {
 	return s.balanceResult
 }
 
-func (s *SixiangMatchState) SetBalanceResult(u *pb.BalanceResult) {
+func (s *SlotsMatchState) SetBalanceResult(u *pb.BalanceResult) {
 	s.balanceResult = u
 }
 
-// func (s *SlotsMatchState) ResetTrackingPlayBonusGame() {
-// 	s.trackingPlaySiXiangGame = make(map[pb.SiXiangGame]int)
-// }
+//	func (s *SlotsMatchState) ResetTrackingPlayBonusGame() {
+//		s.trackingPlaySiXiangGame = make(map[pb.SiXiangGame]int)
+//	}
+func (s *SlotsMatchState) AddCollectionSymbol(chipMcb int, sym pb.SiXiangSymbol) {
+	collection, exist := s.CollectionSymbol[chipMcb]
+	if !exist {
+		s.CollectionSymbol[chipMcb] = make(map[pb.SiXiangSymbol]int, 0)
+		collection = s.CollectionSymbol[chipMcb]
+	}
+	num := collection[sym]
+	num++
+	collection[sym] = num
+	s.CollectionSymbol[chipMcb] = collection
+}
+
+func (s *SlotsMatchState) CollectionSymbolToSlice(chipMcb int) []pb.SiXiangSymbol {
+	collection, exist := s.CollectionSymbol[chipMcb]
+	ml := make([]pb.SiXiangSymbol, 0, len(s.CollectionSymbol))
+	if !exist {
+		return ml
+	}
+	for k := range collection {
+		ml = append(ml, k)
+	}
+	return ml
+}
+
+func (s *SlotsMatchState) SizeCollectionSymbol(chipMcb int) int {
+	return len(s.CollectionSymbol[chipMcb])
+}

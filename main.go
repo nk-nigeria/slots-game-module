@@ -23,12 +23,15 @@ func InitModule(_ context.Context, logger runtime.Logger, _ *sql.DB, _ runtime.N
 	unmarshaler := &protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
-	if err := initializer.RegisterMatch(entity.ModuleName, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
-		return api.NewMatchHandler(marshaler, unmarshaler), nil
-	}); err != nil {
-		return err
+	gameNames := []string{entity.SixiangGameName, entity.TarzanGameName, entity.JuicyGarden}
+	for _, gameName := range gameNames {
+		name := gameName
+		if err := initializer.RegisterMatch(name, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
+			return api.NewMatchHandler(name, marshaler, unmarshaler), nil
+		}); err != nil {
+			return err
+		}
 	}
-
 	logger.Info("Plugin loaded in '%d' msec.", time.Since(initStart).Milliseconds())
 	return nil
 }

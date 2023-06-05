@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
 
@@ -23,7 +24,8 @@ type processor struct {
 	engine      lib.Engine
 	marshaler   *protojson.MarshalOptions
 	unmarshaler *protojson.UnmarshalOptions
-	// turnBaseEngine *lib.TurnBaseEngine
+
+	delayTime time.Time
 }
 
 func NewMatchProcessor(marshaler *protojson.MarshalOptions,
@@ -44,13 +46,13 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	dispatcher runtime.MatchDispatcher,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	logger.WithField("size player", s.GetPresenceSize()).Info("ProcessNewGame")
 	s.InitNewRound()
 	s.SetupMatchPresence()
 	s.SetAllowSpin(true)
 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-	s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+	s.NextSiXiangGame = s.CurrentSiXiangGame
 	_, err := p.engine.NewGame(matchState)
 	if err != nil {
 		logger.WithField("err", err).Error("Engine new game failed")
@@ -58,13 +60,13 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	}
 	if s.GetPresenceSize() <= 0 {
 		logger.
-			WithField("game", entity.ModuleName).
+			WithField("game", s.Label.Code).
 			Info("no player broadcast new game data")
 		return
 	}
 	logger.
-		WithField("game", entity.ModuleName).
-		WithField("data", s.GetMatrix()).
+		WithField("game", s.Label.Code).
+		WithField("data", s.Matrix).
 		Info("new game")
 
 	// slotDesk := &pb.SlotDesk{}
@@ -101,7 +103,10 @@ func (p *processor) ProcessGame(ctx context.Context,
 	messages []runtime.MatchData,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SixiangMatchState)
+	if p.delayTime.After(time.Now()) {
+		return
+	}
+	s := matchState.(*entity.SlotsMatchState)
 	s.InitNewRound()
 	defer s.SetAllowSpin(true)
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
@@ -148,7 +153,7 @@ func (p *processor) ProcessApplyPresencesLeave(ctx context.Context,
 	dispatcher runtime.MatchDispatcher,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	pendingLeaves := s.GetLeavePresences()
 	if len(pendingLeaves) == 0 {
 		return
@@ -221,7 +226,7 @@ func (p *processor) ProcessPresencesJoin(ctx context.Context,
 	presences []runtime.Presence,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	logger.WithField("users", presences).Info("presences join")
 	// update new presence
 	newJoins := make([]runtime.Presence, 0)
@@ -238,7 +243,7 @@ func (p *processor) ProcessPresencesJoin(ctx context.Context,
 	}
 	s.AddPresence(ctx, nk, newJoins)
 	s.JoinsInProgress -= len(newJoins)
-	if len(s.GetMatrix().List) == 0 {
+	if len(s.Matrix.List) == 0 {
 		logger.Debug("game state not init")
 		return
 	}
@@ -255,7 +260,7 @@ func (p *processor) ProcessPresencesLeave(ctx context.Context,
 	presences []runtime.Presence,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	s.RemovePresence(presences...)
 	var listUserId []string
 	for _, p := range presences {
@@ -271,7 +276,7 @@ func (p *processor) ProcessPresencesLeavePending(ctx context.Context,
 	presences []runtime.Presence,
 	matchState interface{},
 ) {
-	s := matchState.(*entity.SixiangMatchState)
+	s := matchState.(*entity.SlotsMatchState)
 	logger.WithField("user", presences).Info("process presences leave pending")
 	for _, presence := range presences {
 		_, found := s.PlayingPresences.Get(presence.GetUserId())
@@ -289,7 +294,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
 	message runtime.MatchData,
-	s *entity.SixiangMatchState,
+	s *entity.SlotsMatchState,
 ) {
 	if !s.IsAllowSpin() {
 		return
@@ -313,7 +318,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		s.SetBetInfo(bet)
 	} else {
-		bet.Chips = s.GetBetInfo().GetChips()
+		bet.Chips = s.Bet().GetChips()
 		s.SetBetInfo(bet)
 	}
 	p.engine.Process(s)
@@ -353,11 +358,15 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 			},
 		})
 	}
+	slotDesk.TsUnix = time.Now().Unix()
 	p.broadcastMessage(logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotDesk,
 		s.GetPlayingPresences(),
 		nil, false)
+	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
+		p.delayTime = time.Now().Add(2 * time.Second)
+	}
 }
 
 func (p *processor) handlerRequestGetInfoTable(
@@ -367,20 +376,28 @@ func (p *processor) handlerRequestGetInfoTable(
 	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
 	userID string,
-	s *entity.SixiangMatchState,
+	s *entity.SlotsMatchState,
 ) {
 	logger.WithField("user", userID).Info("request info table")
 	slotdesk := &pb.SlotDesk{
-		ChipsMcb:           s.GetBetInfo().Chips,
+		ChipsMcb:           s.Bet().Chips,
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
+		TsUnix:             time.Now().Unix(),
 	}
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-		matrix := s.GetMatrix()
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
+
+		matrix := s.Matrix
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-	} else if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL ||
-		s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW ||
-		s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK {
+	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 		for idx, symbol := range matrix.List {
@@ -390,9 +407,10 @@ func (p *processor) handlerRequestGetInfoTable(
 				slotdesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 			}
 		}
-	} else {
+	default:
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
+
 	}
 	slotdesk.NextSixiangGame = s.NextSiXiangGame
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
@@ -405,6 +423,7 @@ func (p *processor) handlerRequestGetInfoTable(
 		slotdesk.BalanceChipsWalletBefore = wallet.Chips
 		slotdesk.BalanceChipsWalletAfter = slotdesk.BalanceChipsWalletBefore
 	}
+	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
@@ -448,7 +467,7 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 			"chips": amountChip, // Substract amountChip coins to the user's wallet.
 		}
 		metadata := map[string]interface{}{
-			"game_reward": entity.ModuleName,
+			"game_reward": entity.SixiangGameName,
 		}
 		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
 			UserID:    result.UserId,
@@ -487,7 +506,7 @@ func (p *processor) InitSpecialGameDesk(ctx context.Context,
 	// 	slotdesk, s.GetPlayingPresences(), nil, true)
 }
 
-func (p *processor) checkValidBetInfo(s *entity.SixiangMatchState, bet *pb.InfoBet) bool {
+func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet) bool {
 
 	switch s.CurrentSiXiangGame {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:

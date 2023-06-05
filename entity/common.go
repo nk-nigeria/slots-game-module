@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -8,9 +9,17 @@ import (
 )
 
 const (
-	ModuleName        = "sixiang"
+	SixiangGameName   = "sixiang"
+	TarzanGameName    = "tarzan"
+	JuicyGarden       = "juicygarden"
 	MaxPresenceCard   = 13
 	JackpotPercentTax = 1 // 1%
+)
+
+var (
+	ErrorSpinReachMax       = errors.New("spin reach max")
+	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
+	ErrorNoGameEngine      = errors.New("no game engine")
 )
 
 // free game by lv

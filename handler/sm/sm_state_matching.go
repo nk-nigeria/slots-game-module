@@ -21,7 +21,7 @@ func NewStateMatching(fn lib.FireFn) lib.StateHandler {
 func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	procPkg.GetLogger().Info("[matching] enter")
-	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
+	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	state.SetUpCountDown(1 * time.Second)
 	procPkg.GetProcessor().ProcessApplyPresencesLeave(
 		procPkg.GetContext(),
@@ -39,7 +39,7 @@ func (s *StateMatching) Exit(_ context.Context, _ ...interface{}) error {
 
 func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
-	state := procPkg.GetMatchState().(*entity.SixiangMatchState)
+	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	message := procPkg.GetMessages()
 	if len(message) > 0 {
 		procPkg.GetProcessor().ProcessMessageFromUser(ctx,

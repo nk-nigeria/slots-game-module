@@ -2,12 +2,37 @@ package entity
 
 import pb "github.com/ciaolink-game-platform/cgp-common/proto"
 
+const (
+	Row_1 = 0
+	Row_2 = 1
+	Row_3 = 2
+	Row_4 = 3
+	Row_5 = 4
+
+	Col_1 = 0
+	Col_2 = 1
+	Col_3 = 2
+	Col_4 = 3
+	Col_5 = 4
+)
+
 type SlotMatrix struct {
 	List      []pb.SiXiangSymbol
 	Cols      int
 	Rows      int
 	Size      int
 	TrackFlip map[int]bool
+}
+
+func NewSlotMatrix(row, col int) SlotMatrix {
+	s := SlotMatrix{
+		Rows: row,
+		Cols: col,
+	}
+	s.Size = s.Rows * s.Cols
+	s.List = make([]pb.SiXiangSymbol, 0, s.Size)
+	s.TrackFlip = make(map[int]bool)
+	return s
 }
 
 func NewSiXiangMatrixNormal() SlotMatrix {
@@ -181,7 +206,7 @@ func (sm *SlotMatrix) ForEeach(fn func(idx, row, col int, symbol pb.SiXiangSymbo
 	}
 }
 
-func (sm *SlotMatrix) ForEeachLine(fn func(line int, symbols []pb.SiXiangSymbol)) {
+func (sm *SlotMatrix) ForEachLine(fn func(line int, symbols []pb.SiXiangSymbol)) {
 	list := make([]pb.SiXiangSymbol, 0)
 	sm.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if idx != 0 && col == 0 {
@@ -191,6 +216,17 @@ func (sm *SlotMatrix) ForEeachLine(fn func(line int, symbols []pb.SiXiangSymbol)
 		list = append(list, symbol)
 	})
 	fn(sm.Rows-1, list)
+}
+
+func (sm *SlotMatrix) ForEachCol(fn func(col int, symbols []pb.SiXiangSymbol)) {
+	for col := 0; col < sm.Cols; col++ {
+		ml := make([]pb.SiXiangSymbol, 0, sm.Rows)
+		for row := 0; row < sm.Rows; row++ {
+			idx := row*sm.Cols + col
+			ml = append(ml, sm.List[idx])
+		}
+		fn(col, ml)
+	}
 }
 
 func (sm *SlotMatrix) ListFromIndexs(indexs []int) []pb.SiXiangSymbol {
@@ -232,4 +268,54 @@ func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int,
 func (sm *SlotMatrix) Flip(idx int) pb.SiXiangSymbol {
 	sm.TrackFlip[idx] = true
 	return sm.List[idx]
+}
+
+func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {
+	if len(paylineIndex) == 0 || len(sm.List) == 0 {
+		return nil, false
+	}
+	firstSymbol := sm.List[paylineIndex[0]]
+	for _, idx := range paylineIndex {
+		if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
+			return nil, false
+		}
+		if firstSymbol != pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+			break
+		}
+		firstSymbol = sm.List[idx]
+	}
+	validPaylineIndex := make([]int, 0)
+	for _, idx := range paylineIndex {
+		sym := sm.List[idx]
+		if firstSymbol == sym || sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD || sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
+			validPaylineIndex = append(validPaylineIndex, idx)
+			continue
+		}
+		break
+
+	}
+	if len(validPaylineIndex) >= sm.Cols {
+		return validPaylineIndex, true
+	}
+	return nil, false
+}
+
+func LuckySymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
+	var bigWin pb.BigWin
+	var winJp pb.WinJackpot
+	switch symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR:
+		bigWin = pb.BigWin_BIG_WIN_NICE
+		winJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_GRAND
+	}
+	return bigWin, winJp
 }
