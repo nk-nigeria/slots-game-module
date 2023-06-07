@@ -424,6 +424,7 @@ func (p *processor) handlerRequestGetInfoTable(
 		slotdesk.BalanceChipsWalletAfter = slotdesk.BalanceChipsWalletBefore
 	}
 	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotdesk.BetLevels = append(slotdesk.BetLevels, 100, 200, 500, 1000)
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
