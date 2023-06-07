@@ -65,7 +65,7 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	// check if payline pass freespin symbol
 	for _, payline := range s.Paylines() {
 		num := 0
-		for _, val := range payline.Indexs {
+		for _, val := range payline.GetIndices() {
 			if s.TrackIndexFreeSpinSymbol[int(val)] {
 				num++
 			}

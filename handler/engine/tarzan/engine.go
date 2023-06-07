@@ -54,8 +54,12 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	if s.PerlGreenForest >= 100 {
-		slotDesk.UpdateChipsBonus = true
-		slotDesk.ChipsBonus = s.ChipsBonus
+		if slotDesk.GameReward == nil {
+			slotDesk.GameReward = &pb.GameReward{}
+		}
+
+		slotDesk.GameReward.UpdateChipsBonus = true
+		slotDesk.GameReward.ChipsBonus = s.ChipsBonus
 		s.ChipsBonus = 0
 		s.PerlGreenForest = 0
 	}

@@ -344,19 +344,25 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 				Error("get profile user failed")
 			return
 		}
-		slotDesk.UpdateWallet = true
-		slotDesk.BalanceChipsWalletBefore = wallet.Chips
-		slotDesk.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWin() - bet.Chips
+		if slotDesk.GameReward == nil {
+			slotDesk.GameReward = &pb.GameReward{}
+		}
+		gameReward := slotDesk.GameReward
+		gameReward.UpdateWallet = true
+
+		gameReward.BalanceChipsWalletBefore = wallet.Chips
+		gameReward.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWin() - bet.Chips
 		p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
 			Updates: []*pb.BalanceUpdate{
 				{
 					UserId:            s.GetPlayingPresences()[0].GetUserId(),
-					AmountChipBefore:  slotDesk.BalanceChipsWalletBefore,
-					AmountChipCurrent: slotDesk.BalanceChipsWalletAfter,
-					AmountChipAdd:     slotDesk.BalanceChipsWalletAfter - slotDesk.BalanceChipsWalletBefore,
+					AmountChipBefore:  gameReward.BalanceChipsWalletBefore,
+					AmountChipCurrent: gameReward.BalanceChipsWalletAfter,
+					AmountChipAdd:     gameReward.BalanceChipsWalletAfter - gameReward.BalanceChipsWalletBefore,
 				},
 			},
 		})
+		slotDesk.GameReward = gameReward
 	}
 	slotDesk.TsUnix = time.Now().Unix()
 	p.broadcastMessage(logger, dispatcher,
@@ -419,9 +425,12 @@ func (p *processor) handlerRequestGetInfoTable(
 			WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
 			Error("get profile user failed")
 	} else {
-		slotdesk.UpdateWallet = true
-		slotdesk.BalanceChipsWalletBefore = wallet.Chips
-		slotdesk.BalanceChipsWalletAfter = slotdesk.BalanceChipsWalletBefore
+		gameReward := &pb.GameReward{}
+		gameReward.UpdateWallet = true
+		gameReward.BalanceChipsWalletBefore = wallet.Chips
+		gameReward.BalanceChipsWalletAfter = gameReward.BalanceChipsWalletBefore
+		gameReward.TotalChipsWinByGame = slotdesk.TotalChipsWinByGame
+		slotdesk.GameReward = gameReward
 	}
 	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotdesk.BetLevels = append(slotdesk.BetLevels, 100, 200, 500, 1000)

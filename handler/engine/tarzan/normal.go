@@ -221,13 +221,13 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 		}
 		payline := &pb.Payline{
 			// Id: int32(idx),
-			Indexs: make([]int32, 0),
+			Indices: make([]int32, 0),
 		}
 		payline.Id = int32(pair.Key)
 		payline.Symbol = matrix.List[paylineIndexs[0]]
 		payline.NumOccur = int32(len(paylineIndexs))
 		for _, val := range paylineIndexs {
-			payline.Indexs = append(payline.Indexs, int32(val))
+			payline.Indices = append(payline.GetIndices(), int32(val))
 		}
 		paylines = append(paylines, payline)
 	}
