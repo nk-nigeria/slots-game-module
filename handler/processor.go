@@ -12,6 +12,7 @@ import (
 
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
+
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ciaolink-game-platform/cgp-common/lib"
@@ -374,6 +375,33 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		nil, false)
 	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
 		p.delayTime = time.Now().Add(2 * time.Second)
+	}
+	// send to statistic
+	if slotDesk.IsFinishGame && slotDesk.GameReward != nil {
+		// report to operation module
+		report := lib.NewReportGame()
+		// report.AddFee(totalFee)
+		report.AddMatch(&pb.MatchData{
+			GameId:   0,
+			GameCode: s.Label.Code,
+			Mcb:      int64(s.Label.Bet),
+			// ChipFee:  totalFee,
+		})
+		report.AddPlayerData(&pb.PlayerData{
+			UserId:  message.GetUserId(),
+			Chip:    slotDesk.GameReward.BalanceChipsWalletAfter,
+			ChipAdd: slotDesk.GameReward.BalanceChipsWalletAfter - slotDesk.GameReward.BalanceChipsWalletBefore,
+		})
+		// reportUrl := "http://103.226.250.195:8350"
+		data, status, err := report.Commit()
+		if err != nil || status > 300 {
+			if err != nil {
+				logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
+					lib.HostReport, s.Label.Code, string(data), status, err.Error())
+			} else {
+				logger.Info("Report game (%s) operatio -> %s successful", s.Label.Code)
+			}
+		}
 	}
 }
 
