@@ -364,6 +364,8 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		})
 		slotDesk.GameReward = gameReward
 	}
+
+	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
 	slotDesk.TsUnix = time.Now().Unix()
 	p.broadcastMessage(logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
