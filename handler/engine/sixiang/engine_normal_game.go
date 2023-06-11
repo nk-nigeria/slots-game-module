@@ -210,6 +210,7 @@ func (e *normalEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 		payline.Id = int32(pair.Key)
 		// idx++
 		symbols := matrix.ListFromIndexs(pair.Value)
+		payline.Indices = make([]int32, 0)
 		for _, val := range entity.ListSymbol {
 			numOccur := 0
 			if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
@@ -218,9 +219,10 @@ func (e *normalEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 			if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 				continue
 			}
-			for _, symbol := range symbols {
+			for idx, symbol := range symbols {
 				if (symbol & val) > 0 {
 					numOccur++
+					payline.Indices = append(payline.Indices, int32(pair.Value[idx]))
 					continue
 				}
 				if numOccur >= 3 {
