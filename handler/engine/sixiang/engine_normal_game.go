@@ -78,6 +78,7 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 	spreadMatrix := e.SpreadWildInMatrix(matrix)
 	s.SetWildMatrix(spreadMatrix)
 	// logic
+	s.SetPaylines(make([]*pb.Payline, 0))
 	if e.CheckJpMatrix(spreadMatrix) {
 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
 	} else {
@@ -211,33 +212,57 @@ func (e *normalEngine) PaylineMatrix(matrix entity.SlotMatrix) []*pb.Payline {
 		// idx++
 		symbols := matrix.ListFromIndexs(pair.Value)
 		payline.Indices = make([]int32, 0)
-		for _, val := range entity.ListSymbol {
-			numOccur := 0
-			if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+		// for _, val := range entity.ListSymbol {
+		// 	numOccur := 0
+		// 	if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+		// 		continue
+		// 	}
+		// 	if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+		// 		continue
+		// 	}
+		// 	for idx, symbol := range symbols {
+		// 		if (symbol & val) > 0 {
+		// 			numOccur++
+		// 			payline.Indices = append(payline.Indices, int32(pair.Value[idx]))
+		// 			continue
+		// 		}
+		// 		break
+		// 	}
+		// 	if numOccur > int(payline.NumOccur) {
+		// 		payline.NumOccur = int32(numOccur)
+		// 		payline.Symbol = val
+		// 	}
+		// 	if numOccur >= 3 {
+		// 		break
+		// 	}
+		// }
+		compareSym := pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+		for _, symbol := range symbols {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
 				continue
 			}
-			if val == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 				continue
 			}
-			for idx, symbol := range symbols {
-				if (symbol & val) > 0 {
-					numOccur++
-					payline.Indices = append(payline.Indices, int32(pair.Value[idx]))
-					continue
-				}
-				if numOccur >= 3 {
-					break
-				}
-				break
-			}
-			if numOccur > int(payline.NumOccur) {
-				payline.NumOccur = int32(numOccur)
-				payline.Symbol = val
-			}
-			if numOccur >= 3 {
-				break
-			}
+			compareSym = symbol
+			break
 		}
+		if compareSym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
+			continue
+		}
+		payline.NumOccur = 0
+		for idx, symbol := range symbols {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD || symbol == compareSym {
+				payline.NumOccur++
+				payline.Indices = append(payline.Indices, int32(pair.Value[idx]))
+				continue
+			}
+			break
+		}
+		if payline.NumOccur == 0 {
+			continue
+		}
+		payline.Symbol = compareSym
 		paylines = append(paylines, payline)
 	}
 	return paylines
