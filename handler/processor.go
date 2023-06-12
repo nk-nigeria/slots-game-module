@@ -369,8 +369,8 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	slotDesk.TsUnix = time.Now().Unix()
 	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
 		p.delayTime = time.Now().Add(2 * time.Second)
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-		slotDesk.NextSixiangGame = s.NextSiXiangGame
+		// s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+		// slotDesk.NextSixiangGame = s.NextSiXiangGame
 	}
 	p.broadcastMessage(logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
