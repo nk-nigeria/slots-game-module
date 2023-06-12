@@ -53,6 +53,7 @@ func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error)
 	s.CollectionSymbol = make(map[int]map[pb.SiXiangSymbol]int)
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.TurnSureSpin = e.randomIntFn(1, s.NumSpinLeft)
+	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	return s, nil
 }
 
@@ -68,6 +69,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	if len(s.MatrixSpecial.TrackFlip) >= 15 {
 		return s, entity.ErrorSpinReachMax
 	}
+	s.IsSpinChange = true
 	// Setup sao cho số lượt spins của user ít nhất được 8 ngọc và 1 phong bao
 	// nên đầu game random ra lân quay chắc chắn sẽ ra ngọc nếu tới lượt đó
 	// nhưng chưaquay ra ngọc
@@ -160,6 +162,10 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
+	if !s.IsSpinChange {
+		return slotDesk, entity.ErrorSpinNotChange
+	}
+	s.IsSpinChange = false
 	if s.NumSpinLeft <= 0 || len(s.MatrixSpecial.TrackFlip) == 15 {
 		slotDesk.IsFinishGame = true
 	}
@@ -172,11 +178,11 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	totalMcb := float64(0)
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		if s.MatrixSpecial.TrackFlip[idx] == false {
-			slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
-		} else {
+		if s.MatrixSpecial.TrackFlip[idx] {
 			v := entity.ListSymbolDragonPearl[symbol].Value
 			totalMcb += e.randomFloat64(float64(v.Min), float64(v.Max))
+		} else {
+			slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		}
 	})
 
@@ -203,15 +209,14 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
+	slotDesk.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	return slotDesk, nil
 }
 
-func (e *dragonPearlEngine) checkJackpot(s *entity.SlotsMatchState) bool {
-	if len(s.MatrixSpecial.TrackFlip) >= 15 {
-		return true
-	}
-	return false
-}
+// func (e *dragonPearlEngine) checkJackpot(s *entity.SlotsMatchState) bool {
+// 	return len(s.MatrixSpecial.TrackFlip) >= 15
+// }
 
 func (e *dragonPearlEngine) randomPearl(
 	s *entity.SlotsMatchState,

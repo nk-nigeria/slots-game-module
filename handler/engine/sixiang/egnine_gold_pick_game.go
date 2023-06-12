@@ -39,6 +39,7 @@ func (e *goldPickEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = defaultGoldPickGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
+	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	return s, nil
 }
 
@@ -51,6 +52,7 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
 	}
+	s.IsSpinChange = true
 	idRandom, symbolRandom := s.MatrixSpecial.RandomSymbolNotFlip(e.randomIntFn)
 	row, col := s.MatrixSpecial.RowCol(idRandom)
 	spin := &pb.SpinSymbol{
@@ -78,6 +80,10 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk := &pb.SlotDesk{}
 	s := matchState.(*entity.SlotsMatchState)
+	if !s.IsSpinChange {
+		return slotDesk, entity.ErrorSpinNotChange
+	}
+	s.IsSpinChange = false
 	if s.NumSpinLeft <= 0 {
 		slotDesk.IsFinishGame = true
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
@@ -97,6 +103,8 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.ChipsMcb = s.Bet().GetChips()
 	slotDesk.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotDesk.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	return slotDesk, nil
 }

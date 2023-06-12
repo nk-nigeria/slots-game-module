@@ -1,7 +1,6 @@
 package sixiang
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -38,6 +37,7 @@ func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = -1
 	// s.ChipsWinInSpecialGame = 0
+	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	return s, nil
 }
 
@@ -47,15 +47,16 @@ func (e *luckyDrawEngine) Random(min, max int) int {
 
 func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	s.IsSpinChange = true
 	// bet := s.GetBetInfo()
 	idsNotFlip := make([]int, 0)
 	for id := range s.MatrixSpecial.List {
-		if s.MatrixSpecial.TrackFlip[id] == false {
+		if !s.MatrixSpecial.TrackFlip[id] {
 			idsNotFlip = append(idsNotFlip, id)
 		}
 	}
 	if len(idsNotFlip) == 0 {
-		return s, errors.New("Spin all")
+		return s, entity.ErrorSpinReachMax
 	}
 	id := e.Random(0, len(idsNotFlip))
 	idFlip := idsNotFlip[id]
@@ -81,6 +82,10 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 			Cols:  int32(matrix.Cols),
 		},
 	}
+	if !s.IsSpinChange {
+		return slotDesk, entity.ErrorSpinNotChange
+	}
+	s.IsSpinChange = false
 	mapUniqueSym := make(map[pb.SiXiangSymbol]pb.SiXiangSymbol)
 	for id, symbol := range matrix.List {
 		if s.MatrixSpecial.TrackFlip[id] {
@@ -111,6 +116,8 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.Bet().Chips
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
+	slotDesk.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	return slotDesk, nil
 }
 

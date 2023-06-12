@@ -52,13 +52,15 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
 	}
+	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
+	s.IsSpinChange = true
 	indexStart := (s.NumSpinLeft - 1) * s.MatrixSpecial.Cols
 	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]
 	var idRandom int
 	var symRandom pb.SiXiangSymbol
 	for {
 		idRandom = e.randomIntFn(0, len(arrSpin))
-		symRandom = entity.ShuffleSlice(arrSpin)[idRandom]
+		symRandom = arrSpin[idRandom]
 		if symRandom != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 			break
 		}
@@ -81,21 +83,33 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	if len(s.SpinSymbols) == 0 {
 		return slotDesk, entity.ErrorMissingSpinSymbol
 	}
+	if !s.IsSpinChange {
+		return slotDesk, entity.ErrorSpinNotChange
+	}
+	s.IsSpinChange = false
 	if s.NumSpinLeft <= 0 || s.SpinSymbols[0].Symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END {
 		slotDesk.IsFinishGame = true
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+		s.NumSpinLeft = 0
 	} else {
 		s.NextSiXiangGame = s.CurrentSiXiangGame
 	}
-	ratio := defaultAddRatioMcb
+	ratioTotal := defaultAddRatioMcb
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	for idx, sym := range s.MatrixSpecial.List {
 		if s.MatrixSpecial.TrackFlip[idx] {
-			ratio += float64(entity.ListSymbolRapidPay[sym].Value.Min)
+			ratioTotal += float64(entity.ListSymbolRapidPay[sym].Value.Min)
 		}
 	}
+	ratio := float64(0)
+	for _, sym := range s.SpinSymbols {
+		ratio += float64(entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min)
+	}
+	slotDesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.SpinSymbols = s.SpinSymbols
-
+	slotDesk.ChipsMcb = s.Bet().Chips
+	slotDesk.TotalChipsWinByGame = int64(ratioTotal * float64(slotDesk.ChipsMcb))
+	// s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	slotDesk.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame

@@ -31,6 +31,10 @@ func (e *sixiangBonusEngine) Random(min, max int) int {
 
 func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	if s.NumSpinLeft <= 0 {
+		return s, entity.ErrorSpinReachMax
+	}
+	s.IsSpinChange = true
 	idRamdom, sym := s.MatrixSpecial.RandomSymbolNotFlip(e.Random)
 	row, col := s.MatrixSpecial.RowCol(idRamdom)
 	s.SpinSymbols = []*pb.SpinSymbol{
@@ -48,6 +52,10 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
+	if !s.IsSpinChange {
+		return slotDesk, entity.ErrorSpinNotChange
+	}
+	s.IsSpinChange = false
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	switch s.SpinSymbols[0].Symbol {
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_SIXANGBONUS_DRAGONPEARL_GAME:

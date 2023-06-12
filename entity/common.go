@@ -17,9 +17,10 @@ const (
 )
 
 var (
-	ErrorSpinReachMax       = errors.New("spin reach max")
+	ErrorSpinReachMax      = errors.New("spin reach max")
 	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
 	ErrorNoGameEngine      = errors.New("no game engine")
+	ErrorSpinNotChange     = errors.New("spin not change")
 )
 
 // free game by lv

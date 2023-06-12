@@ -38,6 +38,10 @@ func (e *bonusEngine) Random(min, max int) int {
 
 func (e *bonusEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	if s.NumSpinLeft <= 0 {
+		return s, entity.ErrorSpinReachMax
+	}
+	s.IsSpinChange = true
 	id := e.Random(0, len(s.MatrixSpecial.List))
 	if s.Bet().ReqSpecGame > 0 {
 		reqBonusGame := pb.SiXiangSymbol(s.Bet().ReqSpecGame)
@@ -69,6 +73,10 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 			Cols: int32(matrix.Cols),
 		},
 	}
+	if !s.IsSpinChange {
+		return slotDesk, entity.ErrorSpinNotChange
+	}
+	s.IsSpinChange = false
 	slotDesk.Matrix.Lists = make([]pb.SiXiangSymbol, slotDesk.Matrix.Cols*slotDesk.Matrix.Rows)
 	// cacl ratio chips by symbol, only goldx10,20,30,50 has ratio > 0
 	{
@@ -84,6 +92,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.IsFinishGame = true
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
 	return slotDesk, nil
 }
 

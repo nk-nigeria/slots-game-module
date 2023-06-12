@@ -68,6 +68,7 @@ func (e *normalEngine) Random(min, max int) int {
 
 func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	s.IsSpinChange = true
 	matrix := e.SpinMatrix(s.Matrix)
 	if s.Bet().GetReqSpecGame() != 0 {
 		matrix.List[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
@@ -100,6 +101,10 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
+	if !s.IsSpinChange {
+		return slotDesk, entity.ErrorSpinNotChange
+	}
+	s.IsSpinChange = false
 	// set matrix spin
 	{
 		sm := s.Matrix
@@ -134,6 +139,7 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
 	return slotDesk, nil
 }
 

@@ -33,7 +33,13 @@ func (e *sixiangBonusIngameEngine) NewGame(matchState interface{}) (interface{},
 	if engine == nil {
 		return matchState, entity.ErrorNoGameEngine
 	}
-	return engine.NewGame(matchState)
+	_, err := engine.NewGame(matchState)
+	if err != nil {
+		return s, err
+	}
+	// s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_BONUS
+	// s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+	return s, nil
 }
 
 func (e *sixiangBonusIngameEngine) Random(min, max int) int {
@@ -55,12 +61,17 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	if engine == nil {
 		return matchState, entity.ErrorNoGameEngine
 	}
+
+	s.IsSpinChange = false
 	result, err := engine.Finish(matchState)
 	if err != nil {
 		return result, err
 	}
 	slotDesk := result.(*pb.SlotDesk)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, -slotDesk.ChipsWin)
 	slotDesk.ChipsWin *= int64(e.ratioBonus)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
+	slotDesk.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.IsInSixiangBonus = true
 	return slotDesk, nil
 }

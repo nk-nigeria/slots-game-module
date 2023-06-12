@@ -216,7 +216,7 @@ var ListSymbolRapidPay = map[pb.SiXiangSymbol]SymbolInfo{
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4: {
 		NumOccur: 1,
-		Value:    Range{3, 3},
+		Value:    Range{4, 4},
 	},
 }
 

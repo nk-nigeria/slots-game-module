@@ -19,6 +19,8 @@ type UserDataMatch struct {
 
 type SlotsMatchState struct {
 	lib.MatchState
+	// prevent calc reward multil time,
+	IsSpinChange  bool
 	allowSpin     bool // allow user submit new bet
 	balanceResult *pb.BalanceResult
 	// UserDataMatch  UserDataMatch
@@ -62,6 +64,7 @@ type SlotsMatchState struct {
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 	m := SlotsMatchState{
+		IsSpinChange:   false,
 		MatchState:     lib.NewMathState(label, NewMyPrecense),
 		balanceResult:  nil,
 		WaitSpinMatrix: false,

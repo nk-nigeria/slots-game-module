@@ -351,7 +351,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		gameReward.UpdateWallet = true
 
 		gameReward.BalanceChipsWalletBefore = wallet.Chips
-		gameReward.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWin() - bet.Chips
+		gameReward.BalanceChipsWalletAfter = wallet.Chips + slotDesk.TotalChipsWinByGame - bet.Chips
 		p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
 			Updates: []*pb.BalanceUpdate{
 				{
@@ -367,14 +367,17 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 
 	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
 	slotDesk.TsUnix = time.Now().Unix()
+	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
+		p.delayTime = time.Now().Add(2 * time.Second)
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+		slotDesk.NextSixiangGame = s.NextSiXiangGame
+	}
 	p.broadcastMessage(logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotDesk,
 		s.GetPlayingPresences(),
 		nil, false)
-	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
-		p.delayTime = time.Now().Add(2 * time.Second)
-	}
+
 	// send to statistic
 	if slotDesk.IsFinishGame && slotDesk.GameReward != nil {
 		// report to operation module
