@@ -323,7 +323,6 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		s.SetBetInfo(bet)
 	}
 	p.engine.Process(s)
-
 	result, err := p.engine.Finish(s)
 	if err != nil {
 		logger.WithField("error", err.Error()).

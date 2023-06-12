@@ -133,12 +133,15 @@ func Test_normalEngine_PaylineMatrix(t *testing.T) {
 		engine.PrintMatrix(spreadMatrix)
 		paylines := engine.PaylineMatrix(spreadMatrix)
 		assert.Equal(t, matrix.Rows*matrix.Cols, len(paylines), "payline size not same row matrix")
-		for idx, payline := range paylines {
-			t.Logf("line %d symbol %d occur %d  \r\n ", idx, payline.Symbol.Number(), payline.NumOccur)
-		}
+		// for idx, payline := range paylines {
+		// 	t.Logf("line %d symbol %s occur %d  \r\n ", idx, payline.Symbol.String(), payline.NumOccur)
+		// }
 		paylinesFilter := engine.FilterPayline(paylines, func(numOccur int) bool {
-			return numOccur > 3
+			return numOccur >= 3
 		})
+		for idx, payline := range paylinesFilter {
+			t.Logf("line %d symbol %s occur %d  \r\n ", idx, payline.Symbol.String(), payline.NumOccur)
+		}
 		t.Logf("len payline filter %d", len(paylinesFilter))
 	})
 }
