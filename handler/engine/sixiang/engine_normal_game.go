@@ -188,16 +188,12 @@ func (e *normalEngine) SpreadWildInMatrix(matrix entity.SlotMatrix) entity.SlotM
 }
 
 func (e *normalEngine) CheckJpMatrix(matrix entity.SlotMatrix) bool {
-	cols := matrix.Cols
-	for idx, symbol := range matrix.List {
+	for _, symbol := range matrix.List {
 		if symbol != pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 			return false
 		}
-		if idx == cols {
-			return true
-		}
 	}
-	return false
+	return true
 }
 
 // return payline, and check jackpot if win
