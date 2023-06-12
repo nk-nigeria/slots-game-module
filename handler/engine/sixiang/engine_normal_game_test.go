@@ -6,6 +6,7 @@ import (
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
+	api "github.com/ciaolink-game-platform/cgp-common/proto"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
@@ -212,5 +213,18 @@ func Test_normalEngine_Process_2(t *testing.T) {
 		engine.PrintMatrix(matchState.Matrix)
 		slotdesk := result.(*pb.SlotDesk)
 		t.Logf("%v", slotdesk)
+	})
+}
+
+func Test_normalEngine_CheckJpMatrix(t *testing.T) {
+	t.Run("Test_normalEngine_CheckJpMatrix", func(t *testing.T) {
+		engine := &normalEngine{}
+		matrix := entity.NewSiXiangMatrixNormal()
+		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			matrix.List[idx] = api.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
+		})
+		assert.Equal(t, true, engine.CheckJpMatrix(matrix))
+		matrix.List[10] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		assert.Equal(t, false, engine.CheckJpMatrix(matrix))
 	})
 }
