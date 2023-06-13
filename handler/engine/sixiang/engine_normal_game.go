@@ -74,6 +74,9 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 		matrix.List[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 		matrix.List[2] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 		matrix.List[4] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		// matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		// 	matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
+		// })
 	}
 	s.SetMatrix(matrix)
 	spreadMatrix := e.SpreadWildInMatrix(matrix)
@@ -121,6 +124,7 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	if s.WinJp == pb.WinJackpot_WIN_JACKPOT_GRAND {
 		slotDesk.GameReward.ChipsWin = int64(s.WinJp) * s.Bet().Chips
 		slotDesk.BigWin = pb.BigWin_BIG_WIN_MEGA
+		slotDesk.WinJp = s.WinJp
 	} else {
 		totalRate := float64(0)
 		slotDesk.Paylines = s.Paylines()
