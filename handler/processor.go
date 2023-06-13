@@ -344,7 +344,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	if slotDesk.IsFinishGame {
-		if slotDesk.GameReward == nil || slotDesk.GameReward.ChipsWin <= 0 {
+		if chipBetFee <= 0 && (slotDesk.GameReward != nil && slotDesk.GameReward.ChipsWin <= 0) {
 			logger.WithField("user", s.GetPlayingPresences()[0].GetUserId()).
 				WithField("current game", slotDesk.CurrentSixiangGame.String()).
 				WithField("next game", slotDesk.NextSixiangGame.String()).
@@ -367,7 +367,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 			// FIXME: hard code 10%,
 			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 100 * 10
 			gameReward.BalanceChipsWalletAfter = wallet.Chips + gameReward.TotalChipsWinByGame -
-				bet.Chips - gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
+				gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
 			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
 				Updates: []*pb.BalanceUpdate{
 					{
