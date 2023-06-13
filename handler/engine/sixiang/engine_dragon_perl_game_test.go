@@ -188,7 +188,7 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 					ratioBonus = float64(r)
 				}
 			}
-			slotDesk.ChipsWin = int64(ratioBonus * float64(slotDesk.ChipsMcb) * float64(entity.ListSymbolDragonPearl[gem].Value.Min))
+			slotDesk.GameReward.ChipsWin = int64(ratioBonus * float64(slotDesk.ChipsMcb) * float64(entity.ListSymbolDragonPearl[gem].Value.Min))
 			test.args = matchState
 			test.want.slotDesk = slotDesk
 			test.want.matchState = entity.NewSlotsMathState(nil)
@@ -209,7 +209,7 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 			assert.Equal(t, tt.want.slotDesk.NextSixiangGame, slotDesk.NextSixiangGame)
 			assert.Equal(t, tt.want.slotDesk.ChipsMcb, slotDesk.ChipsMcb)
 			assert.Equal(t, tt.want.slotDesk.IsFinishGame, slotDesk.IsFinishGame)
-			assert.Equal(t, tt.want.slotDesk.ChipsWin, slotDesk.ChipsWin)
+			assert.Equal(t, tt.want.slotDesk.GameReward.ChipsWin, slotDesk.GameReward.ChipsWin)
 			assert.Equal(t, 15, len(slotDesk.Matrix.Lists))
 		})
 	}

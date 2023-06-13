@@ -21,6 +21,7 @@ var (
 	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
 	ErrorNoGameEngine      = errors.New("no game engine")
 	ErrorSpinNotChange     = errors.New("spin not change")
+	ErrorChipNotEnough     = errors.New("chip is not enough")
 )
 
 // free game by lv
@@ -42,6 +43,7 @@ type WalletAction string
 
 const (
 	WalletActionWinGameJackpot WalletAction = "win_game_jackpot"
+	// WalletActionGameFee        WalletAction = "game_fee"
 )
 
 func InterfaceToString(inf interface{}) string {

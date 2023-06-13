@@ -97,6 +97,8 @@ func (e *freeGame) Random(min int, max int) int {
 // Finish implements lib.Engine
 func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk := &pb.SlotDesk{}
+	slotDesk.GameReward = &pb.GameReward{}
+
 	s := matchState.(*entity.SlotsMatchState)
 	lineWin := 0
 	for _, payline := range s.Paylines() {
@@ -115,14 +117,14 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 		}
 	})
 
-	slotDesk.ChipsWin = int64(lineWin) * s.Bet().Chips / 100
+	slotDesk.GameReward.ChipsWin = int64(lineWin) * s.Bet().Chips / 100
 	slotDesk.ChipsMcb = s.Bet().Chips
 	// ts.ChipWinByGame[s.CurrentSiXiangGame] += slotDesk.ChipsWin
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
 	// s.LineWinByGame[s.CurrentSiXiangGame] += lineWin
 	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
 	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
 

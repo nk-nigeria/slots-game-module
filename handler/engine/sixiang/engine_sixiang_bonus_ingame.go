@@ -68,10 +68,10 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 		return result, err
 	}
 	slotDesk := result.(*pb.SlotDesk)
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, -slotDesk.ChipsWin)
-	slotDesk.ChipsWin *= int64(e.ratioBonus)
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
-	slotDesk.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, -slotDesk.GameReward.ChipsWin)
+	slotDesk.GameReward.ChipsWin *= int64(e.ratioBonus)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.IsInSixiangBonus = true
 	return slotDesk, nil
 }

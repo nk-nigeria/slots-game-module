@@ -119,8 +119,10 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 				NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 				BigWin:             api.BigWin_BIG_WIN_UNSPECIFIED,
 				WinJp:              api.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
-				ChipsWin:           0,
-				ChipsMcb:           bet.Chips,
+				GameReward: &pb.GameReward{
+					ChipsWin: 0,
+				},
+				ChipsMcb: bet.Chips,
 			},
 		}
 		test.args.matchState = matchState
@@ -158,8 +160,10 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 					NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 					BigWin:             api.BigWin_BIG_WIN_UNSPECIFIED,
 					WinJp:              api.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
-					ChipsWin:           bet.Chips * int64(entity.ListSymbolLuckyDraw[symbol].Value.Min),
 					ChipsMcb:           bet.Chips,
+					GameReward: &pb.GameReward{
+						ChipsWin: bet.Chips * int64(entity.ListSymbolLuckyDraw[symbol].Value.Min),
+					},
 				},
 			}
 			test.args.matchState = matchState
@@ -206,8 +210,10 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 				want: pb.SlotDesk{
 					CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 					NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_NORMAL,
-					ChipsWin: bet.Chips*int64(entity.ListSymbolLuckyDraw[api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1].Value.Min) +
-						bet.Chips*int64(entity.ListSymbolLuckyDraw[symbol].Value.Min),
+					GameReward: &pb.GameReward{
+						ChipsWin: bet.Chips*int64(entity.ListSymbolLuckyDraw[api.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1].Value.Min) +
+							bet.Chips*int64(entity.ListSymbolLuckyDraw[symbol].Value.Min),
+					},
 					ChipsMcb: bet.Chips,
 				},
 			}
@@ -229,7 +235,7 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			assert.Equal(t, tt.want.NextSixiangGame, slotDesk.NextSixiangGame)
 			assert.Equal(t, tt.want.BigWin, slotDesk.BigWin)
 			assert.Equal(t, tt.want.WinJp, slotDesk.WinJp)
-			assert.Equal(t, tt.want.ChipsWin, slotDesk.ChipsWin)
+			assert.Equal(t, tt.want.GameReward.ChipsWin, slotDesk.GameReward.ChipsWin)
 			assert.Equal(t, tt.want.ChipsMcb, slotDesk.ChipsMcb)
 		})
 	}

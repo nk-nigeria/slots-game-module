@@ -80,7 +80,9 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s.ChipStat.ResetChipWin(0)
 	// s.LineWinByGame[s.CurrentSiXiangGame] = 0
 	s.ChipStat.ResetLineWin(0)
-	slotDesk := &pb.SlotDesk{}
+	slotDesk := &pb.SlotDesk{
+		GameReward: &pb.GameReward{},
+	}
 	slotDesk.Paylines = e.Paylines(s.WildMatrix)
 	slotDesk.ChipsMcb = s.Bet().Chips
 	lineWin := int64(len(slotDesk.Paylines))
@@ -107,8 +109,8 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
 	// slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
-	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
+	slotDesk.GameReward.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true

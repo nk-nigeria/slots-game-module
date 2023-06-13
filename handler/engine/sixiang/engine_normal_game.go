@@ -104,6 +104,7 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	if !s.IsSpinChange {
 		return slotDesk, entity.ErrorSpinNotChange
 	}
+	slotDesk.GameReward = &pb.GameReward{}
 	s.IsSpinChange = false
 	// set matrix spin
 	{
@@ -118,13 +119,13 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	}
 	// add payline result
 	if s.WinJp == pb.WinJackpot_WIN_JACKPOT_GRAND {
-		slotDesk.ChipsWin = int64(s.WinJp) * s.Bet().Chips
+		slotDesk.GameReward.ChipsWin = int64(s.WinJp) * s.Bet().Chips
 		slotDesk.BigWin = pb.BigWin_BIG_WIN_MEGA
 	} else {
 		totalRate := float64(0)
 		slotDesk.Paylines = s.Paylines()
 		for _, payline := range slotDesk.Paylines {
-			slotDesk.ChipsWin += payline.GetChips()
+			slotDesk.GameReward.ChipsWin += payline.GetChips()
 			totalRate += payline.Rate
 		}
 		slotDesk.BigWin = e.TotalRateToTypeBigWin(totalRate)
@@ -139,7 +140,7 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
-	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
+	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
 	return slotDesk, nil
 }
 

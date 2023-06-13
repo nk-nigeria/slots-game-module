@@ -123,7 +123,7 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 			CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
 			NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
 		}
-		slotDesk.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.Bet().Chips))
+		slotDesk.GameReward.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.Bet().Chips))
 
 		test := test{
 			name: "Test_rapidPayEngine_Finish" + sym.String(),
@@ -146,7 +146,7 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 			CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
 			NextSixiangGame:    api.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		}
-		slotDesk.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.Bet().Chips))
+		slotDesk.GameReward.ChipsWin = int64((defaultAddRatioMcb + float64(entity.ListSymbolRapidPay[sym].Value.Min)) * float64(s.Bet().Chips))
 
 		test := test{
 			name: "Test_rapidPayEngine_Finish" + sym.String(),
@@ -168,7 +168,7 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 			assert.Equal(t, tt.want.ChipsMcb, slotDesk.ChipsMcb)
 			assert.Equal(t, tt.want.CurrentSixiangGame, slotDesk.CurrentSixiangGame)
 			assert.Equal(t, tt.want.NextSixiangGame, slotDesk.NextSixiangGame)
-			assert.Equal(t, tt.want.ChipsWin, slotDesk.ChipsWin)
+			assert.Equal(t, tt.want.GameReward.ChipsWin, slotDesk.GameReward.ChipsWin)
 		})
 	}
 }

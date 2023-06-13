@@ -87,8 +87,9 @@ func (e *fruitRain) Random(min int, max int) int {
 func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{
-		ChipsMcb: s.Bet().Chips,
-		Matrix:   s.MatrixSpecial.ToPbSlotMatrix(),
+		ChipsMcb:   s.Bet().Chips,
+		Matrix:     s.MatrixSpecial.ToPbSlotMatrix(),
+		GameReward: &pb.GameReward{},
 	}
 	isFinish := s.NumSpinLeft == 0
 	if !isFinish {
@@ -110,8 +111,8 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 			lineWin += e.randomIntFn(int(val.Value.Min), int(val.Value.Max))
 		})
 		chipWin := int64(lineWin) * s.Bet().Chips / 100
-		slotDesk.ChipsWin = chipWin
-		slotDesk.TotalChipsWinByGame = chipWin
+		slotDesk.GameReward.ChipsWin = chipWin
+		slotDesk.GameReward.TotalChipsWinByGame = chipWin
 		s.NumFruitBasket = 0
 	}
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame

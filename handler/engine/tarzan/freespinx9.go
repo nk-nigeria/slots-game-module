@@ -94,11 +94,11 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	// Finish when gem spin = 0
 	// tiền thưởng = (tổng số tiền thắng trong 9 Freespin) x (hệ số nhân bonus ở trên)
 	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	if s.CountLineCrossFreeSpinSymbol > 0 {
-		slotDesk.TotalChipsWinByGame *= int64(s.CountLineCrossFreeSpinSymbol)
+		slotDesk.GameReward.TotalChipsWinByGame *= int64(s.CountLineCrossFreeSpinSymbol)
 	}
-	slotDesk.ChipsWin = slotDesk.TotalChipsWinByGame
+	slotDesk.GameReward.ChipsWin = slotDesk.GameReward.TotalChipsWinByGame
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, err
 }

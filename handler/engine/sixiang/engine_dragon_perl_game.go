@@ -161,7 +161,9 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 
 func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	slotDesk := &pb.SlotDesk{}
+	slotDesk := &pb.SlotDesk{
+		GameReward: &pb.GameReward{},
+	}
 	if !s.IsSpinChange {
 		return slotDesk, entity.ErrorSpinNotChange
 	}
@@ -199,9 +201,9 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		}
 	}
 	chips := ratioBonus * float64(totalMcb*float64(s.Bet().Chips))
-	slotDesk.ChipsWin = int64(chips)
+	slotDesk.GameReward.ChipsWin = int64(chips)
 	if s.WinJp != pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED {
-		slotDesk.ChipsWin = s.Bet().Chips * int64(s.WinJp)
+		slotDesk.GameReward.ChipsWin = s.Bet().Chips * int64(s.WinJp)
 	}
 
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
@@ -209,8 +211,8 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
-	slotDesk.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	return slotDesk, nil
 }
 

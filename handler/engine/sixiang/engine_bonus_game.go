@@ -72,6 +72,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 			Rows: int32(matrix.Rows),
 			Cols: int32(matrix.Cols),
 		},
+		GameReward: &pb.GameReward{},
 	}
 	if !s.IsSpinChange {
 		return slotDesk, entity.ErrorSpinNotChange
@@ -81,7 +82,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	// cacl ratio chips by symbol, only goldx10,20,30,50 has ratio > 0
 	{
 		ratio := entity.ListSymbolBonusGame[s.SpinSymbols[0].Symbol].Value.Min
-		slotDesk.ChipsWin = int64(float64(ratio) * float64(s.Bet().GetChips()))
+		slotDesk.GameReward.ChipsWin = int64(float64(ratio) * float64(s.Bet().GetChips()))
 	}
 	// slotDesk.ChipsWinInSpecialGame = s.ChipsWinInSpecialGame
 	// slotDesk.ChipsWin = slotDesk.ChipsWinInSpecialGame
@@ -92,7 +93,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.IsFinishGame = true
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
-	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
+	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
 	return slotDesk, nil
 }
 

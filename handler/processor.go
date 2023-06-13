@@ -13,6 +13,7 @@ import (
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 
+	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/ciaolink-game-platform/cgp-common/lib"
@@ -315,9 +316,21 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		return
 	}
 	s.SetAllowSpin(false)
+	chipBetFee := int64(0)
 	// only update new bet in normal game
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		s.SetBetInfo(bet)
+		// sub chip fee in wallet
+		err := p.checkEnoughChipFromWallet(ctx, logger, nk, message.GetUserId(), s)
+		if err != nil {
+			logger.Error("deduce chip bet failed %s", err.Error())
+			p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+				Code:  int64(codes.Aborted),
+				Error: entity.ErrorChipNotEnough.Error(),
+			}, []runtime.Presence{s.GetPresence(message.GetUserId())}, nil, false)
+			return
+		}
+		chipBetFee = s.Bet().Chips
 	} else {
 		bet.Chips = s.Bet().GetChips()
 		s.SetBetInfo(bet)
@@ -331,40 +344,43 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	if slotDesk.IsFinishGame {
-		if slotDesk.ChipsWin <= 0 {
+		if slotDesk.GameReward == nil || slotDesk.GameReward.ChipsWin <= 0 {
 			logger.WithField("user", s.GetPlayingPresences()[0].GetUserId()).
 				WithField("current game", slotDesk.CurrentSixiangGame.String()).
 				WithField("next game", slotDesk.NextSixiangGame.String()).
 				Info("no need update wallet, because chip win <= 0")
-		}
-		wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
-		if err != nil {
-			logger.WithField("error", err.Error()).
-				WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
-				Error("get profile user failed")
-			return
-		}
-		if slotDesk.GameReward == nil {
-			slotDesk.GameReward = &pb.GameReward{}
-		}
-		gameReward := slotDesk.GameReward
-		gameReward.UpdateWallet = true
-
-		gameReward.BalanceChipsWalletBefore = wallet.Chips
-		gameReward.BalanceChipsWalletAfter = wallet.Chips + slotDesk.TotalChipsWinByGame - bet.Chips
-		p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
-			Updates: []*pb.BalanceUpdate{
-				{
-					UserId:            s.GetPlayingPresences()[0].GetUserId(),
-					AmountChipBefore:  gameReward.BalanceChipsWalletBefore,
-					AmountChipCurrent: gameReward.BalanceChipsWalletAfter,
-					AmountChipAdd:     gameReward.BalanceChipsWalletAfter - gameReward.BalanceChipsWalletBefore,
+		} else {
+			wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
+			if err != nil {
+				logger.WithField("error", err.Error()).
+					WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
+					Error("get profile user failed")
+				return
+			}
+			if slotDesk.GameReward == nil {
+				slotDesk.GameReward = &pb.GameReward{}
+			}
+			gameReward := slotDesk.GameReward
+			gameReward.UpdateWallet = true
+			gameReward.BalanceChipsWalletBefore = wallet.Chips
+			gameReward.ChipBetFee = chipBetFee
+			// FIXME: hard code 10%,
+			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 100 * 10
+			gameReward.BalanceChipsWalletAfter = wallet.Chips + gameReward.TotalChipsWinByGame -
+				bet.Chips - gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
+			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
+				Updates: []*pb.BalanceUpdate{
+					{
+						UserId:            s.GetPlayingPresences()[0].GetUserId(),
+						AmountChipBefore:  gameReward.BalanceChipsWalletBefore,
+						AmountChipCurrent: gameReward.BalanceChipsWalletAfter,
+						AmountChipAdd:     gameReward.BalanceChipsWalletAfter - gameReward.BalanceChipsWalletBefore,
+					},
 				},
-			},
-		})
-		slotDesk.GameReward = gameReward
+			})
+			slotDesk.GameReward = gameReward
+		}
 	}
-
 	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
 	slotDesk.TsUnix = time.Now().Unix()
 	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
@@ -377,34 +393,8 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		slotDesk,
 		s.GetPlayingPresences(),
 		nil, false)
+	p.reportStatistic(logger, message.GetUserId(), slotDesk, s)
 
-	// send to statistic
-	if slotDesk.IsFinishGame && slotDesk.GameReward != nil {
-		// report to operation module
-		report := lib.NewReportGame()
-		// report.AddFee(totalFee)
-		report.AddMatch(&pb.MatchData{
-			GameId:   0,
-			GameCode: s.Label.Code,
-			Mcb:      int64(s.Label.Bet),
-			// ChipFee:  totalFee,
-		})
-		report.AddPlayerData(&pb.PlayerData{
-			UserId:  message.GetUserId(),
-			Chip:    slotDesk.GameReward.BalanceChipsWalletAfter,
-			ChipAdd: slotDesk.GameReward.BalanceChipsWalletAfter - slotDesk.GameReward.BalanceChipsWalletBefore,
-		})
-		// reportUrl := "http://103.226.250.195:8350"
-		data, status, err := report.Commit()
-		if err != nil || status > 300 {
-			if err != nil {
-				logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
-					lib.HostReport, s.Label.Code, string(data), status, err.Error())
-			} else {
-				logger.Info("Report game (%s) operatio -> %s successful", s.Label.Code)
-			}
-		}
-	}
 }
 
 func (p *processor) handlerRequestGetInfoTable(
@@ -461,7 +451,7 @@ func (p *processor) handlerRequestGetInfoTable(
 		gameReward.UpdateWallet = true
 		gameReward.BalanceChipsWalletBefore = wallet.Chips
 		gameReward.BalanceChipsWalletAfter = gameReward.BalanceChipsWalletBefore
-		gameReward.TotalChipsWinByGame = slotdesk.TotalChipsWinByGame
+		// gameReward.TotalChipsWinByGame = slotdesk.GameReward.TotalChipsWinByGame
 		slotdesk.GameReward = gameReward
 	}
 	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
@@ -559,4 +549,62 @@ func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet
 	default:
 		return true
 	}
+}
+
+func (p *processor) reportStatistic(logger runtime.Logger, userId string, slotDesk *pb.SlotDesk, s *entity.SlotsMatchState) {
+	// send to statistic
+	if slotDesk.IsFinishGame && slotDesk.GameReward != nil {
+		// report to operation module
+		report := lib.NewReportGame()
+		// report.AddFee(totalFee)
+		report.AddMatch(&pb.MatchData{
+			GameId:   0,
+			GameCode: s.Label.Code,
+			Mcb:      int64(s.Label.Bet),
+			ChipFee:  slotDesk.GameReward.ChipFee,
+		})
+		report.AddPlayerData(&pb.PlayerData{
+			UserId:  userId,
+			Chip:    slotDesk.GameReward.BalanceChipsWalletAfter,
+			ChipAdd: slotDesk.GameReward.BalanceChipsWalletAfter - slotDesk.GameReward.BalanceChipsWalletBefore,
+		})
+		// reportUrl := "http://103.226.250.195:8350"
+		data, status, err := report.Commit()
+		if err != nil || status > 300 {
+			if err != nil {
+				logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
+					lib.HostReport, s.Label.Code, string(data), status, err.Error())
+			} else {
+				logger.Info("Report game (%s) operatio -> %s successful", s.Label.Code)
+			}
+		}
+	}
+}
+
+func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userId string, s *entity.SlotsMatchState) error {
+	wallet, err := entity.ReadWalletUser(ctx, nk, logger, userId)
+	if err != nil {
+		return err
+	}
+	chipBet := s.Bet().Chips
+	if wallet.Chips < chipBet {
+		return entity.ErrorChipNotEnough
+	}
+	// amountChip := -chipBet
+	// changeset := map[string]int64{
+	// 	"chips": amountChip, // Substract amountChip coins to the user's wallet.
+	// }
+	// metadata := map[string]interface{}{
+	// 	"game_reward": s.Label.Code,
+	// 	"action":      entity.WalletActionGameFee,
+	// }
+	// walletUpdates := []*runtime.WalletUpdate{{
+	// 	Changeset: changeset,
+	// 	Metadata:  metadata,
+	// }}
+	// _, err = nk.WalletsUpdate(ctx, walletUpdates, true)
+	// if err != nil {
+	// 	return err
+	// }
+	return nil
 }

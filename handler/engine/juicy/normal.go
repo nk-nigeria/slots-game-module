@@ -69,7 +69,9 @@ func (e *normal) Random(min int, max int) int {
 
 // Finish implements lib.Engine
 func (e *normal) Finish(matchState interface{}) (interface{}, error) {
-	slotDesk := &pb.SlotDesk{}
+	slotDesk := &pb.SlotDesk{
+		GameReward: &pb.GameReward{},
+	}
 	s := matchState.(*entity.SlotsMatchState)
 	s.NumScatterSeq = e.countScattersSequent(s.Matrix)
 	lineWin := 0
@@ -94,8 +96,8 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
 	slotDesk.ChipsMcb = s.Bet().Chips
 	// slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
-	slotDesk.TotalChipsWinByGame = slotDesk.ChipsWin
+	slotDesk.GameReward.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
 

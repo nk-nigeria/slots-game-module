@@ -170,7 +170,7 @@ func Test_bonusEngine_FullFlow(t *testing.T) {
 			slotDesk := result.(*api.SlotDesk)
 			assert.Equal(t, tt.want.nextGame, slotDesk.NextSixiangGame)
 			// assert.Equal(t, tt.want.chips, slotDesk.ChipsWinInSpecialGame)
-			assert.Equal(t, tt.want.chips, slotDesk.ChipsWin)
+			assert.Equal(t, tt.want.chips, slotDesk.GameReward.ChipsWin)
 			assert.Equal(t, tt.args.chip, slotDesk.ChipsMcb)
 		})
 	}

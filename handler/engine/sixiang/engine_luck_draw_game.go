@@ -81,6 +81,7 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 			Rows:  int32(matrix.Rows),
 			Cols:  int32(matrix.Cols),
 		},
+		GameReward: &pb.GameReward{},
 	}
 	if !s.IsSpinChange {
 		return slotDesk, entity.ErrorSpinNotChange
@@ -102,7 +103,7 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 			rangeRatio := entity.ListSymbolLuckyDraw[symbol].Value
 			totalRatio += e.randomFloat64(float64(rangeRatio.Min), float64(rangeRatio.Max))
 		}
-		slotDesk.ChipsWin += int64(totalRatio * float64(s.Bet().GetChips()))
+		slotDesk.GameReward.ChipsWin += int64(totalRatio * float64(s.Bet().GetChips()))
 	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
@@ -116,8 +117,8 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.Bet().Chips
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.ChipsWin)
-	slotDesk.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	return slotDesk, nil
 }
 

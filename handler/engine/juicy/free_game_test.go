@@ -200,12 +200,12 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 				assert.Equal(t, int(lineWin), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, slotDesk.NextSixiangGame)
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, s.NextSiXiangGame)
-				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100), int(slotDesk.ChipsWin))
+				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100), int(slotDesk.GameReward.ChipsWin))
 
 			} else {
 				// assert.Equal(t, int(lineWin*numScatterSeq), int(s.LineWinByGame[s.CurrentSiXiangGame]))
 				assert.Equal(t, int(lineWin*numScatterSeq), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-				assert.Equal(t, int(chipWin), int(slotDesk.ChipsWin))
+				assert.Equal(t, int(chipWin), int(slotDesk.GameReward.ChipsWin))
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, slotDesk.NextSixiangGame)
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, s.NextSiXiangGame)
 			}

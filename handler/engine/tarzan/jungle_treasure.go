@@ -98,15 +98,16 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 		NextSixiangGame:    s.NextSiXiangGame,
 		ChipsMcb:           s.Bet().GetChips(),
 		IsFinishGame:       s.NumSpinLeft == 0,
+		GameReward:         &pb.GameReward{},
 	}
 	chipsWin := int64(lineWin * int(slotDesk.ChipsMcb) / 100)
 	// s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + chipsWin
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipsWin)
 	// s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + lineWin
 	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
-	slotDesk.ChipsWin = chipsWin
+	slotDesk.GameReward.ChipsWin = chipsWin
 	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if !s.MatrixSpecial.TrackFlip[idx] {

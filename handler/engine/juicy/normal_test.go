@@ -316,16 +316,16 @@ func Test_normal_Only_Payline_Finish(t *testing.T) {
 				assert.Equal(t, int(lineWin), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, slotDesk.NextSixiangGame)
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, s.NextSiXiangGame)
-				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100), int(slotDesk.ChipsWin))
+				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100), int(slotDesk.GameReward.ChipsWin))
 
 			} else {
 				assert.Equal(t, int(numScatterSeq), int(s.RatioFruitBasket))
 				// assert.Equal(t, int(lineWin*numScatterSeq), int(s.LineWinByGame[s.CurrentSiXiangGame]))
 				assert.Equal(t, int(lineWin*numScatterSeq), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-				assert.Equal(t, int(lineWin*numScatterSeq), int(slotDesk.ChipsWin))
+				assert.Equal(t, int(lineWin*numScatterSeq), int(slotDesk.GameReward.ChipsWin))
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET, slotDesk.NextSixiangGame)
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET, s.NextSiXiangGame)
-				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100*s.RatioFruitBasket), int(slotDesk.ChipsWin))
+				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100*s.RatioFruitBasket), int(slotDesk.GameReward.ChipsWin))
 			}
 			assert.Equal(t, 0, s.NumFruitBasket)
 		}
@@ -389,15 +389,15 @@ func Test_normal_Only_fruitbasket_Finish(t *testing.T) {
 				if numScatterSeq < 3 {
 					// assert.Equal(t, int(lineWin), int(s.LineWinByGame[s.CurrentSiXiangGame]))
 					assert.Equal(t, int(lineWin), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-					assert.Equal(t, chipWin, int(slotDesk.ChipsWin))
+					assert.Equal(t, chipWin, int(slotDesk.GameReward.ChipsWin))
 					assert.Equal(t, chipWin, int(s.ChipStat.ChipWin(s.CurrentSiXiangGame)))
 					if numFruitbasket >= 6 {
 						nextGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN
 					}
 				} else {
 					assert.Equal(t, int(lineWin), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-					assert.Equal(t, int(chipWin), int(slotDesk.ChipsWin))
-					assert.Equal(t, chipWin, int(slotDesk.ChipsWin))
+					assert.Equal(t, int(chipWin), int(slotDesk.GameReward.ChipsWin))
+					assert.Equal(t, chipWin, int(slotDesk.GameReward.ChipsWin))
 					assert.Equal(t, chipWin, int(s.ChipStat.ChipWin(s.CurrentSiXiangGame)))
 					nextGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
 				}
