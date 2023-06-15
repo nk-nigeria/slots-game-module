@@ -42,8 +42,8 @@ type SlotsMatchState struct {
 	// lần quay chắc chắn ra ngọc
 	TurnSureSpin           int
 	CollectionSymbolRemain []pb.SiXiangSymbol
-	// Danh sach ngoc tứ linh spin được theo chip bet.
-	CollectionSymbol map[int]map[pb.SiXiangSymbol]int
+	// Danh sach ngoc tứ linh spin được theo chip bet. [game][bet][symbol]qty_of_symbol
+	CollectionSymbol map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int
 
 	// tarzan
 	// List idx of free symbol index
@@ -73,7 +73,7 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		},
 		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
-		CollectionSymbol:   make(map[int]map[pb.SiXiangSymbol]int, 0),
+		CollectionSymbol:   make(map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int, 0),
 		// ChipWinByGame:      make(map[pb.SiXiangGame]int64, 0),
 		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
 		ChipStat:         NewChipStat(),
@@ -141,30 +141,47 @@ func (s *SlotsMatchState) SetBalanceResult(u *pb.BalanceResult) {
 //	func (s *SlotsMatchState) ResetTrackingPlayBonusGame() {
 //		s.trackingPlaySiXiangGame = make(map[pb.SiXiangGame]int)
 //	}
-func (s *SlotsMatchState) AddCollectionSymbol(chipMcb int, sym pb.SiXiangSymbol) {
-	collection, exist := s.CollectionSymbol[chipMcb]
+func (s *SlotsMatchState) AddCollectionSymbol(game pb.SiXiangGame, chipMcb int, sym pb.SiXiangSymbol) {
+	if _, ok := s.CollectionSymbol[game]; !ok {
+		s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
+	}
+	collection, exist := s.CollectionSymbol[game][chipMcb]
 	if !exist {
-		s.CollectionSymbol[chipMcb] = make(map[pb.SiXiangSymbol]int, 0)
-		collection = s.CollectionSymbol[chipMcb]
+		s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
+		collection = s.CollectionSymbol[game][chipMcb]
 	}
 	num := collection[sym]
 	num++
 	collection[sym] = num
-	s.CollectionSymbol[chipMcb] = collection
+	s.CollectionSymbol[game][chipMcb] = collection
 }
 
-func (s *SlotsMatchState) CollectionSymbolToSlice(chipMcb int) []pb.SiXiangSymbol {
-	collection, exist := s.CollectionSymbol[chipMcb]
-	ml := make([]pb.SiXiangSymbol, 0, len(s.CollectionSymbol))
+func (s *SlotsMatchState) ResetCollection(game pb.SiXiangGame, chipMcb int) {
+	s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
+	s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
+}
+func (s *SlotsMatchState) CollectionSymbolToSlice(game pb.SiXiangGame, chipMcb int) []*pb.CollectSymbol {
+	ml := make([]*pb.CollectSymbol, 0, len(s.CollectionSymbol))
+	if _, ok := s.CollectionSymbol[game]; !ok {
+		return ml
+	}
+	collection, exist := s.CollectionSymbol[game][chipMcb]
 	if !exist {
 		return ml
 	}
-	for k := range collection {
-		ml = append(ml, k)
+	for symbol, qty := range collection {
+		v := &pb.CollectSymbol{
+			Symbol: symbol,
+			Qty:    int64(qty),
+		}
+		ml = append(ml, v)
 	}
 	return ml
 }
 
-func (s *SlotsMatchState) SizeCollectionSymbol(chipMcb int) int {
-	return len(s.CollectionSymbol[chipMcb])
+func (s *SlotsMatchState) SizeCollectionSymbol(game pb.SiXiangGame, chipMcb int) int {
+	if _, ok := s.CollectionSymbol[game]; !ok {
+		return 0
+	}
+	return len(s.CollectionSymbol[game][chipMcb])
 }

@@ -40,6 +40,7 @@ func (e *goldPickEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = defaultGoldPickGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	return s, nil
 }
 
@@ -92,22 +93,42 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
-	ratio := float64(0)
-	for id, sym := range s.MatrixSpecial.List {
-		if s.MatrixSpecial.TrackFlip[id] {
-			value := entity.ListSymbolGoldPick[sym].Value
-			ratio += e.randomFloat64(float64(value.Min), float64(value.Max))
-		} else {
-			slotDesk.Matrix.Lists[id] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+	// for id, sym := range s.MatrixSpecial.List {
+	// 	if s.MatrixSpecial.TrackFlip[id] {
+	// 		value := entity.ListSymbolGoldPick[sym].Value
+	// 		ratio += e.randomFloat64(float64(value.Min), float64(value.Max))
+	// 	} else {
+	// 		slotDesk.Matrix.Lists[id] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+	// 	}
+	// }
+	ratioWin := float32(0)
+	for _, spin := range s.SpinSymbols {
+		sym := spin.Symbol
+		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_TRYAGAIN {
+			continue
 		}
+		if sym >= pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR {
+			s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), sym)
+		}
+		spin.Ratio = float32(e.randomFloat64(
+			float64(entity.ListSymbolGoldPick[sym].Value.Min),
+			float64(entity.ListSymbolGoldPick[sym].Value.Max),
+		))
+		ratioWin += spin.Ratio
 	}
+	slotDesk.ChipsMcb = s.Bet().GetChips()
+	slotDesk.GameReward.ChipsWin = int64(float64(ratioWin) * float64(slotDesk.ChipsMcb))
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.ChipsMcb = s.Bet().GetChips()
-	slotDesk.GameReward.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
+	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips))
+	slotDesk.GameReward.RatioWin = ratioWin
 	return slotDesk, nil
+}
+
+func (e *goldPickEngine) Loop(s interface{}) (interface{}, error) {
+	return s, nil
 }

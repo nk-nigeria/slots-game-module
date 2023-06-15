@@ -76,3 +76,7 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
+
+func (e *sixiangBonusEngine) Loop(s interface{}) (interface{}, error) {
+	return s, nil
+}

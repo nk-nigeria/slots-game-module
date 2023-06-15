@@ -66,8 +66,14 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 
 	// slotDesk.BigWin = e.transformLineWinToBigWin(s.LineWinByGame[s.CurrentSiXiangGame])
 	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(0)
+	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, 0)
 	return slotDesk, err
+}
+
+func (e *tarzanEngine) Loop(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	engine := e.engines[s.CurrentSiXiangGame]
+	return engine.Loop(s)
 }
 
 func (e *tarzanEngine) transformLineWinToBigWin(lineWin int) pb.BigWin {

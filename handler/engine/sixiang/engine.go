@@ -92,6 +92,12 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 	return engine.Finish(matchState)
 }
 
+func (e *slotsEngine) Loop(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	engine := e.engines[s.CurrentSiXiangGame]
+	return engine.Loop(s)
+}
+
 func (e *slotsEngine) PrintMatrix(matrix entity.SlotMatrix) {
 	// matrix := matchState.GetMatrix()
 	matrix.ForEeach(func(idx, _, col int, symbol pb.SiXiangSymbol) {

@@ -102,3 +102,7 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, err
 }
+
+func (e *freespinx9) Loop(s interface{}) (interface{}, error) {
+	return s, nil
+}

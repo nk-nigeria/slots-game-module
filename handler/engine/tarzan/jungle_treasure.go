@@ -122,3 +122,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 func (e *jungleTreasure) Random(min int, max int) int {
 	return e.randomIntFn(min, max)
 }
+
+func (e *jungleTreasure) Loop(s interface{}) (interface{}, error) {
+	return s, nil
+}

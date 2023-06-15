@@ -22,7 +22,7 @@ func (s *StateMatching) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	procPkg.GetLogger().Info("[matching] enter")
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
-	state.SetUpCountDown(1 * time.Second)
+	state.SetUpCountDown(0 * time.Second)
 	procPkg.GetProcessor().ProcessApplyPresencesLeave(
 		procPkg.GetContext(),
 		procPkg.GetLogger(),

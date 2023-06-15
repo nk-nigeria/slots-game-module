@@ -27,7 +27,6 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 		}
 		matchStateExpect.CollectionSymbolRemain = entity.ShuffleSlice(list)
 	}
-	matchStateExpect.CollectionSymbol = make(map[int]map[api.SiXiangSymbol]int)
 	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
 	tests := []struct {
 		name string
@@ -52,7 +51,9 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 			assert.Equal(t, tt.want.CurrentSiXiangGame, tt.args.matchState.CurrentSiXiangGame)
 			assert.Equal(t, tt.want.NumSpinLeft, tt.args.matchState.NumSpinLeft)
 			assert.Equal(t, tt.want.CollectionSymbolRemain, tt.args.matchState.CollectionSymbolRemain)
-			assert.Equal(t, tt.want.CollectionSymbol[int(tt.args.matchState.Bet().Chips)], tt.args.matchState.CollectionSymbol[int(tt.args.matchState.Bet().GetChips())])
+			assert.Equal(t,
+				tt.want.CollectionSymbol[tt.args.matchState.CurrentSiXiangGame][int(tt.args.matchState.Bet().Chips)],
+				tt.args.matchState.CollectionSymbol[tt.args.matchState.CurrentSiXiangGame][int(tt.args.matchState.Bet().GetChips())])
 			trackSym := make(map[api.SiXiangSymbol]int)
 			trackSymExpect := make(map[api.SiXiangSymbol]int)
 			for _, sym := range tt.want.MatrixSpecial.List {
@@ -181,9 +182,9 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 				ChipsMcb:           matchState.Bet().GetChips(),
 			}
 			ratioBonus := float64(1)
-			ml := matchState.CollectionSymbolToSlice(int(matchState.Bet().Chips))
+			ml := matchState.CollectionSymbolToSlice(matchState.CurrentSiXiangGame, int(matchState.Bet().Chips))
 			for _, eyeSym := range ml {
-				r := entity.ListEyeSiXiang[eyeSym].Value.Min
+				r := entity.ListEyeSiXiang[eyeSym.Symbol].Value.Min
 				if float64(r) > ratioBonus {
 					ratioBonus = float64(r)
 				}

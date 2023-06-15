@@ -55,6 +55,12 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	s.SetAllowSpin(true)
 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	s.NextSiXiangGame = s.CurrentSiXiangGame
+	// FIXME: remove after test
+	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	s.NextSiXiangGame = s.CurrentSiXiangGame
+	s.SetBetInfo(&pb.InfoBet{
+		Chips: 10000,
+	})
 	_, err := p.engine.NewGame(matchState)
 	if err != nil {
 		logger.WithField("err", err).Error("Engine new game failed")
@@ -110,7 +116,17 @@ func (p *processor) ProcessGame(ctx context.Context,
 	}
 	s := matchState.(*entity.SlotsMatchState)
 	s.InitNewRound()
+	{
+		res, _ := p.engine.Loop(s)
+		// logger.Info("loop")
+		if res != nil {
+			if slotDesk, ok := res.(*pb.SlotDesk); ok {
+				p.handlerResult(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
+			}
+		}
+	}
 	defer s.SetAllowSpin(true)
+
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
 		s.CurrentSiXiangGame = s.NextSiXiangGame
 		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
@@ -317,6 +333,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	}
 	s.SetAllowSpin(false)
 	chipBetFee := int64(0)
+
 	// only update new bet in normal game
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		s.SetBetInfo(bet)
@@ -343,58 +360,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		return
 	}
 	slotDesk := result.(*pb.SlotDesk)
-	if slotDesk.IsFinishGame {
-		if chipBetFee <= 0 && (slotDesk.GameReward != nil && slotDesk.GameReward.ChipsWin <= 0) {
-			logger.WithField("user", s.GetPlayingPresences()[0].GetUserId()).
-				WithField("current game", slotDesk.CurrentSixiangGame.String()).
-				WithField("next game", slotDesk.NextSixiangGame.String()).
-				Info("no need update wallet, because chip win <= 0")
-		} else {
-			wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
-			if err != nil {
-				logger.WithField("error", err.Error()).
-					WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
-					Error("get profile user failed")
-				return
-			}
-			if slotDesk.GameReward == nil {
-				slotDesk.GameReward = &pb.GameReward{}
-			}
-			gameReward := slotDesk.GameReward
-			gameReward.UpdateWallet = true
-			gameReward.BalanceChipsWalletBefore = wallet.Chips
-			gameReward.ChipBetFee = chipBetFee
-			// FIXME: hard code 10%,
-			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 100 * 10
-			gameReward.BalanceChipsWalletAfter = wallet.Chips + gameReward.TotalChipsWinByGame -
-				gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
-			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
-				Updates: []*pb.BalanceUpdate{
-					{
-						UserId:            s.GetPlayingPresences()[0].GetUserId(),
-						AmountChipBefore:  gameReward.BalanceChipsWalletBefore,
-						AmountChipCurrent: gameReward.BalanceChipsWalletAfter,
-						AmountChipAdd:     gameReward.BalanceChipsWalletAfter - gameReward.BalanceChipsWalletBefore,
-					},
-				},
-			})
-			slotDesk.GameReward = gameReward
-		}
-	}
-	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
-	slotDesk.TsUnix = time.Now().Unix()
-	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
-		p.delayTime = time.Now().Add(2 * time.Second)
-		// s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-		// slotDesk.NextSixiangGame = s.NextSiXiangGame
-	}
-	p.broadcastMessage(logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
-		slotDesk,
-		s.GetPlayingPresences(),
-		nil, false)
-	p.reportStatistic(logger, message.GetUserId(), slotDesk, s)
-
+	p.handlerResult(ctx, logger, nk, dispatcher, message.GetUserId(), s, slotDesk, chipBetFee)
 }
 
 func (p *processor) handlerRequestGetInfoTable(
@@ -607,4 +573,58 @@ func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtim
 	// 	return err
 	// }
 	return nil
+}
+func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
+	dispatcher runtime.MatchDispatcher, userId string, s *entity.SlotsMatchState, slotDesk *pb.SlotDesk, chipBetFee int64) {
+	if slotDesk.IsFinishGame {
+		if chipBetFee <= 0 && (slotDesk.GameReward != nil && slotDesk.GameReward.ChipsWin <= 0) {
+			logger.WithField("user", s.GetPlayingPresences()[0].GetUserId()).
+				WithField("current game", slotDesk.CurrentSixiangGame.String()).
+				WithField("next game", slotDesk.NextSixiangGame.String()).
+				Info("no need update wallet, because chip win <= 0")
+		} else {
+			wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
+			if err != nil {
+				logger.WithField("error", err.Error()).
+					WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
+					Error("get profile user failed")
+				return
+			}
+			if slotDesk.GameReward == nil {
+				slotDesk.GameReward = &pb.GameReward{}
+			}
+			gameReward := slotDesk.GameReward
+			gameReward.UpdateWallet = true
+			gameReward.BalanceChipsWalletBefore = wallet.Chips
+			gameReward.ChipBetFee = chipBetFee
+			// FIXME: hard code 10%,
+			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 100 * 10
+			gameReward.BalanceChipsWalletAfter = wallet.Chips + gameReward.TotalChipsWinByGame -
+				gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
+			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
+				Updates: []*pb.BalanceUpdate{
+					{
+						UserId:            s.GetPlayingPresences()[0].GetUserId(),
+						AmountChipBefore:  gameReward.BalanceChipsWalletBefore,
+						AmountChipCurrent: gameReward.BalanceChipsWalletAfter,
+						AmountChipAdd:     gameReward.BalanceChipsWalletAfter - gameReward.BalanceChipsWalletBefore,
+					},
+				},
+			})
+			slotDesk.GameReward = gameReward
+		}
+	}
+	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
+	slotDesk.TsUnix = time.Now().Unix()
+	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
+		p.delayTime = time.Now().Add(2 * time.Second)
+		// s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+		// slotDesk.NextSixiangGame = s.NextSiXiangGame
+	}
+	p.broadcastMessage(logger, dispatcher,
+		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+		slotDesk,
+		s.GetPlayingPresences(),
+		nil, false)
+	p.reportStatistic(logger, userId, slotDesk, s)
 }

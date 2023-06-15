@@ -40,6 +40,11 @@ func (e *engine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	return e.engines[s.CurrentSiXiangGame].Process(s)
 }
+func (e *engine) Loop(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	engine := e.engines[s.CurrentSiXiangGame]
+	return engine.Loop(s)
+}
 
 // Random implements lib.Engine
 func (e *engine) Random(min int, max int) int {

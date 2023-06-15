@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
@@ -23,7 +24,7 @@ func (s *StatePreparing) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	procPkg.GetLogger().Info("state %v", state.Presences)
-	state.SetUpCountDown(preparingTimeout)
+	state.SetUpCountDown(0 * time.Second)
 	// remove all user not interact 2 game conti
 	listPrecense := state.GetPresenceNotInteract(2)
 	if len(listPrecense) > 0 {

@@ -75,3 +75,7 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	slotDesk.IsInSixiangBonus = true
 	return slotDesk, nil
 }
+
+func (e *sixiangBonusIngameEngine) Loop(s interface{}) (interface{}, error) {
+	return s, nil
+}

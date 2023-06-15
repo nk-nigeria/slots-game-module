@@ -62,3 +62,7 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }
+
+func (e *fruitBasket) Loop(s interface{}) (interface{}, error) {
+	return s, nil
+}

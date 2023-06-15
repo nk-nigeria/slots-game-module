@@ -121,6 +121,10 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 	return slotDesk, nil
 }
 
+func (e *fruitRain) Loop(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 func (e *fruitRain) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)

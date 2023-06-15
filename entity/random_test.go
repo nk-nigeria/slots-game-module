@@ -59,7 +59,7 @@ func TestShuffleSlice(t *testing.T) {
 		{
 			name: "TestShuffleSlice",
 			args: args{
-				slice: entity.ListSpecialGame[:],
+				slice: ListSpecialGame[:],
 			},
 		},
 	}

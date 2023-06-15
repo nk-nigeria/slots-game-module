@@ -111,6 +111,10 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	return slotDesk, nil
 }
 
+func (e *normal) Loop(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entity.SlotMatrix {
 	var list []pb.SiXiangSymbol
 	switch ratioWild {

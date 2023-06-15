@@ -62,12 +62,12 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 		})
 	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
 		for sym := range entity.TarzanLetterSymbol {
-			s.AddCollectionSymbol(0, sym)
+			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
 		}
 	}
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
-			s.AddCollectionSymbol(0, symbol)
+			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, symbol)
 		}
 	})
 	return matchState, nil
@@ -121,6 +121,10 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 // Random implements lib.Engine
 func (e *normal) Random(min int, max int) int {
 	return e.randomIntFn(min, max)
+}
+
+func (e *normal) Loop(s interface{}) (interface{}, error) {
+	return s, nil
 }
 
 func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
@@ -192,7 +196,7 @@ func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
 }
 
 func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	if s.SizeCollectionSymbol(0) == len(entity.TarzanLetterSymbol) {
+	if s.SizeCollectionSymbol(s.CurrentSiXiangGame, 0) == len(entity.TarzanLetterSymbol) {
 		return pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 	}
 	matrix := s.Matrix

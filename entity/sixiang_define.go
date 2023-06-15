@@ -33,31 +33,31 @@ var ListSymbol = []pb.SiXiangSymbol{
 var ListSymbolLuckyDraw = map[pb.SiXiangSymbol]SymbolInfo{
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1: {
 		NumOccur: 1,
-		Value:    Range{5, 7},
+		Value:    Range{1.5, 2},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_2: {
 		NumOccur: 1,
-		Value:    Range{10, 14},
+		Value:    Range{3, 4},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_3: {
 		NumOccur: 1,
-		Value:    Range{15, 18},
+		Value:    Range{4, 5},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR: {
 		NumOccur: 3,
-		Value:    Range{10, 10},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MINOR), float32(pb.WinJackpot_WIN_JACKPOT_MINOR)},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR: {
 		NumOccur: 3,
-		Value:    Range{50, 50},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MAJOR), float32(pb.WinJackpot_WIN_JACKPOT_MAJOR)},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA: {
 		NumOccur: 3,
-		Value:    Range{100, 100},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MEGA), float32(pb.WinJackpot_WIN_JACKPOT_MEGA)},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND: {
 		NumOccur: 3,
-		Value:    Range{500, 500},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_GRAND), float32(pb.WinJackpot_WIN_JACKPOT_GRAND)},
 	},
 }
 
@@ -173,19 +173,19 @@ var ListSymbolGoldPick = map[pb.SiXiangSymbol]SymbolInfo{
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD1: {
 		NumOccur: 5,
-		Value:    Range{0.1, 0.2},
+		Value:    Range{0.1, 0.3},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD2: {
 		NumOccur: 4,
-		Value:    Range{0.3, 0.7},
+		Value:    Range{1, 2},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD3: {
 		NumOccur: 4,
-		Value:    Range{1, 2},
+		Value:    Range{3, 4},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD4: {
 		NumOccur: 2,
-		Value:    Range{3, 6},
+		Value:    Range{5, 7},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_GOLD5: {
 		NumOccur: 1,
@@ -193,15 +193,15 @@ var ListSymbolGoldPick = map[pb.SiXiangSymbol]SymbolInfo{
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR: {
 		NumOccur: 0,
-		Value:    Range{10, 10},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MINOR), float32(pb.WinJackpot_WIN_JACKPOT_MINOR)},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MAJOR: {
 		NumOccur: 0,
-		Value:    Range{50, 50},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MAJOR), float32(pb.WinJackpot_WIN_JACKPOT_MAJOR)},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MEGA: {
 		NumOccur: 0,
-		Value:    Range{100, 100},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MEGA), float32(pb.WinJackpot_WIN_JACKPOT_MEGA)},
 	},
 }
 
