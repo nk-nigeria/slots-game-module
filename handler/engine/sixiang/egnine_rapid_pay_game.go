@@ -11,15 +11,19 @@ import (
 var _ lib.Engine = &rapidPayEngine{}
 
 const (
-	defaultRapidPayGemSpin  = entity.Row_5 + 1
-	defaultAddRatioMcb      = float64(0.1)
-	durationTriggerAutoSpin = 2 * time.Second
+	defaultRapidPayGemSpin = entity.Row_5 + 1
+	defaultAddRatioMcb     = float64(0.1)
+	// duration auto spin if no interract after first countdown
+	durationAutoSpinNoInteract = 2 * time.Second
+	// duration auto spin if no interract first
+	durationAutoSpin = 10 * time.Second
 )
 
 type rapidPayEngine struct {
-	randomIntFn   func(min, max int) int
-	randomFloat64 func(min, max float64) float64
-	lastSpinTime  time.Time
+	randomIntFn             func(min, max int) int
+	randomFloat64           func(min, max float64) float64
+	lastSpinTime            time.Time
+	durationTriggerAutoSpin time.Duration
 }
 
 func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
@@ -45,6 +49,7 @@ func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = defaultRapidPayGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	e.lastSpinTime = time.Now()
+	e.durationTriggerAutoSpin = durationAutoSpin
 	return s, nil
 }
 
@@ -56,6 +61,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	defer func() {
 		e.lastSpinTime = time.Now()
+		e.durationTriggerAutoSpin = durationAutoSpin
 	}()
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
@@ -130,8 +136,9 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 
 func (e *rapidPayEngine) Loop(s interface{}) (interface{}, error) {
 	delay := time.Since(e.lastSpinTime)
-	if delay > durationTriggerAutoSpin {
+	if delay > e.durationTriggerAutoSpin {
 		e.Process(s)
+		e.durationTriggerAutoSpin = durationAutoSpinNoInteract
 		return e.Finish(s)
 	}
 	return s, nil
