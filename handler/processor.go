@@ -56,8 +56,8 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	s.NextSiXiangGame = s.CurrentSiXiangGame
 	// FIXME: remove after test
-	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-	s.NextSiXiangGame = s.CurrentSiXiangGame
+	// s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	// s.NextSiXiangGame = s.CurrentSiXiangGame
 	s.SetBetInfo(&pb.InfoBet{
 		Chips: 10000,
 	})
