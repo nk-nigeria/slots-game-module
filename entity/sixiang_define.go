@@ -103,35 +103,39 @@ var ListSymbolDragonPearl = map[pb.SiXiangSymbol]SymbolInfo{
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM1: {
 		NumOccur: 4,
-		Value:    Range{0.1, 0.2},
+		Value:    Range{0.03, 0.06},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM2: {
 		NumOccur: 3,
-		Value:    Range{0.3, 0.7},
+		Value:    Range{0.1, 0.25},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM3: {
 		NumOccur: 2,
-		Value:    Range{1, 2},
+		Value:    Range{0.3, 0.6},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM4: {
 		NumOccur: 2,
-		Value:    Range{3, 6},
+		Value:    Range{1, 2},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM5: {
 		NumOccur: 1,
-		Value:    Range{8, 10},
+		Value:    Range{2.5, 3},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR: {
 		NumOccur: 0,
-		Value:    Range{10, 10},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MINOR), float32(pb.WinJackpot_WIN_JACKPOT_MINOR)},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR: {
 		NumOccur: 0,
-		Value:    Range{50, 50},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MAJOR), float32(pb.WinJackpot_WIN_JACKPOT_MAJOR)},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA: {
 		NumOccur: 0,
-		Value:    Range{100, 100},
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_MEGA), float32(pb.WinJackpot_WIN_JACKPOT_MEGA)},
+	},
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_GRAND: {
+		NumOccur: 0,
+		Value:    Range{float32(pb.WinJackpot_WIN_JACKPOT_GRAND), float32(pb.WinJackpot_WIN_JACKPOT_GRAND)},
 	},
 }
 

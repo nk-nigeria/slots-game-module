@@ -11,17 +11,24 @@ import (
 var _ lib.Engine = &dragonPearlEngine{}
 
 const (
+	// default remain spin remain at start game
 	defaultDragonPearlGemSpin = 3
-	bonusDragonPearlGemSpin   = 3
+	// add more spin when appear symbol eye bird (chu tuoc)
+	bonusDragonPearlGemSpin = 3
 )
 
 type dragonPearlEngine struct {
 	randomIntFn   func(min, max int) int
 	randomFloat64 func(min, max float64) float64
+	// ration bonus when draw DRAGONPEARL_GEM, default 1
+	// will x2 when draw eye dragon
+	ratioGem int
 }
 
 func NewDragonPearlEngine(randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
-	engine := dragonPearlEngine{}
+	engine := dragonPearlEngine{
+		ratioGem: 1,
+	}
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
@@ -110,9 +117,12 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD:
 		// add spin
 		s.NumSpinLeft += bonusDragonPearlGemSpin
+		s.AddCollectionSymbol(int(s.Bet().GetChips()), pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD)
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
 		// x2 money in gem
 		s.NumSpinLeft += 1
+		e.ratioGem *= 2
+		s.AddCollectionSymbol(int(s.Bet().GetChips()), pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER)
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR:
 		s.NumSpinLeft += 1
 		// add 3 gen money
@@ -139,6 +149,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				}
 			}
 		}
+		s.AddCollectionSymbol(int(s.Bet().GetChips()), pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR)
 		// todo
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON:
 		s.NumSpinLeft += 1
@@ -155,6 +166,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 			Col:    s.SpinSymbols[0].Col,
 		}
 		s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
+		s.AddCollectionSymbol(int(s.Bet().GetChips()), pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON)
 	}
 	return s, nil
 }
@@ -177,31 +189,32 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		}
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
-	totalMcb := float64(0)
+	ratioWin := float32(0)
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if s.MatrixSpecial.TrackFlip[idx] {
-			v := entity.ListSymbolDragonPearl[symbol].Value
-			totalMcb += e.randomFloat64(float64(v.Min), float64(v.Max))
+			// v := entity.ListSymbolDragonPearl[symbol].Value
+			// ratioWin += e.randomFloat64(float64(v.Min), float64(v.Max))
 		} else {
 			slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		}
 	})
-
-	//todo jacpot reward
-	// for _, spin := range s.SpinSymbols {
-	// 	v := entity.ListSymbolDragonPearl[spin.Symbol].Value
-	// 	totalMcb += float64(e.randomFloat64(float64(v.Min), float64(v.Max)))
-	// }
-	ratioBonus := float64(1)
+	for _, sym := range s.SpinSymbols {
+		v := entity.ListSymbolDragonPearl[sym.Symbol].Value
+		sym.Ratio = float32(e.randomFloat64(float64(v.Min), float64(v.Max)))
+		ratioWin += sym.Ratio
+	}
+	ratioWin *= float32(e.ratioGem)
+	slotDesk.GameReward.ChipsWin = int64(float64(ratioWin) * float64(float64(ratioWin)*float64(s.Bet().Chips)))
+	ratioJPBonus := float32(1)
 	for _, eyeSym := range s.CollectionSymbolToSlice(int(s.Bet().Chips)) {
 		r := entity.ListEyeSiXiang[eyeSym].Value.Min
-		if float64(r) > ratioBonus {
-			ratioBonus = float64(r)
+		if (r) > ratioJPBonus {
+			ratioJPBonus = float32(r)
 		}
 	}
-	chips := ratioBonus * float64(totalMcb*float64(s.Bet().Chips))
-	slotDesk.GameReward.ChipsWin = int64(chips)
+	// totalChipsWin := float64(ratioJPBonus) * float64(ratioWin*float64(s.Bet().Chips))
+	// slotDesk.GameReward.ChipsWin = int64(totalChipsWin)
 	if s.WinJp != pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED {
 		slotDesk.GameReward.ChipsWin = s.Bet().Chips * int64(s.WinJp)
 	}
@@ -211,8 +224,11 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
+	// s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, int64(slotDesk.GameReward.ChipsWin))
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.RatioWin = float32(ratioWin)
+	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(int(s.Bet().Chips))
 	return slotDesk, nil
 }
 

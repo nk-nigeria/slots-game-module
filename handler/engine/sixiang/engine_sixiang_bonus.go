@@ -51,7 +51,9 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 
 func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	slotDesk := &pb.SlotDesk{}
+	slotDesk := &pb.SlotDesk{
+		GameReward: &pb.GameReward{},
+	}
 	if !s.IsSpinChange {
 		return slotDesk, entity.ErrorSpinNotChange
 	}

@@ -68,6 +68,7 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 	}
 	for idx, sym := range arrSym {
 		matchState := entity.NewSlotsMathState(nil)
+		matchState.IsSpinChange = true
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 		engine.NewGame(matchState)
 		idRandom := 0
@@ -84,6 +85,7 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 			CurrentSixiangGame: api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS,
 			NextSixiangGame:    arrNextGame[idx],
 			IsFinishGame:       true,
+			GameReward:         &api.GameReward{},
 		}
 		test := test{
 			name: "Test_sixiangBonusEngine_Finish_" + sym.String(),
@@ -101,6 +103,8 @@ func Test_sixiangBonusEngine_Finish(t *testing.T) {
 			assert.Equal(t, tt.want.CurrentSixiangGame, slotDesk.CurrentSixiangGame)
 			assert.Equal(t, tt.want.NextSixiangGame, slotDesk.NextSixiangGame)
 			assert.Equal(t, tt.want.IsFinishGame, slotDesk.IsFinishGame)
+			assert.Equal(t, tt.want.GameReward.ChipsWin, slotDesk.GameReward.ChipsWin)
+			assert.Equal(t, tt.want.GameReward.TotalChipsWinByGame, slotDesk.GameReward.TotalChipsWinByGame)
 		})
 	}
 }
