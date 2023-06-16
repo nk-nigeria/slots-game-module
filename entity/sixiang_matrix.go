@@ -139,11 +139,11 @@ func NewMatrixRapidPay() SlotMatrix {
 	// sm.List = append(sm.List, SliceRepeat(2, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)...)
 	// x2 x3 x4 END
 	sm.List = append(sm.List,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_LUCKYBOX,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_LUCKYBOX,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_LUCKYBOX,
 		pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
 	)
 	// x2 x3 X4 END
 	sm.List = append(sm.List,

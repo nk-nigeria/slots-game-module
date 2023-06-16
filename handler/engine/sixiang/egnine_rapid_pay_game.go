@@ -69,10 +69,23 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	}
 	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
 	s.IsSpinChange = true
-
 	indexStart := (s.NumSpinLeft - 1) * s.MatrixSpecial.Cols
-	for idx, sym := range entity.ShuffleSlice(e.symbolsAtRow(s.NumSpinLeft - 1)) {
-		s.MatrixSpecial.List[indexStart+idx] = sym
+	{
+		beginId := 0
+		for _, sym := range entity.ShuffleSlice(e.symbolsAtRow(s.NumSpinLeft - 1)) {
+			for {
+				if beginId >= s.MatrixSpecial.Cols {
+					break
+				}
+				if s.MatrixSpecial.List[indexStart+beginId] != pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_LUCKYBOX {
+					beginId++
+					continue
+				}
+				s.MatrixSpecial.List[indexStart+beginId] = sym
+				beginId++
+				break
+			}
+		}
 	}
 	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]
 	var idRandom int
@@ -159,23 +172,18 @@ func (e *rapidPayEngine) symbolsAtRow(row int) []pb.SiXiangSymbol {
 	switch row {
 	case 0:
 		return []pb.SiXiangSymbol{
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			//
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
 		}
 	case 1:
 		return []pb.SiXiangSymbol{
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
 		}
 	case 2:
 		return []pb.SiXiangSymbol{
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
@@ -183,7 +191,6 @@ func (e *rapidPayEngine) symbolsAtRow(row int) []pb.SiXiangSymbol {
 		}
 	case 3:
 		return []pb.SiXiangSymbol{
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
