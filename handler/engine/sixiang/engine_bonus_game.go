@@ -59,6 +59,7 @@ func (e *bonusEngine) Process(matchState interface{}) (interface{}, error) {
 	row, col := s.MatrixSpecial.RowCol(id)
 	spinSymbol.Row = int32(row)
 	spinSymbol.Col = int32(col)
+	spinSymbol.Index = int32(id)
 	s.NumSpinLeft--
 	s.SpinSymbols = []*pb.SpinSymbol{spinSymbol}
 	return s, nil

@@ -55,9 +55,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	s.SetAllowSpin(true)
 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	s.NextSiXiangGame = s.CurrentSiXiangGame
-	// FIXME: remove after test
-	// s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-	// s.NextSiXiangGame = s.CurrentSiXiangGame
+
 	s.SetBetInfo(&pb.InfoBet{
 		Chips: 10000,
 	})
@@ -65,6 +63,12 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	if err != nil {
 		logger.WithField("err", err).Error("Engine new game failed")
 		return
+	}
+	// FIXME: remove after test
+	{
+		s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+		s.NextSiXiangGame = s.CurrentSiXiangGame
+		p.engine.NewGame(matchState)
 	}
 	if s.GetPresenceSize() <= 0 {
 		logger.
@@ -74,31 +78,8 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	}
 	logger.
 		WithField("game", s.Label.Code).
-		WithField("data", s.Matrix).
+		// WithField("data", s.Matrix).
 		Info("new game")
-
-	// slotDesk := &pb.SlotDesk{}
-	// presence := s.GetPresences()[0]
-	// wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
-	// if err != nil {
-	// 	logger.WithField("error", err.Error()).
-	// 		WithField("user id", presence.GetUserId()).
-	// 		Error("get profile user failed")
-	// 	return
-	// }
-	// matrix := s.GetMatrix()
-	// slotDesk.Matrix = matrix.ToPbSlotMatrix()
-	// slotDesk.UpdateWallet = true
-	// slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	// slotDesk.NextSixiangGame = s.NextSiXiangGame
-	// slotDesk.BalanceChipsWalletBefore = wallet.Chips
-	// slotDesk.BalanceChipsWalletAfter = wallet.Chips
-
-	// p.broadcastMessage(logger, dispatcher,
-	// 	int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
-	// 	slotDesk,
-	// 	[]runtime.Presence{presence},
-	// 	nil, false)
 	presence := s.GetPresences()[0]
 	p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, presence.GetUserId(), s)
 }
@@ -116,15 +97,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 	}
 	s := matchState.(*entity.SlotsMatchState)
 	s.InitNewRound()
-	{
-		res, _ := p.engine.Loop(s)
-		// logger.Info("loop")
-		if res != nil {
-			if slotDesk, ok := res.(*pb.SlotDesk); ok {
-				p.handlerResult(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
-			}
-		}
-	}
+
 	defer s.SetAllowSpin(true)
 
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
@@ -132,12 +105,24 @@ func (p *processor) ProcessGame(ctx context.Context,
 		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 			p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
 		}
-		for _, player := range s.GetPlayingPresences() {
-			p.handlerRequestGetInfoTable(ctx,
-				logger, nk, db,
-				dispatcher,
-				player.GetUserId(),
-				s)
+		if s.Bet().EmitNewgameEvent {
+			for _, player := range s.GetPlayingPresences() {
+				p.handlerRequestGetInfoTable(ctx,
+					logger, nk, db,
+					dispatcher,
+					player.GetUserId(),
+					s)
+			}
+		}
+	}
+	// auto run in some game
+	{
+		res, _ := p.engine.Loop(s)
+		// logger.Info("loop")
+		if res != nil {
+			if slotDesk, ok := res.(*pb.SlotDesk); ok {
+				p.handlerResult(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
+			}
 		}
 	}
 
@@ -618,6 +603,11 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 	slotDesk.TsUnix = time.Now().Unix()
 	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
 		p.delayTime = time.Now().Add(2 * time.Second)
+		// if s.Bet().DelayEmitResult != "" {
+		// 	if delayDur, err := time.ParseDuration(s.Bet().GetDelayEmitResult()); err == nil {
+		// 		p.delayTime = time.Now().Add(delayDur)
+		// 	}
+		// }
 		// s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
 		// slotDesk.NextSixiangGame = s.NextSiXiangGame
 	}

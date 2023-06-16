@@ -74,6 +74,7 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 	}
 	s.MatrixSpecial.Flip(idRandom)
 	s.MatrixSpecial.List[idRandom] = symbolRandom
+	spin.Index = int32(idRandom)
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
 	return s, nil
 }

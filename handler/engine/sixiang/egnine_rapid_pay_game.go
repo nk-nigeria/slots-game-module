@@ -50,6 +50,7 @@ func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	e.lastSpinTime = time.Now()
 	e.durationTriggerAutoSpin = durationAutoSpin
+	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	return s, nil
 }
 
@@ -68,7 +69,11 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	}
 	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
 	s.IsSpinChange = true
+
 	indexStart := (s.NumSpinLeft - 1) * s.MatrixSpecial.Cols
+	for idx, sym := range entity.ShuffleSlice(e.symbolsAtRow(s.NumSpinLeft - 1)) {
+		s.MatrixSpecial.List[indexStart+idx] = sym
+	}
 	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]
 	var idRandom int
 	var symRandom pb.SiXiangSymbol
@@ -85,6 +90,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 		Symbol: symRandom,
 		Row:    int32(row),
 		Col:    int32(col),
+		Index:  int32(indexStart) + int32(idRandom),
 	}
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
 	s.NumSpinLeft--
@@ -142,4 +148,55 @@ func (e *rapidPayEngine) Loop(s interface{}) (interface{}, error) {
 		return e.Finish(s)
 	}
 	return s, nil
+}
+
+// row 0: x4 END
+// row 1:x3 x4 END
+// row 2: x2 x3 x4 END
+// row 3: x2 x3 X4 END
+// row 4: x2 x2 x3 x3 x4
+func (e *rapidPayEngine) symbolsAtRow(row int) []pb.SiXiangSymbol {
+	switch row {
+	case 0:
+		return []pb.SiXiangSymbol{
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+		}
+	case 1:
+		return []pb.SiXiangSymbol{
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+		}
+	case 2:
+		return []pb.SiXiangSymbol{
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+		}
+	case 3:
+		return []pb.SiXiangSymbol{
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END,
+		}
+	case 4:
+		return []pb.SiXiangSymbol{
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X2,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X3,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_X4,
+		}
+	}
+	return []pb.SiXiangSymbol{}
 }

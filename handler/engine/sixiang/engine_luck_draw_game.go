@@ -68,6 +68,7 @@ func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 	row, col := s.MatrixSpecial.RowCol(idFlip)
 	spinSymbol.Row = int32(row)
 	spinSymbol.Col = int32(col)
+	spinSymbol.Index = int32(idFlip)
 	s.SpinSymbols = []*pb.SpinSymbol{spinSymbol}
 	return s, nil
 }

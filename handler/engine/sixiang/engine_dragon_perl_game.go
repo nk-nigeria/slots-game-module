@@ -94,6 +94,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 			Symbol: eyeRandom,
 			Row:    int32(row),
 			Col:    int32(col),
+			Index:  int32(idxRandom),
 		}
 		s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().GetChips()), eyeRandom)
 		s.SpinSymbols = []*pb.SpinSymbol{spinSymbol}
@@ -104,6 +105,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				Symbol: symbolRand,
 				Row:    int32(row),
 				Col:    int32(col),
+				Index:  int32(row*s.Matrix.Cols + col),
 			}
 			if eyeRand != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 				spinSymbol.Symbol = eyeRand
@@ -138,6 +140,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 							Symbol: symbolRand,
 							Row:    int32(row),
 							Col:    int32(col),
+							Index:  int32(row*s.Matrix.Cols + col),
 						}
 						s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
 						return true
@@ -168,6 +171,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 			Symbol: randomJp,
 			Row:    s.SpinSymbols[0].Row,
 			Col:    s.SpinSymbols[0].Col,
+			Index:  s.SpinSymbols[0].Index,
 		}
 		s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
 		s.AddCollectionSymbol(
