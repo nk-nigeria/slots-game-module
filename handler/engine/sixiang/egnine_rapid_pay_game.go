@@ -20,10 +20,8 @@ const (
 )
 
 type rapidPayEngine struct {
-	randomIntFn             func(min, max int) int
-	randomFloat64           func(min, max float64) float64
-	lastSpinTime            time.Time
-	durationTriggerAutoSpin time.Duration
+	randomIntFn   func(min, max int) int
+	randomFloat64 func(min, max float64) float64
 }
 
 func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
@@ -48,8 +46,8 @@ func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = defaultRapidPayGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
-	e.lastSpinTime = time.Now()
-	e.durationTriggerAutoSpin = durationAutoSpin
+	s.LastSpinTime = time.Now()
+	s.DurationTriggerAutoSpin = durationAutoSpin
 	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	return s, nil
 }
@@ -61,8 +59,8 @@ func (e *rapidPayEngine) Random(min, max int) int {
 func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	defer func() {
-		e.lastSpinTime = time.Now()
-		e.durationTriggerAutoSpin = durationAutoSpin
+		s.LastSpinTime = time.Now()
+		s.DurationTriggerAutoSpin = durationAutoSpin
 	}()
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
@@ -153,11 +151,12 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	return slotDesk, nil
 }
 
-func (e *rapidPayEngine) Loop(s interface{}) (interface{}, error) {
-	delay := time.Since(e.lastSpinTime)
-	if delay > e.durationTriggerAutoSpin {
+func (e *rapidPayEngine) Loop(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	delay := time.Since(s.LastSpinTime)
+	if delay > s.DurationTriggerAutoSpin {
 		e.Process(s)
-		e.durationTriggerAutoSpin = durationAutoSpinNoInteract
+		s.DurationTriggerAutoSpin = durationAutoSpinNoInteract
 		return e.Finish(s)
 	}
 	return s, nil

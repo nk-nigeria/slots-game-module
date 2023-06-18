@@ -60,6 +60,9 @@ type SlotsMatchState struct {
 	NumScatterSeq    int
 	NumFruitBasket   int
 	RatioFruitBasket int
+
+	LastSpinTime            time.Time
+	DurationTriggerAutoSpin time.Duration
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {

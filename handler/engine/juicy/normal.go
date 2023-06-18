@@ -98,6 +98,9 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	// slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
 	slotDesk.GameReward.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
+	slotDesk.GameReward.LineWin = int64(lineWin)
+	slotDesk.GameReward.TotalLineWin = slotDesk.GameReward.LineWin
+	slotDesk.GameReward.RatioBonus = float32(s.NumScatterSeq)
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
 

@@ -33,6 +33,7 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	e.autoRefillGemSpin = true
 	m := entity.NewJuicyFruitRainMaxtrix()
 	e.matrixFruitRainBasket = m.List
+	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	switch s.NumScatterSeq {
 	case 3:
 		s.RatioFruitBasket = 1
@@ -52,8 +53,8 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
 	}
-	matrix := s.MatrixSpecial
-	matrix = e.SpinMatrix(matrix)
+	// matrix := s.MatrixSpecial
+	matrix := e.SpinMatrix(s.MatrixSpecial)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		// keep symbol if fruitbasket
 		if entity.IsFruitBasketSymbol(symbol) {
@@ -98,10 +99,24 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 			if entity.IsFruitBasketSymbol(symbol) {
 				numFruitBasket++
 			}
+			if entity.IsFruitJPSymbol(symbol) {
+				switch symbol {
+				case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI:
+					s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+				case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR:
+					s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+				case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR:
+					s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+				}
+			}
 		})
 		if numFruitBasket == len(s.MatrixSpecial.List) {
 			isFinish = true
+			s.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
 		}
+	}
+	if s.WinJp != pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED {
+		isFinish = true
 	}
 	if isFinish {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
@@ -109,10 +124,14 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 			val := entity.JuicyBasketSymbol[symbol]
 			lineWin += e.randomIntFn(int(val.Value.Min), int(val.Value.Max))
+
 		})
+		// TODO:  add calc chip win jackpot
 		chipWin := int64(lineWin) * s.Bet().Chips / 100
 		slotDesk.GameReward.ChipsWin = chipWin
 		slotDesk.GameReward.TotalChipsWinByGame = chipWin
+		slotDesk.GameReward.LineWin = int64(lineWin)
+		slotDesk.GameReward.TotalLineWin = int64(lineWin)
 		s.NumFruitBasket = 0
 	}
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
