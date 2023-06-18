@@ -245,7 +245,7 @@ var MapPaylineIdx = orderedmap.New[int, []int]()
 func init() {
 	// MapPaylineIdx = make(map[int][]int, 0)
 	// 1 - 5
-	idx := 0
+	idx := 1
 	MapPaylineIdx.Set(idx, []int{0, 1, 2, 3, 4})
 	// MapPaylineIdx[idx] = []int{0, 1, 2, 3, 4}
 	idx++

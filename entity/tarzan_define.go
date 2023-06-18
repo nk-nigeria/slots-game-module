@@ -75,22 +75,27 @@ var TarzanJungleTreasureSymbol = map[pb.SiXiangSymbol]SymbolInfo{
 		NumOccur: 2,
 		Value:    Range{Min: 3, Max: 3},
 	},
+	// 10 - 30 line
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_1: {
 		NumOccur: 3,
 		Value:    Range{Min: 10, Max: 30},
 	},
+	// 50 - 120 line
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_2: {
 		NumOccur: 3,
 		Value:    Range{Min: 50, Max: 120},
 	},
+	// 200 - 300 line
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_3: {
 		NumOccur: 2,
 		Value:    Range{Min: 200, Max: 300},
 	},
+	// 500 - 700 line
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_4: {
 		NumOccur: 2,
 		Value:    Range{Min: 500, Max: 700},
 	},
+	// 1000 - 1200 line
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_5: {
 		NumOccur: 1,
 		Value:    Range{Min: 1000, Max: 1200},
@@ -100,7 +105,7 @@ var TarzanJungleTreasureSymbol = map[pb.SiXiangSymbol]SymbolInfo{
 var PaylineTarzanMapping = orderedmap.New[int, []int]()
 
 func init() {
-	idx := 0
+	idx := 1
 	PaylineTarzanMapping.Set(idx, []int{5, 6, 7, 8, 9})
 	idx++
 	PaylineTarzanMapping.Set(idx, []int{0, 1, 2, 3, 4})

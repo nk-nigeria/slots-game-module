@@ -162,7 +162,7 @@ func init() {
 	JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio2_0, list...)
 	JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio2_0, SliceRepeat(10, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)
 
-	idx := 0
+	idx := 1
 	MapJuicyPaylineIdx.Set(idx, []int{5, 6, 7, 8, 9})
 	idx++
 	MapJuicyPaylineIdx.Set(idx, []int{0, 1, 2, 3, 4})

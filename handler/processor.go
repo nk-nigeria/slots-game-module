@@ -439,26 +439,26 @@ func (p *processor) broadcastMessage(logger runtime.Logger,
 	return nil
 }
 
-func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, balanceResult *pb.BalanceResult) {
+func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
+	userId string, amountChipAdd int64, metadata map[string]interface{}) {
 	// logger.Info("updateChipByResultGameFinish %v", balanceResult)
-	logger.WithField("data", balanceResult).Info("update game reward to wallet ")
-
-	walletUpdates := make([]*runtime.WalletUpdate, 0, len(balanceResult.Updates))
-	for _, result := range balanceResult.Updates {
-		amountChip := result.AmountChipCurrent - result.AmountChipBefore
-		changeset := map[string]int64{
-			"chips": amountChip, // Substract amountChip coins to the user's wallet.
-		}
-		metadata := map[string]interface{}{
-			"game_reward": entity.SixiangGameName,
-		}
-		walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
-			UserID:    result.UserId,
-			Changeset: changeset,
-			Metadata:  metadata,
-		})
+	// logger.WithField("data", balanceResult).Info("update game reward to wallet ")
+	if metadata == nil {
+		metadata = map[string]interface{}{}
 	}
-	// logger.Info("wallet update ctx %v, walletUpdates %v", ctx, walletUpdates)
+	metadata["game_reward"] = entity.SixiangGameName
+	walletUpdates := make([]*runtime.WalletUpdate, 0)
+	// for _, result := range balanceResult.Updates {
+	amountChip := amountChipAdd
+	changeset := map[string]int64{
+		"chips": amountChip, // Substract amountChip coins to the user's wallet.
+	}
+	walletUpdates = append(walletUpdates, &runtime.WalletUpdate{
+		UserID:    userId,
+		Changeset: changeset,
+		Metadata:  metadata,
+	})
+	// }
 	_, err := nk.WalletsUpdate(ctx, walletUpdates, true)
 	if err != nil {
 		payload, _ := json.Marshal(walletUpdates)
@@ -584,18 +584,20 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 			gameReward.ChipBetFee = chipBetFee
 			// FIXME: hard code 10%,
 			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 100 * 10
-			gameReward.BalanceChipsWalletAfter = wallet.Chips + gameReward.TotalChipsWinByGame -
+			chipWinGame := wallet.Chips + gameReward.TotalChipsWinByGame -
 				gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
-			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
-				Updates: []*pb.BalanceUpdate{
-					{
-						UserId:            s.GetPlayingPresences()[0].GetUserId(),
-						AmountChipBefore:  gameReward.BalanceChipsWalletBefore,
-						AmountChipCurrent: gameReward.BalanceChipsWalletAfter,
-						AmountChipAdd:     gameReward.BalanceChipsWalletAfter - gameReward.BalanceChipsWalletBefore,
-					},
-				},
-			})
+			gameReward.BalanceChipsWalletAfter = chipWinGame + gameReward.ChipsBonus
+			// update chip win/loose by game
+			p.updateChipByResultGameFinish(ctx, logger, nk,
+				s.GetPlayingPresences()[0].GetUserId(),
+				chipWinGame, nil)
+			// update bonus chip
+			if gameReward.UpdateChipsBonus {
+				p.updateChipByResultGameFinish(ctx, logger, nk,
+					s.GetPlayingPresences()[0].GetUserId(),
+					gameReward.ChipsBonus, map[string]interface{}{"action": "bonus"},
+				)
+			}
 			slotDesk.GameReward = gameReward
 		}
 	}

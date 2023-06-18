@@ -45,6 +45,7 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft == 0 {
 		return s, entity.ErrorSpinReachMax
 	}
+	s.IsSpinChange = true
 	var randIdx int
 	var randSymbol pb.SiXiangSymbol
 	if s.NumSpinLeft != e.sureTurnSpinSymboTurnX3 {
@@ -68,6 +69,7 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 		Symbol: randSymbol,
 		Row:    int32(row),
 		Col:    int32(col),
+		Index:  int32(randIdx),
 	}
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
 	s.NumSpinLeft--
@@ -77,6 +79,9 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 // Finish implements lib.Engine
 func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	if !s.IsSpinChange {
+		return nil, entity.ErrorSpinNotChange
+	}
 	lineWin := 0
 	for _, spin := range s.SpinSymbols {
 		switch spin.Symbol {
@@ -90,7 +95,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 		}
 	}
 
-	if s.NumSpinLeft == 0 {
+	if s.NumSpinLeft <= 0 {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
 	slotDesk := &pb.SlotDesk{
@@ -114,6 +119,10 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 			slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		}
 	})
+	slotDesk.GameReward.RatioWin = float32(lineWin) / 100.0
+	slotDesk.GameReward.LineWin = int64(lineWin)
+	slotDesk.GameReward.TotalLineWin = s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalRatioWin = float32(s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)) / 100.0
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, nil
 }

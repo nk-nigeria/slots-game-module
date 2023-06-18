@@ -52,19 +52,22 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
-
-	switch s.Bet().ReqSpecGame {
-	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
-		s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-			if col >= entity.Col_3 {
-				s.Matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
+	// custom game
+	{
+		switch s.Bet().ReqSpecGame {
+		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
+			s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+				if col >= entity.Col_3 {
+					s.Matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
+				}
+			})
+		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
+			for sym := range entity.TarzanLetterSymbol {
+				s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
 			}
-		})
-	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
-		for sym := range entity.TarzanLetterSymbol {
-			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
 		}
 	}
+	// end set custom game
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
 			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, symbol)
@@ -89,7 +92,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	matrix := s.Matrix
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
-			lineWin += 500
+			lineWin += 200
 		}
 	})
 	// s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin * slotDesk.ChipsMcb / 100)
@@ -115,6 +118,10 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.IsFinishGame = true
 	slotDesk.NumSpinLeft = -1
+	slotDesk.GameReward.RatioWin = float32(lineWin) / 100.0
+	slotDesk.GameReward.TotalRatioWin = slotDesk.GameReward.RatioWin
+	slotDesk.GameReward.LineWin = lineWin
+	slotDesk.GameReward.TotalLineWin = slotDesk.GameReward.LineWin
 	return slotDesk, nil
 }
 

@@ -87,18 +87,18 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	// s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + prevChipWin
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, prevChipWin)
-	// s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + prevLineWin
 	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, prevLineWin)
 	// Finish when gem spin = 0
 	// tiền thưởng = (tổng số tiền thắng trong 9 Freespin) x (hệ số nhân bonus ở trên)
-	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
-	if s.CountLineCrossFreeSpinSymbol > 0 {
-		slotDesk.GameReward.TotalChipsWinByGame *= int64(s.CountLineCrossFreeSpinSymbol)
+	slotDesk.GameReward.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.LineWin = s.ChipStat.LineWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalLineWin = s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.RatioBonus = float32(s.CountLineCrossFreeSpinSymbol)
+	if slotDesk.GameReward.RatioBonus > 1 {
+		slotDesk.GameReward.TotalChipsWinByGame *= int64(slotDesk.GameReward.RatioBonus)
 	}
-	slotDesk.GameReward.ChipsWin = slotDesk.GameReward.TotalChipsWinByGame
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, err
 }
