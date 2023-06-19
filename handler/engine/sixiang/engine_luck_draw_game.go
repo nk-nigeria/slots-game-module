@@ -37,7 +37,7 @@ func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = -1
 	// s.ChipsWinInSpecialGame = 0
-	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	return s, nil
 }

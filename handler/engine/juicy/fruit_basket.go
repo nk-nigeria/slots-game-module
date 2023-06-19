@@ -24,6 +24,7 @@ func (*fruitBasket) NewGame(matchState interface{}) (interface{}, error) {
 	s.MatrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FRUIT_RAIN)
 	s.MatrixSpecial = entity.ShuffleMatrix(s.MatrixSpecial)
 	s.NumSpinLeft = 1
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return matchState, nil
 }
 

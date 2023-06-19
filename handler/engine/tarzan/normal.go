@@ -53,20 +53,20 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
 	// custom game
-	{
-		switch s.Bet().ReqSpecGame {
-		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
-			s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-				if col >= entity.Col_3 {
-					s.Matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
-				}
-			})
-		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
-			for sym := range entity.TarzanLetterSymbol {
-				s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
-			}
-		}
-	}
+	// {
+	// 	switch s.Bet().ReqSpecGame {
+	// 	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
+	// 		s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	// 			if col >= entity.Col_3 {
+	// 				s.Matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
+	// 			}
+	// 		})
+	// 	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
+	// 		for sym := range entity.TarzanLetterSymbol {
+	// 			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
+	// 		}
+	// 	}
+	// }
 	// end set custom game
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
@@ -79,10 +79,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 // Finish implements lib.Engine
 func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	s.ChipStat.ResetChipWin(0)
-	// s.LineWinByGame[s.CurrentSiXiangGame] = 0
-	s.ChipStat.ResetLineWin(0)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	slotDesk := &pb.SlotDesk{
 		GameReward: &pb.GameReward{},
 	}

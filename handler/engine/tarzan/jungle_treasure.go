@@ -31,11 +31,10 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s.MatrixSpecial = entity.ShuffleMatrix(s.MatrixSpecial)
 	s.SpinSymbols = nil
 	s.NumSpinLeft = 5
-	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	// s.LineWinByGame[s.CurrentSiXiangGame] = 0
-	s.ChipStat.ResetChipWin(0)
-	s.ChipStat.ResetLineWin(0)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.NumSpinLeft+1)
+	// clear symbol letter
+	s.ResetCollection(pb.SiXiangGame_SI_XIANG_GAME_NORMAL, int(s.Bet().Chips))
 	return s, nil
 }
 

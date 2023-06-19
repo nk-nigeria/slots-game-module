@@ -29,6 +29,7 @@ func (e *bonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	// s.ChipsWinInSpecialGame = 0
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = 1
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
 }
 

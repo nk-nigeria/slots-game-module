@@ -65,11 +65,11 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 		return
 	}
 	// FIXME: remove after test
-	{
-		s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-		s.NextSiXiangGame = s.CurrentSiXiangGame
-		p.engine.NewGame(matchState)
-	}
+	// {
+	// 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	// 	s.NextSiXiangGame = s.CurrentSiXiangGame
+	// 	p.engine.NewGame(matchState)
+	// }
 	if s.GetPresenceSize() <= 0 {
 		logger.
 			WithField("game", s.Label.Code).
@@ -583,16 +583,16 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 			gameReward.BalanceChipsWalletBefore = wallet.Chips
 			gameReward.ChipBetFee = chipBetFee
 			// FIXME: hard code 10%,
-			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 100 * 10
-			chipWinGame := wallet.Chips + gameReward.TotalChipsWinByGame -
+			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 10
+			chipWinGame := gameReward.TotalChipsWinByGame -
 				gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
-			gameReward.BalanceChipsWalletAfter = chipWinGame + gameReward.ChipsBonus
+			gameReward.BalanceChipsWalletAfter = gameReward.BalanceChipsWalletBefore + chipWinGame + gameReward.ChipsBonus
 			// update chip win/loose by game
 			p.updateChipByResultGameFinish(ctx, logger, nk,
 				s.GetPlayingPresences()[0].GetUserId(),
 				chipWinGame, nil)
 			// update bonus chip
-			if gameReward.UpdateChipsBonus {
+			if gameReward.UpdateChipsBonus && gameReward.ChipsBonus > 0 {
 				p.updateChipByResultGameFinish(ctx, logger, nk,
 					s.GetPlayingPresences()[0].GetUserId(),
 					gameReward.ChipsBonus, map[string]interface{}{"action": "bonus"},

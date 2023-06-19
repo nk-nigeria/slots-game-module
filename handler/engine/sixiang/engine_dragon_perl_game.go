@@ -60,7 +60,7 @@ func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error)
 	// s.CollectionSymbol = make(map[int]map[pb.SiXiangSymbol]int)
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.TurnSureSpin = e.randomIntFn(1, s.NumSpinLeft)
-	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
 }
 

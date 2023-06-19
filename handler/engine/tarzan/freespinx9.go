@@ -32,10 +32,7 @@ func NewFreeSpinX9(randomIntFn func(int, int) int) lib.Engine {
 // NewGame implements lib.Engine
 func (e *freespinx9) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
-	// s.LineWinByGame[s.CurrentSiXiangGame] = 0
-	s.ChipStat.ResetLineWin(s.CurrentSiXiangGame)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.CountLineCrossFreeSpinSymbol = 0
 	s.NumSpinLeft = maxGemSpinFreeSpinX9
 	return matchState, nil

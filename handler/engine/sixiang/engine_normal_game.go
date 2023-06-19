@@ -59,6 +59,7 @@ func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
 	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
 	s.NumSpinLeft = -1
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
 }
 

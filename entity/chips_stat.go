@@ -21,6 +21,13 @@ func NewChipStat() *chipStat {
 	return &s
 }
 
+func (s *chipStat) Reset(game pb.SiXiangGame) {
+	s.ResetChipWin(game)
+	s.ResetLineWin(game)
+	s.ResetTotalChipWin(game)
+	s.ResetTotalLineWin(game)
+}
+
 func (s *chipStat) AddChipWin(game pb.SiXiangGame, chips int64) {
 	{
 		v := s.chipsWin[game]
@@ -69,4 +76,12 @@ func (s *chipStat) TotalChipWin(game pb.SiXiangGame) int64 {
 
 func (s *chipStat) TotalLineWin(game pb.SiXiangGame) int64 {
 	return s.totalLineWin[game]
+}
+
+func (s *chipStat) ResetTotalChipWin(game pb.SiXiangGame) {
+	s.totalChipsWin[game] = 0
+}
+
+func (s *chipStat) ResetTotalLineWin(game pb.SiXiangGame) {
+	s.totalLineWin[game] = 0
 }

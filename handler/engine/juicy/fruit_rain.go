@@ -44,6 +44,7 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	default:
 		s.RatioFruitBasket = 1
 	}
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
 }
 

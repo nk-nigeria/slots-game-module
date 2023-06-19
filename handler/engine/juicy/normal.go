@@ -37,6 +37,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	matrix := entity.NewSlotMatrix(entity.RowsJuicynMatrix, entity.ColsJuicyMatrix)
 	matrix = e.SpinMatrix(matrix, ratioWild1_0)
 	s.SetMatrix(matrix)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.NumSpinLeft = -1
 	return matchState, nil
 }

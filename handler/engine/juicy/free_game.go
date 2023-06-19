@@ -48,7 +48,7 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 	matrix := e.SpinMatrix(s.MatrixSpecial, e.ratioWild)
 	s.MatrixSpecial = matrix
 	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return matchState, nil
 }
 

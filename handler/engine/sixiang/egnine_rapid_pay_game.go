@@ -49,6 +49,7 @@ func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.LastSpinTime = time.Now()
 	s.DurationTriggerAutoSpin = durationAutoSpin
 	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
 }
 

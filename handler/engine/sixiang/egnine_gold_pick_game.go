@@ -39,8 +39,8 @@ func (e *goldPickEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = defaultGoldPickGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
-	s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
 }
 
