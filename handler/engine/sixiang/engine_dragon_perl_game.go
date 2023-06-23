@@ -48,6 +48,19 @@ func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error)
 	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
 	// s.ChipsWinInSpecialGame = 0
 	s.SpinSymbols = []*pb.SpinSymbol{}
+	// init spin list
+	s.SpinList = make([]*pb.SpinSymbol, 0)
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
+			Symbol:    symbol,
+			Row:       int32(row),
+			Col:       int32(col),
+			Index:     int32(idx),
+			Ratio:     0,
+			WinJp:     pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
+			WinAmount: 0,
+		})
+	})
 	{
 		list := make([]pb.SiXiangSymbol, 0)
 		for k := range entity.ListEyeSiXiang {
@@ -115,6 +128,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 			return true
 		})
 	}
+	s.SpinList[s.SpinSymbols[0].Index] = s.SpinSymbols[0]
 	switch s.SpinSymbols[0].Symbol {
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD:
 		// add spin
@@ -136,13 +150,15 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				// }
 				valid := e.randomPearl(s, func(symbolRand, eyeRand pb.SiXiangSymbol, row, col int) bool {
 					if eyeRand == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
+						index := row*s.Matrix.Cols + col
 						spinSymbol := &pb.SpinSymbol{
 							Symbol: symbolRand,
 							Row:    int32(row),
 							Col:    int32(col),
-							Index:  int32(row*s.Matrix.Cols + col),
+							Index:  int32(index),
 						}
 						s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
+						s.SpinList[index] = spinSymbol
 						return true
 					}
 					return false
@@ -167,13 +183,15 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA,
 		}
 		randomJp := entity.ShuffleSlice(listSymbolJP)[e.randomIntFn(0, len(listSymbolJP))]
+		index := s.SpinSymbols[0].Index
 		spinSymbol := &pb.SpinSymbol{
 			Symbol: randomJp,
 			Row:    s.SpinSymbols[0].Row,
 			Col:    s.SpinSymbols[0].Col,
-			Index:  s.SpinSymbols[0].Index,
+			Index:  index,
 		}
 		s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
+		s.SpinList[index].WinJp = pb.WinJackpot(randomJp)
 		s.AddCollectionSymbol(
 			s.CurrentSiXiangGame,
 			int(s.Bet().GetChips()),
@@ -215,9 +233,11 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		v := entity.ListSymbolDragonPearl[sym.Symbol].Value
 		sym.Ratio = float32(e.randomFloat64(float64(v.Min), float64(v.Max)))
 		ratioWin += sym.Ratio
+		s.SpinSymbols[sym.Index].Ratio = sym.Ratio
+		s.SpinSymbols[sym.Index].WinAmount = int64(float64(float64(ratioWin) * float64(s.Bet().Chips)))
 	}
 	ratioWin *= float32(e.ratioGem)
-	slotDesk.GameReward.ChipsWin = int64(float64(ratioWin) * float64(float64(ratioWin)*float64(s.Bet().Chips)))
+
 	ratioJPBonus := float32(1)
 	for _, eyeSym := range s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips)) {
 		r := entity.ListEyeSiXiang[eyeSym.Symbol].Value.Min
@@ -225,6 +245,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 			ratioJPBonus = float32(r)
 		}
 	}
+	slotDesk.GameReward.ChipsWin = int64(float64(ratioJPBonus) * float64(float64(ratioWin)*float64(s.Bet().Chips)))
 	// totalChipsWin := float64(ratioJPBonus) * float64(ratioWin*float64(s.Bet().Chips))
 	// slotDesk.GameReward.ChipsWin = int64(totalChipsWin)
 	if s.WinJp != pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED {
@@ -234,6 +255,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.SpinSymbols = s.SpinSymbols
+	slotDesk.Matrix.SpinLists = s.SpinList
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	// s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)

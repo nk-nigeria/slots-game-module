@@ -90,14 +90,14 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	}
 	s.IsSpinChange = false
 	// mapUniqueSym := make(map[pb.SiXiangSymbol]pb.SiXiangSymbol)
-	// for id, symbol := range matrix.List {
-	// 	if s.MatrixSpecial.TrackFlip[id] {
-	// 		slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, symbol)
-	// 		mapUniqueSym[symbol] = symbol
-	// 	} else {
-	// 		slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)
-	// 	}
-	// }
+	for id, symbol := range matrix.List {
+		if s.MatrixSpecial.TrackFlip[id] {
+			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, symbol)
+			// mapUniqueSym[symbol] = symbol
+		} else {
+			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)
+		}
+	}
 	// // calc chip win
 	// {
 	// 	totalRatio := float64(0)

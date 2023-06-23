@@ -44,6 +44,7 @@ type SlotsMatchState struct {
 	CollectionSymbolRemain []pb.SiXiangSymbol
 	// Danh sach ngoc tứ linh spin được theo chip bet. [game][bet][symbol]qty_of_symbol
 	CollectionSymbol map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int
+	SpinList         []*pb.SpinSymbol
 
 	// tarzan
 	// List idx of free symbol index

@@ -318,7 +318,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	}
 	s.SetAllowSpin(false)
 	chipBetFee := int64(0)
-
+	s.Bet().Id = bet.Id
 	// only update new bet in normal game
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		s.SetBetInfo(bet)
@@ -337,6 +337,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		bet.Chips = s.Bet().GetChips()
 		s.SetBetInfo(bet)
 	}
+	s.Bet().ReqSpecGame = bet.ReqSpecGame
 	p.engine.Process(s)
 	result, err := p.engine.Finish(s)
 	if err != nil {
@@ -345,6 +346,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		return
 	}
 	slotDesk := result.(*pb.SlotDesk)
+	slotDesk.InfoBet = s.Bet()
 	p.handlerResult(ctx, logger, nk, dispatcher, message.GetUserId(), s, slotDesk, chipBetFee)
 }
 

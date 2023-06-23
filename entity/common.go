@@ -22,6 +22,7 @@ var (
 	ErrorNoGameEngine      = errors.New("no game engine")
 	ErrorSpinNotChange     = errors.New("spin not change")
 	ErrorChipNotEnough     = errors.New("chip is not enough")
+	ErrorIndexAlreadySpin  = errors.New("index already spin")
 )
 
 // free game by lv
