@@ -52,10 +52,10 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 		return nil, entity.ErrorSpinIndexAleadyTaken
 	}
 	if s.Bet().Id < 0 {
-		return s, entity.ErrorIndexAlreadySpin
+		return s, entity.ErrorInfoBetInvalid
 	}
-	if s.Matrix.Flip(int(s.Bet().Id)) == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
-		return s, entity.ErrorIndexAlreadySpin
+	if s.MatrixSpecial.IsFlip(int(s.Bet().Id)) {
+		return s, entity.ErrorInfoBetInvalid
 	}
 	s.IsSpinChange = true
 	var randIdx int
@@ -140,6 +140,10 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.GameReward.TotalLineWin = s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.TotalRatioWin = float32(s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)) / 100.0
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	// reset letter
+	if slotDesk.IsFinishGame {
+		s.ResetCollection(pb.SiXiangGame_SI_XIANG_GAME_NORMAL, int(s.Bet().Chips))
+	}
 	return slotDesk, nil
 }
 
