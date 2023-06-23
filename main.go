@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/api"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
+	"github.com/ciaolink-game-platform/cgp-common/define"
 
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -23,7 +23,7 @@ func InitModule(_ context.Context, logger runtime.Logger, _ *sql.DB, _ runtime.N
 	unmarshaler := &protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
-	gameNames := []string{entity.SixiangGameName, entity.TarzanGameName, entity.JuicyGarden}
+	gameNames := []string{define.SixiangGameName, define.TarzanGameName, define.JuicyGarden}
 	for _, gameName := range gameNames {
 		name := gameName
 		if err := initializer.RegisterMatch(name, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {

@@ -9,20 +9,19 @@ import (
 )
 
 const (
-	SixiangGameName   = "sixiang"
-	TarzanGameName    = "tarzan"
-	JuicyGarden       = "juicygarden"
 	MaxPresenceCard   = 13
 	JackpotPercentTax = 1 // 1%
 )
 
 var (
-	ErrorSpinReachMax      = errors.New("spin reach max")
-	ErrorMissingSpinSymbol = errors.New("missing spin symbol")
-	ErrorNoGameEngine      = errors.New("no game engine")
-	ErrorSpinNotChange     = errors.New("spin not change")
-	ErrorChipNotEnough     = errors.New("chip is not enough")
-	ErrorIndexAlreadySpin  = errors.New("index already spin")
+	ErrorSpinReachMax         = errors.New("spin reach max")
+	ErrorMissingSpinSymbol    = errors.New("missing spin symbol")
+	ErrorNoGameEngine         = errors.New("no game engine")
+	ErrorSpinNotChange        = errors.New("spin not change")
+	ErrorChipNotEnough        = errors.New("chip is not enough")
+	ErrorSpinIndexAleadyTaken = errors.New("spin index already taken")
+	ErrorSpinIndexRequired    = errors.New("spin index required")
+	ErrorInfoBetInvalid       = errors.New("info bet invalid")
 )
 
 // free game by lv

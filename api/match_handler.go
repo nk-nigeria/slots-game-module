@@ -12,6 +12,7 @@ import (
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/tarzan"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/sm"
 
+	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -40,19 +41,19 @@ func NewMatchHandler(
 ) *MatchHandler {
 	var matchHandler *MatchHandler
 	switch moduleName {
-	case entity.SixiangGameName:
+	case define.SixiangGameName:
 		matchHandler = &MatchHandler{
 			processor: handler.NewMatchProcessor(marshaler, unmarshaler,
 				sixiang.NewEngine()),
 			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
 		}
-	case entity.TarzanGameName:
+	case define.TarzanGameName:
 		matchHandler = &MatchHandler{
 			processor: handler.NewMatchProcessor(marshaler, unmarshaler,
 				tarzan.NewEngine()),
 			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
 		}
-	case entity.JuicyGarden:
+	case define.JuicyGarden:
 		{
 			matchHandler = &MatchHandler{
 				processor: handler.NewMatchProcessor(marshaler, unmarshaler, juicy.NewEngine()),

@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -66,7 +67,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	}
 	// FIXME: remove after test
 	// {
-	// 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	// 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 	// 	s.NextSiXiangGame = s.CurrentSiXiangGame
 	// 	p.engine.NewGame(matchState)
 	// }
@@ -307,6 +308,12 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
 		message.GetUserId(), message.GetData(), err)
 	if err != nil {
+		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR),
+			&pb.Error{
+				Code:  int64(pb.OpCodeUpdate_OPCODE_ERROR),
+				Error: entity.ErrorInfoBetInvalid.Error(),
+			},
+			[]runtime.Presence{s.GetPresence(message.GetUserId())}, nil, false)
 		return
 	}
 	if !p.checkValidBetInfo(s, bet) {
@@ -338,7 +345,12 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 		s.SetBetInfo(bet)
 	}
 	s.Bet().ReqSpecGame = bet.ReqSpecGame
-	p.engine.Process(s)
+	_, err = p.engine.Process(s)
+	if err != nil {
+		logger.WithField("error", err.Error()).
+			Error("engine process failed")
+		return
+	}
 	result, err := p.engine.Finish(s)
 	if err != nil {
 		logger.WithField("error", err.Error()).
@@ -448,7 +460,7 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 	if metadata == nil {
 		metadata = map[string]interface{}{}
 	}
-	metadata["game_reward"] = entity.SixiangGameName
+	metadata["game_reward"] = define.SixiangGameName
 	walletUpdates := make([]*runtime.WalletUpdate, 0)
 	// for _, result := range balanceResult.Updates {
 	amountChip := amountChipAdd

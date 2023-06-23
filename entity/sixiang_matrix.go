@@ -209,6 +209,15 @@ func (sm *SlotMatrix) ForEeach(fn func(idx, row, col int, symbol pb.SiXiangSymbo
 	}
 }
 
+func (sm *SlotMatrix) ForEeachNotFlip(fn func(idx, row, col int, symbol pb.SiXiangSymbol)) {
+	sm.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if sm.TrackFlip[idx] {
+			return
+		}
+		fn(idx, row, col, symbol)
+	})
+}
+
 func (sm *SlotMatrix) ForEachLine(fn func(line int, symbols []pb.SiXiangSymbol)) {
 	list := make([]pb.SiXiangSymbol, 0)
 	sm.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -271,6 +280,9 @@ func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int,
 func (sm *SlotMatrix) Flip(idx int) pb.SiXiangSymbol {
 	sm.TrackFlip[idx] = true
 	return sm.List[idx]
+}
+func (sm *SlotMatrix) IsFlip(idx int) bool {
+	return sm.TrackFlip[idx]
 }
 
 func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {

@@ -34,7 +34,7 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.NumSpinLeft+1)
 	// clear symbol letter
-	s.ResetCollection(pb.SiXiangGame_SI_XIANG_GAME_NORMAL, int(s.Bet().Chips))
+	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	return s, nil
 }
 
@@ -42,7 +42,14 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	if s.NumSpinLeft == 0 {
-		return s, entity.ErrorSpinReachMax
+		return nil, entity.ErrorSpinReachMax
+	}
+	spinIndex := s.Bet().Id
+	if spinIndex < 0 {
+		return nil, entity.ErrorSpinIndexRequired
+	}
+	if s.MatrixSpecial.IsFlip(int(spinIndex)) {
+		return nil, entity.ErrorSpinIndexAleadyTaken
 	}
 	if s.Bet().Id < 0 {
 		return s, entity.ErrorIndexAlreadySpin
@@ -54,13 +61,16 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 	var randIdx int
 	var randSymbol pb.SiXiangSymbol
 	if s.NumSpinLeft != e.sureTurnSpinSymboTurnX3 {
-		randIdx, randSymbol = s.MatrixSpecial.RandomSymbolNotFlip(e.randomIntFn)
+		randIdx, randSymbol = int(spinIndex), s.MatrixSpecial.Flip(int(spinIndex))
 	} else {
-		randSymbol = pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3
-		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-			if symbol == randSymbol {
-				randIdx = idx
+		// 100% spin symbol SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3
+		s.MatrixSpecial.ForEeachNotFlip(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			if symbol != pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3 {
+				return
 			}
+			// swap
+			s.MatrixSpecial.List[idx], s.MatrixSpecial.List[spinIndex] = s.MatrixSpecial.List[spinIndex], s.MatrixSpecial.List[idx]
+			randIdx, randSymbol = int(spinIndex), s.MatrixSpecial.Flip(int(spinIndex))
 		})
 	}
 	if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3 {
