@@ -49,30 +49,50 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := s.Matrix
-	matrix = e.SpinMatrix(matrix)
+	s.NumSpinRemain6thLetter++
+	// make sure num spin for 6th reach before appear 6th letter in matrix
+	for {
+		if s.NumSpinRemain6thLetter >= entity.MinNumSpinLetter6th {
+			break
+		}
+		if s.SizeCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips)) < 5 {
+			break
+		}
+		containLetterSymbol := false
+		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			if entity.TarzanLetterSymbol[symbol] {
+				containLetterSymbol = true
+			}
+		})
+		if containLetterSymbol && s.SizeCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips)) == 5 {
+			continue
+		}
+		break
+	}
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
 	// custom game
-	// {
-	// 	switch s.Bet().ReqSpecGame {
-	// 	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
-	// 		s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-	// 			if col >= entity.Col_3 {
-	// 				s.Matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
-	// 			}
-	// 		})
-	// 	case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
-	// 		for sym := range entity.TarzanLetterSymbol {
-	// 			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
-	// 		}
-	// 	}
-	// }
+	{
+		switch s.Bet().ReqSpecGame {
+		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
+			s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+				if col >= entity.Col_3 {
+					s.Matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
+				}
+			})
+		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
+			for sym := range entity.TarzanLetterSymbol {
+				s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
+			}
+		}
+	}
 	// end set custom game
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
 			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, symbol)
 		}
 	})
+
 	return matchState, nil
 }
 

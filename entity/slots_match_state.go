@@ -11,14 +11,16 @@ import (
 )
 
 const (
-	MinPresences = 1
-	MaxPresences = 1
+	MinPresences        = 1
+	MaxPresences        = 1
+	MinNumSpinLetter6th = 280
 )
 
 // [num_gem_already_collect]priceratio
 var PriceBuySixiangGem map[int]int
 
 func init() {
+	PriceBuySixiangGem = make(map[int]int)
 	PriceBuySixiangGem[0] = 90
 	PriceBuySixiangGem[1] = 110
 	PriceBuySixiangGem[2] = 150
@@ -78,6 +80,7 @@ type SlotsMatchState struct {
 
 	LastSpinTime            time.Time
 	DurationTriggerAutoSpin time.Duration
+	NumSpinRemain6thLetter  int
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -94,9 +97,10 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		CollectionSymbol:   make(map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int, 0),
 		// ChipWinByGame:      make(map[pb.SiXiangGame]int64, 0),
 		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
-		ChipStat:         NewChipStat(),
-		RatioFruitBasket: 1,
-		gameEyePlayed:    make(map[int]map[pb.SiXiangSymbol]int),
+		ChipStat:               NewChipStat(),
+		RatioFruitBasket:       1,
+		gameEyePlayed:          make(map[int]map[pb.SiXiangSymbol]int),
+		NumSpinRemain6thLetter: MinNumSpinLetter6th,
 	}
 	// m.SaveGame = make(map[string]*pb.SaveGame)
 

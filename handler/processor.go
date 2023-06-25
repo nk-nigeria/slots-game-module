@@ -311,9 +311,13 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	}
 	bet := &pb.InfoBet{}
 	err := p.unmarshaler.Unmarshal(message.GetData(), bet)
-	logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
-		message.GetUserId(), message.GetData(), err)
+	// logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
+	// 	message.GetUserId(), message.GetData(), err)
 	if err != nil {
+		logger.WithField("err", err.Error()).
+			WithField("msg", message.GetData()).
+			WithField("user id", message.GetUserId()).
+			Error("unmarshal bet info failed")
 		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR),
 			&pb.Error{
 				Code:  int64(pb.OpCodeUpdate_OPCODE_ERROR),
