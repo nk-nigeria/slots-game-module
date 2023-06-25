@@ -72,6 +72,11 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 }
 
 func (e *tarzanEngine) Loop(matchState interface{}) (interface{}, error) {
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		fmt.Println("Recovered. Error:\n", r)
+	// 	}
+	// }()
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
 	return engine.Loop(s)

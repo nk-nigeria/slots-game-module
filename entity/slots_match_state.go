@@ -1,8 +1,10 @@
 package entity
 
 import (
+	"encoding/json"
 	"time"
 
+	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -13,11 +15,21 @@ const (
 	MaxPresences = 1
 )
 
-type UserDataMatch struct {
-	RRSpecialGame bool `json:"rr_spec_game"`
+// [num_gem_already_collect]priceratio
+var PriceBuySixiangGem map[int]int
+
+func init() {
+	PriceBuySixiangGem[0] = 90
+	PriceBuySixiangGem[1] = 110
+	PriceBuySixiangGem[2] = 150
+	PriceBuySixiangGem[1] = 250
 }
 
+type SixiangSaveGame struct {
+	GameEyePlayed map[int]map[pb.SiXiangSymbol]int
+}
 type SlotsMatchState struct {
+	// SaveGame map[string]*pb.SaveGame
 	lib.MatchState
 	// prevent calc reward multil time,
 	IsSpinChange  bool
@@ -40,8 +52,10 @@ type SlotsMatchState struct {
 	SpinSymbols []*pb.SpinSymbol
 	NumSpinLeft int // gem using for spin in dragon perl
 	// lần quay chắc chắn ra ngọc
-	TurnSureSpin           int
-	CollectionSymbolRemain []pb.SiXiangSymbol
+	TurnSureSpin     int
+	EyeSymbolRemains []pb.SiXiangSymbol
+	// [mcb]gamebonus
+	gameEyePlayed map[int]map[pb.SiXiangSymbol]int
 	// Danh sach ngoc tứ linh spin được theo chip bet. [game][bet][symbol]qty_of_symbol
 	CollectionSymbol map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int
 	SpinList         []*pb.SpinSymbol
@@ -82,7 +96,9 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
 		ChipStat:         NewChipStat(),
 		RatioFruitBasket: 1,
+		gameEyePlayed:    make(map[int]map[pb.SiXiangSymbol]int),
 	}
+	// m.SaveGame = make(map[string]*pb.SaveGame)
 
 	return &m
 }
@@ -164,6 +180,7 @@ func (s *SlotsMatchState) ResetCollection(game pb.SiXiangGame, chipMcb int) {
 	s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
 	s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
 }
+
 func (s *SlotsMatchState) CollectionSymbolToSlice(game pb.SiXiangGame, chipMcb int) []*pb.CollectSymbol {
 	ml := make([]*pb.CollectSymbol, 0, len(s.CollectionSymbol))
 	if _, ok := s.CollectionSymbol[game]; !ok {
@@ -188,4 +205,60 @@ func (s *SlotsMatchState) SizeCollectionSymbol(game pb.SiXiangGame, chipMcb int)
 		return 0
 	}
 	return len(s.CollectionSymbol[game][chipMcb])
+}
+
+func (s *SlotsMatchState) AddGameEyePlayed(game pb.SiXiangSymbol) int {
+	if _, ok := s.gameEyePlayed[int(s.bet.Chips)]; !ok {
+		s.gameEyePlayed[int(s.bet.Chips)] = make(map[pb.SiXiangSymbol]int)
+	}
+	m := s.gameEyePlayed[int(s.bet.Chips)]
+	num := m[game]
+	num++
+	m[game] = num
+	s.gameEyePlayed[int(s.bet.Chips)] = m
+	return num
+}
+
+func (s *SlotsMatchState) NumGameEyePlayed() int {
+	return len(s.gameEyePlayed[int(s.bet.Chips)])
+}
+
+func (s *SlotsMatchState) ClearGameEyePlayed() {
+	s.gameEyePlayed[int(s.Bet().Chips)] = make(map[pb.SiXiangSymbol]int, 0)
+}
+
+func (s *SlotsMatchState) GetGameEyePlayed() map[pb.SiXiangSymbol]int {
+	return s.gameEyePlayed[int(s.Bet().Chips)]
+}
+
+func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
+	// save game expire
+	if time.Now().Unix()-saveGame.LastUpdateUnix > 30*86400 {
+		return
+	}
+	if len(saveGame.Data) == 0 {
+		return
+	}
+	switch s.Label.Code {
+	case define.SixiangGameName:
+		sixiangSaveGame := &SixiangSaveGame{}
+		err := json.Unmarshal([]byte(saveGame.Data), &sixiangSaveGame)
+		if err != nil {
+			return
+		}
+		s.gameEyePlayed = sixiangSaveGame.GameEyePlayed
+	}
+}
+
+func (s *SlotsMatchState) SaveGameJson() string {
+	// return "test"
+	switch s.Label.Code {
+	case define.SixiangGameName:
+		sixiangSaveGame := &SixiangSaveGame{
+			GameEyePlayed: s.gameEyePlayed,
+		}
+		data, _ := json.Marshal(sixiangSaveGame)
+		return string(data)
+	}
+	return ""
 }

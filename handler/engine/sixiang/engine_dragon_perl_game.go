@@ -66,7 +66,7 @@ func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error)
 		for k := range entity.ListEyeSiXiang {
 			list = append(list, k)
 		}
-		s.CollectionSymbolRemain = entity.ShuffleSlice(list)
+		s.EyeSymbolRemains = entity.ShuffleSlice(list)
 	}
 
 	s.NumSpinLeft = defaultDragonPearlGemSpin
@@ -100,7 +100,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				listIdEyeSymbol = append(listIdEyeSymbol, idx)
 			}
 		})
-		eyeRandom := entity.ShuffleSlice(s.CollectionSymbolRemain)[0]
+		eyeRandom := entity.ShuffleSlice(s.EyeSymbolRemains)[0]
 		idxRandom := entity.ShuffleSlice(listIdEyeSymbol)[0]
 		row, col := s.MatrixSpecial.RowCol(idxRandom)
 		spinSymbol := &pb.SpinSymbol{
@@ -233,8 +233,9 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		v := entity.ListSymbolDragonPearl[sym.Symbol].Value
 		sym.Ratio = float32(e.randomFloat64(float64(v.Min), float64(v.Max)))
 		ratioWin += sym.Ratio
-		s.SpinSymbols[sym.Index].Ratio = sym.Ratio
-		s.SpinSymbols[sym.Index].WinAmount = int64(float64(float64(ratioWin) * float64(s.Bet().Chips)))
+		sym.WinAmount = int64(float64(sym.Ratio) * float64(s.Bet().Chips))
+		s.SpinList[sym.Index].WinAmount = sym.WinAmount
+		s.SpinList[sym.Index].Ratio = sym.Ratio
 	}
 	ratioWin *= float32(e.ratioGem)
 
@@ -263,6 +264,9 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.RatioWin = float32(ratioWin)
 	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips))
+	if slotDesk.IsFinishGame {
+		s.AddGameEyePlayed(pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON)
+	}
 	return slotDesk, nil
 }
 
@@ -281,13 +285,13 @@ func (e *dragonPearlEngine) randomPearl(
 	idRandom, symbolRandom := s.MatrixSpecial.RandomSymbolNotFlip(e.randomIntFn)
 	eyeRandom := pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 	if symbolRandom == pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_LUCKMONEY {
-		eyeRandom = s.CollectionSymbolRemain[0]
+		eyeRandom = s.EyeSymbolRemains[0]
 	}
 	row, col := s.MatrixSpecial.RowCol(idRandom)
 	acceptSymbol := fn(symbolRandom, eyeRandom, row, col)
 	if acceptSymbol {
 		if eyeRandom != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
-			s.CollectionSymbolRemain = s.CollectionSymbolRemain[1:]
+			s.EyeSymbolRemains = s.EyeSymbolRemains[1:]
 			s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), eyeRandom)
 		}
 

@@ -73,6 +73,7 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.IsInSixiangBonus = true
+	s.ClearGameEyePlayed()
 	return slotDesk, nil
 }
 

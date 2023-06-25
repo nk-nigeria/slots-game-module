@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
@@ -67,7 +68,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	}
 	// FIXME: remove after test
 	// {
-	// 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
+	// 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
 	// 	s.NextSiXiangGame = s.CurrentSiXiangGame
 	// 	p.engine.NewGame(matchState)
 	// }
@@ -82,6 +83,8 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 		// WithField("data", s.Matrix).
 		Info("new game")
 	presence := s.GetPresences()[0]
+	saveGame := p.loadSaveGame(ctx, logger, nk, db, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s.Label.Code)
+	s.LoadSaveGame(saveGame)
 	p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, presence.GetUserId(), s)
 }
 
@@ -98,7 +101,6 @@ func (p *processor) ProcessGame(ctx context.Context,
 	}
 	s := matchState.(*entity.SlotsMatchState)
 	s.InitNewRound()
-
 	defer s.SetAllowSpin(true)
 
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
@@ -133,6 +135,8 @@ func (p *processor) ProcessGame(ctx context.Context,
 			p.handlerRequestBet(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_INFO_TABLE):
 			p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
+		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
+			p.handlerBuySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 		}
 	}
 	p.ProcessApplyPresencesLeave(ctx, logger, nk, db, dispatcher, s)
@@ -165,6 +169,8 @@ func (p *processor) ProcessApplyPresencesLeave(ctx context.Context,
 	logger.WithField("size", len(pendingLeaves)).Info("process apply presences")
 	s.RemovePresence(pendingLeaves...)
 	s.ApplyLeavePresence()
+	p.saveGame(ctx, logger, nk, db, dispatcher, pendingLeaves[0].GetUserId(),
+		s.SaveGameJson(), s.Label.Code)
 }
 
 func (p *processor) ProcessFinishGame(ctx context.Context,
@@ -330,7 +336,7 @@ func (p *processor) handlerRequestBet(ctx context.Context,
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		s.SetBetInfo(bet)
 		// sub chip fee in wallet
-		err := p.checkEnoughChipFromWallet(ctx, logger, nk, message.GetUserId(), s)
+		err := p.checkEnoughChipFromWallet(ctx, logger, nk, message.GetUserId(), s.Bet().Chips)
 		if err != nil {
 			logger.Error("deduce chip bet failed %s", err.Error())
 			p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
@@ -403,8 +409,9 @@ func (p *processor) handlerRequestGetInfoTable(
 	default:
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-
 	}
+	slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+	slotdesk.Matrix.SpinLists = s.SpinList
 	slotdesk.NextSixiangGame = s.NextSiXiangGame
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
 	if err != nil {
@@ -423,6 +430,74 @@ func (p *processor) handlerRequestGetInfoTable(
 	slotdesk.BetLevels = append(slotdesk.BetLevels, 100, 200, 500, 1000)
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
+}
+
+func (p *processor) handlerBuySixiangGemInfoTable(
+	ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	userID string,
+	s *entity.SlotsMatchState,
+) {
+	if s.Label.Code != define.SixiangGameName {
+		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+			Code:  int64(codes.Aborted),
+			Error: entity.ErrorInvalidRequestGame.Error(),
+		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+		return
+	}
+	numGemCollect := s.NumGameEyePlayed()
+	if numGemCollect < 0 || numGemCollect > 4 {
+		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+			Code:  int64(codes.Aborted),
+			Error: entity.ErrorInternal.Error(),
+		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+		return
+	}
+	ratio := entity.PriceBuySixiangGem[numGemCollect]
+	chips := ratio * int(s.Bet().Chips)
+	err := p.checkEnoughChipFromWallet(ctx, logger, nk, userID, int64(chips))
+	if err != nil {
+		logger.WithField("err", err.Error()).Error("chip not enough for buy gem")
+		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+			Code:  int64(codes.Aborted),
+			Error: entity.ErrorChipNotEnough.Error(),
+		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+		return
+	}
+	err = p.updateChipUser(ctx, logger, nk,
+		s.GetPlayingPresences()[0].GetUserId(), s.Label.Code,
+		-int64(chips), map[string]interface{}{"action": "buy_gem"},
+	)
+	if err != nil {
+		logger.WithField("err", err.Error()).Error("update chip buy gem failed")
+		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+			Code:  int64(codes.Aborted),
+			Error: entity.ErrorInternal.Error(),
+		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+		return
+	}
+	// add SI XIANG GEMS
+	gamePlayed := s.GetGameEyePlayed()
+	listSymbol := []pb.SiXiangSymbol{
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR,
+		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER,
+	}
+	for _, sym := range listSymbol {
+		if _, ok := gamePlayed[sym]; !ok {
+			s.AddGameEyePlayed(sym)
+			break
+		}
+	}
+	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
+	}
+	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_BUY_SIXIANG_GEM),
+		&pb.InfoBet{}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
 }
 
 func (p *processor) broadcastMessage(logger runtime.Logger,
@@ -453,14 +528,14 @@ func (p *processor) broadcastMessage(logger runtime.Logger,
 	return nil
 }
 
-func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
-	userId string, amountChipAdd int64, metadata map[string]interface{}) {
+func (m *processor) updateChipUser(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
+	userId string, gameCode string, amountChipAdd int64, metadata map[string]interface{}) error {
 	// logger.Info("updateChipByResultGameFinish %v", balanceResult)
 	// logger.WithField("data", balanceResult).Info("update game reward to wallet ")
 	if metadata == nil {
 		metadata = map[string]interface{}{}
 	}
-	metadata["game_reward"] = define.SixiangGameName
+	metadata["game_reward"] = gameCode
 	walletUpdates := make([]*runtime.WalletUpdate, 0)
 	// for _, result := range balanceResult.Updates {
 	amountChip := amountChipAdd
@@ -480,8 +555,9 @@ func (m *processor) updateChipByResultGameFinish(ctx context.Context, logger run
 			WithField("payload", string(payload)).
 			WithField("err", err).
 			Error("Wallets update error.")
-		return
+		return err
 	}
+	return err
 }
 
 func (p *processor) InitSpecialGameDesk(ctx context.Context,
@@ -546,31 +622,15 @@ func (p *processor) reportStatistic(logger runtime.Logger, userId string, slotDe
 	}
 }
 
-func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userId string, s *entity.SlotsMatchState) error {
+func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userId string, chipRequired int64) error {
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, userId)
 	if err != nil {
 		return err
 	}
-	chipBet := s.Bet().Chips
-	if wallet.Chips < chipBet {
+	// chipBet := chipRequired
+	if wallet.Chips < chipRequired {
 		return entity.ErrorChipNotEnough
 	}
-	// amountChip := -chipBet
-	// changeset := map[string]int64{
-	// 	"chips": amountChip, // Substract amountChip coins to the user's wallet.
-	// }
-	// metadata := map[string]interface{}{
-	// 	"game_reward": s.Label.Code,
-	// 	"action":      entity.WalletActionGameFee,
-	// }
-	// walletUpdates := []*runtime.WalletUpdate{{
-	// 	Changeset: changeset,
-	// 	Metadata:  metadata,
-	// }}
-	// _, err = nk.WalletsUpdate(ctx, walletUpdates, true)
-	// if err != nil {
-	// 	return err
-	// }
 	return nil
 }
 func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
@@ -602,14 +662,14 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 				gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
 			gameReward.BalanceChipsWalletAfter = gameReward.BalanceChipsWalletBefore + chipWinGame + gameReward.ChipsBonus
 			// update chip win/loose by game
-			p.updateChipByResultGameFinish(ctx, logger, nk,
+			p.updateChipUser(ctx, logger, nk,
 				s.GetPlayingPresences()[0].GetUserId(),
-				chipWinGame, nil)
+				s.Label.Code, chipWinGame, nil)
 			// update bonus chip
 			if gameReward.UpdateChipsBonus && gameReward.ChipsBonus > 0 {
-				p.updateChipByResultGameFinish(ctx, logger, nk,
+				p.updateChipUser(ctx, logger, nk,
 					s.GetPlayingPresences()[0].GetUserId(),
-					gameReward.ChipsBonus, map[string]interface{}{"action": "bonus"},
+					s.Label.Code, gameReward.ChipsBonus, map[string]interface{}{"action": "bonus"},
 				)
 			}
 			slotDesk.GameReward = gameReward
@@ -619,13 +679,12 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 	slotDesk.TsUnix = time.Now().Unix()
 	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
 		p.delayTime = time.Now().Add(2 * time.Second)
-		// if s.Bet().DelayEmitResult != "" {
-		// 	if delayDur, err := time.ParseDuration(s.Bet().GetDelayEmitResult()); err == nil {
-		// 		p.delayTime = time.Now().Add(delayDur)
-		// 	}
-		// }
-		// s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-		// slotDesk.NextSixiangGame = s.NextSiXiangGame
+	} else {
+		// sixiang bonus
+		if s.NumGameEyePlayed() >= 4 {
+			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
+			p.delayTime = time.Now().Add(2 * time.Second)
+		}
 	}
 	p.broadcastMessage(logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
@@ -633,4 +692,45 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 		s.GetPlayingPresences(),
 		nil, false)
 	p.reportStatistic(logger, userId, slotDesk, s)
+}
+
+func (p *processor) saveGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB,
+	dispatcher runtime.MatchDispatcher, userId string, saveGameJson, gameCode string) {
+	// save game
+	saveGame := &pb.SaveGame{
+		Data:           saveGameJson,
+		LastUpdateUnix: time.Now().Unix(),
+	}
+	data, err := json.Marshal(saveGame)
+	if err != nil {
+		logger.WithField("err", err.Error()).Error("masharl save game sixiang failed")
+	} else {
+		cgbdb.UpdateUsersSaveGame(ctx, logger, db, userId, gameCode,
+			string(data))
+	}
+}
+func (p *processor) loadSaveGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
+	db *sql.DB, dispatcher runtime.MatchDispatcher, userId string, gameCode string) *pb.SaveGame {
+	account, err := nk.AccountGetId(ctx, userId)
+	if err != nil {
+		logger.WithField("err", err.Error()).WithField("user id", userId).Error("get account failed")
+		return &pb.SaveGame{}
+	}
+	var metadata map[string]interface{}
+	err = json.Unmarshal([]byte(account.User.GetMetadata()), &metadata)
+	if err != nil {
+		logger.WithField("err", err.Error()).WithField("user id", userId).Error("marshal account metadata failed")
+		return &pb.SaveGame{}
+	}
+	data, ok := metadata[fmt.Sprintf("savegame.%s", gameCode)].(string)
+	if !ok {
+		return &pb.SaveGame{}
+	}
+	saveGame := &pb.SaveGame{}
+	json.Unmarshal([]byte(data), &saveGame)
+	// expire save game
+	if time.Now().Unix()-saveGame.LastUpdateUnix > 30*86400 {
+		return &pb.SaveGame{}
+	}
+	return saveGame
 }

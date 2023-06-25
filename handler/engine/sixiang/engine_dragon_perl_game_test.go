@@ -25,7 +25,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 		for k := range entity.ListEyeSiXiang {
 			list = append(list, k)
 		}
-		matchStateExpect.CollectionSymbolRemain = entity.ShuffleSlice(list)
+		matchStateExpect.EyeSymbolRemains = entity.ShuffleSlice(list)
 	}
 	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
 	tests := []struct {
@@ -50,7 +50,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want.CurrentSiXiangGame, tt.args.matchState.CurrentSiXiangGame)
 			assert.Equal(t, tt.want.NumSpinLeft, tt.args.matchState.NumSpinLeft)
-			assert.Equal(t, tt.want.CollectionSymbolRemain, tt.args.matchState.CollectionSymbolRemain)
+			assert.Equal(t, tt.want.EyeSymbolRemains, tt.args.matchState.EyeSymbolRemains)
 			assert.Equal(t,
 				tt.want.CollectionSymbol[tt.args.matchState.CurrentSiXiangGame][int(tt.args.matchState.Bet().Chips)],
 				tt.args.matchState.CollectionSymbol[tt.args.matchState.CurrentSiXiangGame][int(tt.args.matchState.Bet().GetChips())])

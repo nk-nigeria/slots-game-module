@@ -22,6 +22,8 @@ var (
 	ErrorSpinIndexAleadyTaken = errors.New("spin index already taken")
 	ErrorSpinIndexRequired    = errors.New("spin index required")
 	ErrorInfoBetInvalid       = errors.New("info bet invalid")
+	ErrorInvalidRequestGame   = errors.New("invalid request game")
+	ErrorInternal             = errors.New("internal error")
 )
 
 // free game by lv

@@ -3,6 +3,7 @@ package cgbdb
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -59,13 +60,13 @@ func UpdateUsersPlayingInMatch(ctx context.Context, logger runtime.Logger, db *s
 	return err
 }
 
-func UpdateUsersGameData(ctx context.Context, logger runtime.Logger, db *sql.DB, userId string, data string) error {
+func UpdateUsersSaveGame(ctx context.Context, logger runtime.Logger, db *sql.DB, userId string, gameCode string, data string) error {
 	query := `UPDATE
 					users AS u
 				SET
 					metadata
 						= u.metadata
-						|| jsonb_build_object('gamedata.sixiang', '` + data + `')
+						|| jsonb_build_object(` + fmt.Sprintf("'savegame.%s'", gameCode) + `, '` + data + `')
 				WHERE	
 					id = $1;`
 	_, err := db.ExecContext(ctx, query, userId)
@@ -73,5 +74,4 @@ func UpdateUsersGameData(ctx context.Context, logger runtime.Logger, db *sql.DB,
 		logger.WithField("err", err).Error("db.ExecContext match update error.")
 	}
 	return err
-
 }
