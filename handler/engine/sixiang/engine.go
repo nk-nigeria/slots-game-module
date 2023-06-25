@@ -89,7 +89,18 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement fisnish game "+s.CurrentSiXiangGame.String())
 	}
-	return engine.Finish(matchState)
+	result, err := engine.Finish(matchState)
+	if err != nil {
+		return result, err
+	}
+	slotDesk, ok := result.(*pb.SlotDesk)
+	if !ok {
+		return result, err
+	}
+	ratio := entity.PriceBuySixiangGem[s.NumGameEyePlayed()]
+	chips := ratio * int(s.Bet().Chips)
+	slotDesk.ChipsBuyGem = int64(chips)
+	return slotDesk, nil
 }
 
 func (e *slotsEngine) Loop(matchState interface{}) (interface{}, error) {
