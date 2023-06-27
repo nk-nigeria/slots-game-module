@@ -33,8 +33,6 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = 5
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.NumSpinLeft+1)
-	// clear symbol letter
-	s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	return s, nil
 }
 
@@ -142,7 +140,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	// reset letter
 	if slotDesk.IsFinishGame {
-		s.ResetCollection(pb.SiXiangGame_SI_XIANG_GAME_NORMAL, int(s.Bet().Chips))
+		s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
 	}
 	return slotDesk, nil
 }

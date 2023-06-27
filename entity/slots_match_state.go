@@ -34,6 +34,13 @@ type SixiangSaveGame struct {
 	LastMcb       int64                          `json:"last_mcb,omitempty"`
 }
 
+type TarzanSaveGame struct {
+	LetterSymbol    []pb.SiXiangSymbol `json:"letter_symbol,omitempty"`
+	PerlGreenForest int                `json:"perl_green_forest,omitempty"`
+	// chip tich luy
+	PerlGreenForestChips int64 `json:"perl_green_forest_chips,omitempty"`
+}
+
 type SlotsMatchState struct {
 	// SaveGame map[string]*pb.SaveGame
 	lib.MatchState
@@ -58,13 +65,13 @@ type SlotsMatchState struct {
 	SpinSymbols []*pb.SpinSymbol
 	NumSpinLeft int // gem using for spin in dragon perl
 	// lần quay chắc chắn ra ngọc
-	TurnSureSpin     int
+	TurnSureSpinEye  int
 	EyeSymbolRemains []pb.SiXiangSymbol
 	// [mcb]gamebonus
 	gameEyePlayed map[int]map[pb.SiXiangGame]int
 	// Danh sach ngoc tứ linh spin được theo chip bet. [game][bet][symbol]qty_of_symbol
-	CollectionSymbol map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int
-	SpinList         []*pb.SpinSymbol
+	// CollectionSymbol map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int
+	SpinList []*pb.SpinSymbol
 
 	// tarzan
 	// List idx of free symbol index
@@ -77,14 +84,15 @@ type SlotsMatchState struct {
 	// ngoc rung xanh
 	PerlGreenForest int
 	// chip tich luy
-	ChipsBonus       int64
-	NumScatterSeq    int
-	NumFruitBasket   int
-	RatioFruitBasket int
+	PerlGreenForestChips int64
+	NumScatterSeq        int
+	NumFruitBasket       int
+	RatioFruitBasket     int
 
 	LastSpinTime            time.Time
 	DurationTriggerAutoSpin time.Duration
 	NumSpinRemain6thLetter  int
+	LetterSymbol            map[pb.SiXiangSymbol]bool `json:"letter_symbol,omitempty"`
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -98,13 +106,14 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		},
 		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
-		CollectionSymbol:   make(map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int, 0),
+		// CollectionSymbol:   make(map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int, 0),
 		// ChipWinByGame:      make(map[pb.SiXiangGame]int64, 0),
 		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
 		ChipStat:               NewChipStat(),
 		RatioFruitBasket:       1,
 		gameEyePlayed:          make(map[int]map[pb.SiXiangGame]int),
 		NumSpinRemain6thLetter: MinNumSpinLetter6th,
+		LetterSymbol:           make(map[pb.SiXiangSymbol]bool),
 	}
 	// m.SaveGame = make(map[string]*pb.SaveGame)
 
@@ -169,51 +178,51 @@ func (s *SlotsMatchState) SetBalanceResult(u *pb.BalanceResult) {
 //	func (s *SlotsMatchState) ResetTrackingPlayBonusGame() {
 //		s.trackingPlaySiXiangGame = make(map[pb.SiXiangGame]int)
 //	}
-func (s *SlotsMatchState) AddCollectionSymbol(game pb.SiXiangGame, chipMcb int, sym pb.SiXiangSymbol) {
-	if _, ok := s.CollectionSymbol[game]; !ok {
-		s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
-	}
-	collection, exist := s.CollectionSymbol[game][chipMcb]
-	if !exist {
-		s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
-		collection = s.CollectionSymbol[game][chipMcb]
-	}
-	num := collection[sym]
-	num++
-	collection[sym] = num
-	s.CollectionSymbol[game][chipMcb] = collection
-}
+// func (s *SlotsMatchState) AddCollectionSymbol(game pb.SiXiangGame, chipMcb int, sym pb.SiXiangSymbol) {
+// 	if _, ok := s.CollectionSymbol[game]; !ok {
+// 		s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
+// 	}
+// 	collection, exist := s.CollectionSymbol[game][chipMcb]
+// 	if !exist {
+// 		s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
+// 		collection = s.CollectionSymbol[game][chipMcb]
+// 	}
+// 	num := collection[sym]
+// 	num++
+// 	collection[sym] = num
+// 	s.CollectionSymbol[game][chipMcb] = collection
+// }
 
-func (s *SlotsMatchState) ResetCollection(game pb.SiXiangGame, chipMcb int) {
-	s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
-	s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
-}
+// func (s *SlotsMatchState) ResetCollection(game pb.SiXiangGame, chipMcb int) {
+// 	s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
+// 	s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
+// }
 
-func (s *SlotsMatchState) CollectionSymbolToSlice(game pb.SiXiangGame, chipMcb int) []*pb.CollectSymbol {
-	ml := make([]*pb.CollectSymbol, 0, len(s.CollectionSymbol))
-	if _, ok := s.CollectionSymbol[game]; !ok {
-		return ml
-	}
-	collection, exist := s.CollectionSymbol[game][chipMcb]
-	if !exist {
-		return ml
-	}
-	for symbol, qty := range collection {
-		v := &pb.CollectSymbol{
-			Symbol: symbol,
-			Qty:    int64(qty),
-		}
-		ml = append(ml, v)
-	}
-	return ml
-}
+// func (s *SlotsMatchState) CollectionSymbolToSlice(game pb.SiXiangGame, chipMcb int) []*pb.CollectSymbol {
+// 	ml := make([]*pb.CollectSymbol, 0, len(s.CollectionSymbol))
+// 	if _, ok := s.CollectionSymbol[game]; !ok {
+// 		return ml
+// 	}
+// 	collection, exist := s.CollectionSymbol[game][chipMcb]
+// 	if !exist {
+// 		return ml
+// 	}
+// 	for symbol, qty := range collection {
+// 		v := &pb.CollectSymbol{
+// 			Symbol: symbol,
+// 			Qty:    int64(qty),
+// 		}
+// 		ml = append(ml, v)
+// 	}
+// 	return ml
+// }
 
-func (s *SlotsMatchState) SizeCollectionSymbol(game pb.SiXiangGame, chipMcb int) int {
-	if _, ok := s.CollectionSymbol[game]; !ok {
-		return 0
-	}
-	return len(s.CollectionSymbol[game][chipMcb])
-}
+// func (s *SlotsMatchState) SizeCollectionSymbol(game pb.SiXiangGame, chipMcb int) int {
+// 	if _, ok := s.CollectionSymbol[game]; !ok {
+// 		return 0
+// 	}
+// 	return len(s.CollectionSymbol[game][chipMcb])
+// }
 
 func (s *SlotsMatchState) AddGameEyePlayed(game pb.SiXiangGame) int {
 	if _, ok := s.gameEyePlayed[int(s.bet.Chips)]; !ok {
@@ -261,6 +270,20 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
 		s.bet = &pb.InfoBet{
 			Chips: sixiangSaveGame.LastMcb,
 		}
+	case define.TarzanGameName:
+		tarzanSg := &TarzanSaveGame{}
+		err := json.Unmarshal([]byte(saveGame.Data), &tarzanSg)
+		if err != nil {
+			return
+		}
+		if s.LetterSymbol == nil {
+			s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
+		}
+		for _, sym := range tarzanSg.LetterSymbol {
+			s.LetterSymbol[sym] = true
+		}
+		s.PerlGreenForest = tarzanSg.PerlGreenForest
+		s.PerlGreenForestChips = tarzanSg.PerlGreenForestChips
 	}
 }
 
@@ -273,6 +296,17 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			LastMcb:       s.bet.Chips,
 		}
 		data, _ := json.Marshal(sixiangSaveGame)
+		return string(data)
+	case define.TarzanGameName:
+		tarzanSg := &TarzanSaveGame{
+			LetterSymbol:         make([]pb.SiXiangSymbol, 0),
+			PerlGreenForest:      s.PerlGreenForest,
+			PerlGreenForestChips: s.PerlGreenForestChips,
+		}
+		for sym := range s.LetterSymbol {
+			tarzanSg.LetterSymbol = append(tarzanSg.LetterSymbol, sym)
+		}
+		data, _ := json.Marshal(tarzanSg)
 		return string(data)
 	}
 	return ""

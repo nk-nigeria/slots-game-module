@@ -35,7 +35,7 @@ func (e *tarzanEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
 	s.PerlGreenForest++
-	s.ChipsBonus += s.Bet().GetChips() / 2
+	s.PerlGreenForestChips += s.Bet().GetChips() / 2
 	return engine.Process(matchState)
 }
 
@@ -57,17 +57,17 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		return result, err
 	}
 	slotDesk.PerlGreenForest = int32(s.PerlGreenForest)
-	slotDesk.GameReward.ChipsBonus = s.ChipsBonus
+	slotDesk.GameReward.ChipsBonus = s.PerlGreenForestChips
 	slotDesk.GameReward.UpdateChipsBonus = false
 	if s.PerlGreenForest >= 100 {
 		slotDesk.GameReward.UpdateChipsBonus = true
-		s.ChipsBonus = 0
+		s.PerlGreenForestChips = 0
 		s.PerlGreenForest = 0
 	}
 
 	// slotDesk.BigWin = e.transformLineWinToBigWin(s.LineWinByGame[s.CurrentSiXiangGame])
 	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, 0)
+	// slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, 0)
 	return slotDesk, err
 }
 

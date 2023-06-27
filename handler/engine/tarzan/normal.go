@@ -55,7 +55,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 		if s.NumSpinRemain6thLetter >= entity.MinNumSpinLetter6th {
 			break
 		}
-		if s.SizeCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips)) < 5 {
+		if len(s.LetterSymbol) < 5 {
 			break
 		}
 		containLetterSymbol := false
@@ -64,7 +64,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 				containLetterSymbol = true
 			}
 		})
-		if containLetterSymbol && s.SizeCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips)) == 5 {
+		if containLetterSymbol && len(s.LetterSymbol) == 5 {
 			continue
 		}
 		break
@@ -82,14 +82,16 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 			})
 		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE):
 			for sym := range entity.TarzanLetterSymbol {
-				s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
+				// s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, sym)
+				s.LetterSymbol[sym] = true
 			}
 		}
 	}
 	// end set custom game
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
-			s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, symbol)
+			// s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, symbol)
+			s.LetterSymbol[symbol] = true
 		}
 	})
 
@@ -139,6 +141,9 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.GameReward.TotalRatioWin = slotDesk.GameReward.RatioWin
 	slotDesk.GameReward.LineWin = lineWin
 	slotDesk.GameReward.TotalLineWin = slotDesk.GameReward.LineWin
+	for k := range s.LetterSymbol {
+		slotDesk.LetterSymbols = append(slotDesk.LetterSymbols, k)
+	}
 	return slotDesk, nil
 }
 
@@ -220,7 +225,7 @@ func (e *normal) TarzanSwing(matrix entity.SlotMatrix) entity.SlotMatrix {
 }
 
 func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	if s.SizeCollectionSymbol(s.CurrentSiXiangGame, 0) == len(entity.TarzanLetterSymbol) {
+	if len(s.LetterSymbol) == len(entity.TarzanLetterSymbol) {
 		return pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 	}
 	matrix := s.Matrix

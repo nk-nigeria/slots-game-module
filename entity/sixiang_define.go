@@ -302,3 +302,8 @@ func init() {
 	idx++
 	MapPaylineIdx.Set(idx, []int{10, 6, 7, 8, 4})
 }
+
+func IsSixiangEyeSymbol(sym pb.SiXiangSymbol) bool {
+	_, ok := ListEyeSiXiang[sym]
+	return ok
+}

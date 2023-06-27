@@ -334,3 +334,20 @@ func LuckySymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
 	}
 	return bigWin, winJp
 }
+
+func GoldPickSymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
+	var bigWin pb.BigWin
+	var winJp pb.WinJackpot
+	switch symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR:
+		bigWin = pb.BigWin_BIG_WIN_NICE
+		winJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MAJOR:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MEGA:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+	}
+	return bigWin, winJp
+}
