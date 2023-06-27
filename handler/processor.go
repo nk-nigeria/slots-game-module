@@ -763,6 +763,7 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 			WithField("user id", userId).
 			Error("load wallet user failed")
 	}
+	s.Bet().Chips = entity.BetLevels[0]
 	// TH2 : user đã chơi -> quay lại chơi -> số chips mang vào >= mức bet đã chơi
 	// -> sever đưa vào lại MCB cũ.
 	if wallet.Chips > s.Bet().Chips {
