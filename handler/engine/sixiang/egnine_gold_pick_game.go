@@ -128,7 +128,7 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	slotDesk.GameReward.RatioWin = ratioWin
 	if slotDesk.IsFinishGame {
-		s.AddGameEyePlayed(pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER)
+		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK)
 	}
 	return slotDesk, nil
 }

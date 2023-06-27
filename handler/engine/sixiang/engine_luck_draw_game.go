@@ -136,7 +136,7 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.GameReward.RatioWin = ratioWin
 	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	if slotDesk.IsFinishGame {
-		s.AddGameEyePlayed(pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR)
+		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW)
 	}
 	return slotDesk, nil
 }

@@ -30,8 +30,8 @@ func init() {
 }
 
 type SixiangSaveGame struct {
-	GameEyePlayed map[int]map[pb.SiXiangSymbol]int `json:"game_eye_played,omitempty"`
-	LastMcb       int64                            `json:"last_mcb,omitempty"`
+	GameEyePlayed map[int]map[pb.SiXiangGame]int `json:"game_eye_played,omitempty"`
+	LastMcb       int64                          `json:"last_mcb,omitempty"`
 }
 
 type SlotsMatchState struct {
@@ -61,7 +61,7 @@ type SlotsMatchState struct {
 	TurnSureSpin     int
 	EyeSymbolRemains []pb.SiXiangSymbol
 	// [mcb]gamebonus
-	gameEyePlayed map[int]map[pb.SiXiangSymbol]int
+	gameEyePlayed map[int]map[pb.SiXiangGame]int
 	// Danh sach ngoc tứ linh spin được theo chip bet. [game][bet][symbol]qty_of_symbol
 	CollectionSymbol map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int
 	SpinList         []*pb.SpinSymbol
@@ -103,7 +103,7 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
 		ChipStat:               NewChipStat(),
 		RatioFruitBasket:       1,
-		gameEyePlayed:          make(map[int]map[pb.SiXiangSymbol]int),
+		gameEyePlayed:          make(map[int]map[pb.SiXiangGame]int),
 		NumSpinRemain6thLetter: MinNumSpinLetter6th,
 	}
 	// m.SaveGame = make(map[string]*pb.SaveGame)
@@ -215,9 +215,9 @@ func (s *SlotsMatchState) SizeCollectionSymbol(game pb.SiXiangGame, chipMcb int)
 	return len(s.CollectionSymbol[game][chipMcb])
 }
 
-func (s *SlotsMatchState) AddGameEyePlayed(game pb.SiXiangSymbol) int {
+func (s *SlotsMatchState) AddGameEyePlayed(game pb.SiXiangGame) int {
 	if _, ok := s.gameEyePlayed[int(s.bet.Chips)]; !ok {
-		s.gameEyePlayed[int(s.bet.Chips)] = make(map[pb.SiXiangSymbol]int)
+		s.gameEyePlayed[int(s.bet.Chips)] = make(map[pb.SiXiangGame]int)
 	}
 	m := s.gameEyePlayed[int(s.bet.Chips)]
 	num := m[game]
@@ -232,10 +232,10 @@ func (s *SlotsMatchState) NumGameEyePlayed() int {
 }
 
 func (s *SlotsMatchState) ClearGameEyePlayed() {
-	s.gameEyePlayed[int(s.Bet().Chips)] = make(map[pb.SiXiangSymbol]int, 0)
+	s.gameEyePlayed[int(s.Bet().Chips)] = make(map[pb.SiXiangGame]int, 0)
 }
 
-func (s *SlotsMatchState) GetGameEyePlayed() map[pb.SiXiangSymbol]int {
+func (s *SlotsMatchState) GameEyePlayed() map[pb.SiXiangGame]int {
 	return s.gameEyePlayed[int(s.Bet().Chips)]
 }
 
@@ -255,6 +255,9 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
 			return
 		}
 		s.gameEyePlayed = sixiangSaveGame.GameEyePlayed
+		if s.gameEyePlayed == nil {
+			s.gameEyePlayed = make(map[int]map[pb.SiXiangGame]int)
+		}
 		s.bet = &pb.InfoBet{
 			Chips: sixiangSaveGame.LastMcb,
 		}

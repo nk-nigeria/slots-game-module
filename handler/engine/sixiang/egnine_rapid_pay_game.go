@@ -150,7 +150,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.GameReward.RatioWin = float32(ratioTotal)
 	if slotDesk.IsFinishGame {
-		s.AddGameEyePlayed(pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD)
+		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY)
 	}
 	return slotDesk, nil
 }

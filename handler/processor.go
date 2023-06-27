@@ -134,11 +134,14 @@ func (p *processor) ProcessGame(ctx context.Context,
 	for _, message := range messages {
 		switch message.GetOpCode() {
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN):
-			p.handlerRequestBet(ctx, logger, nk, db, dispatcher, message, s)
+			p.handlerRequestSpin(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_INFO_TABLE):
 			p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
 			p.handlerBuySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
+		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BET):
+			p.handlerChangeBet(ctx, logger, nk, db, dispatcher, message, s)
+
 		}
 	}
 	p.ProcessApplyPresencesLeave(ctx, logger, nk, db, dispatcher, s)
@@ -303,7 +306,7 @@ func (p *processor) ProcessPresencesLeavePending(ctx context.Context,
 	}
 }
 
-func (p *processor) handlerRequestBet(ctx context.Context,
+func (p *processor) handlerRequestSpin(ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule,
 	db *sql.DB,
@@ -394,8 +397,7 @@ func (p *processor) handlerRequestGetInfoTable(
 		TsUnix:             time.Now().Unix(),
 	}
 	switch s.CurrentSiXiangGame {
-	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
-		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
 		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
 		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
 
@@ -422,6 +424,9 @@ func (p *processor) handlerRequestGetInfoTable(
 	slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotdesk.Matrix.SpinLists = s.SpinList
 	slotdesk.NextSixiangGame = s.NextSiXiangGame
+	for gem := range s.GameEyePlayed() {
+		slotdesk.SixiangGems = append(slotdesk.SixiangGems, gem)
+	}
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
 	if err != nil {
 		logger.WithField("error", err.Error()).
@@ -489,12 +494,12 @@ func (p *processor) handlerBuySixiangGemInfoTable(
 		return
 	}
 	// add SI XIANG GEMS
-	gamePlayed := s.GetGameEyePlayed()
-	listSymbol := []pb.SiXiangSymbol{
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_BIRD,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER,
+	gamePlayed := s.GameEyePlayed()
+	listSymbol := []pb.SiXiangGame{
+		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
+		pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 	}
 	for _, sym := range listSymbol {
 		if _, ok := gamePlayed[sym]; !ok {
@@ -790,4 +795,40 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 			break
 		}
 	}
+}
+
+func (p *processor) handlerChangeBet(
+	ctx context.Context,
+	logger runtime.Logger,
+	nk runtime.NakamaModule,
+	db *sql.DB,
+	dispatcher runtime.MatchDispatcher,
+	message runtime.MatchData,
+	s *entity.SlotsMatchState,
+) {
+	bet := &pb.InfoBet{}
+	err := p.unmarshaler.Unmarshal(message.GetData(), bet)
+	// logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
+	// 	message.GetUserId(), message.GetData(), err)
+	if err != nil {
+		logger.WithField("err", err.Error()).
+			WithField("msg", message.GetData()).
+			WithField("user id", message.GetUserId()).
+			Error("unmarshal bet info failed")
+		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR),
+			&pb.Error{
+				Code:  int64(pb.OpCodeUpdate_OPCODE_ERROR),
+				Error: entity.ErrorInfoBetInvalid.Error(),
+			},
+			[]runtime.Presence{s.GetPresence(message.GetUserId())}, nil, false)
+		return
+	}
+	if !p.checkValidBetInfo(s, bet) {
+		logger.WithField("user id", message.GetUserId()).
+			WithField("game", s.CurrentSiXiangGame.String()).
+			WithField("bet", bet).
+			Error("invalid bet ")
+		return
+	}
+	p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 }

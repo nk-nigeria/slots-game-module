@@ -265,7 +265,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	slotDesk.GameReward.RatioWin = float32(ratioWin)
 	slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	if slotDesk.IsFinishGame {
-		s.AddGameEyePlayed(pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_DRAGON)
+		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL)
 	}
 	return slotDesk, nil
 }

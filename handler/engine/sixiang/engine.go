@@ -100,6 +100,9 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 	ratio := entity.PriceBuySixiangGem[s.NumGameEyePlayed()]
 	chips := ratio * int(s.Bet().Chips)
 	slotDesk.ChipsBuyGem = int64(chips)
+	for gem := range s.GameEyePlayed() {
+		slotDesk.SixiangGems = append(slotDesk.SixiangGems, gem)
+	}
 	return slotDesk, nil
 }
 
