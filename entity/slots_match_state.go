@@ -30,9 +30,10 @@ func init() {
 }
 
 type SixiangSaveGame struct {
-	GameEyePlayed map[int]map[pb.SiXiangSymbol]int
-	LastMcb       int64
+	GameEyePlayed map[int]map[pb.SiXiangSymbol]int `json:"game_eye_played,omitempty"`
+	LastMcb       int64                            `json:"last_mcb,omitempty"`
 }
+
 type SlotsMatchState struct {
 	// SaveGame map[string]*pb.SaveGame
 	lib.MatchState
@@ -254,6 +255,9 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
 			return
 		}
 		s.gameEyePlayed = sixiangSaveGame.GameEyePlayed
+		s.bet = &pb.InfoBet{
+			Chips: sixiangSaveGame.LastMcb,
+		}
 	}
 }
 

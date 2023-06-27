@@ -595,7 +595,12 @@ func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet
 		if bet.Chips <= 0 {
 			return false
 		}
-		return true
+		for _, betLv := range entity.BetLevels {
+			if bet.Chips == betLv {
+				return true
+			}
+		}
+		return false
 	default:
 		return true
 	}
