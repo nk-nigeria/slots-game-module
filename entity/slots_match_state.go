@@ -16,6 +16,8 @@ const (
 	MinNumSpinLetter6th = 280
 )
 
+var BetLevels []int64 = []int64{100, 200, 500, 1000}
+
 // [num_gem_already_collect]priceratio
 var PriceBuySixiangGem map[int]int
 
@@ -29,6 +31,7 @@ func init() {
 
 type SixiangSaveGame struct {
 	GameEyePlayed map[int]map[pb.SiXiangSymbol]int
+	LastMcb       int64
 }
 type SlotsMatchState struct {
 	// SaveGame map[string]*pb.SaveGame
@@ -260,6 +263,7 @@ func (s *SlotsMatchState) SaveGameJson() string {
 	case define.SixiangGameName:
 		sixiangSaveGame := &SixiangSaveGame{
 			GameEyePlayed: s.gameEyePlayed,
+			LastMcb:       s.bet.Chips,
 		}
 		data, _ := json.Marshal(sixiangSaveGame)
 		return string(data)

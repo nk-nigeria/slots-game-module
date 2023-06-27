@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
@@ -85,6 +86,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	presence := s.GetPresences()[0]
 	saveGame := p.loadSaveGame(ctx, logger, nk, db, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s.Label.Code)
 	s.LoadSaveGame(saveGame)
+	p.suggestMcb(ctx, logger, nk, presence.GetUserId(), s)
 	p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, presence.GetUserId(), s)
 }
 
@@ -276,6 +278,9 @@ func (p *processor) ProcessPresencesLeave(ctx context.Context,
 	for _, p := range presences {
 		listUserId = append(listUserId, p.GetUserId())
 	}
+	if len(listUserId) == 0 {
+		return
+	}
 	cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
 }
 
@@ -431,7 +436,7 @@ func (p *processor) handlerRequestGetInfoTable(
 		slotdesk.GameReward = gameReward
 	}
 	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
-	slotdesk.BetLevels = append(slotdesk.BetLevels, 100, 200, 500, 1000)
+	slotdesk.BetLevels = append(slotdesk.BetLevels, entity.BetLevels...)
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
@@ -737,4 +742,46 @@ func (p *processor) loadSaveGame(ctx context.Context, logger runtime.Logger, nk 
 		return &pb.SaveGame{}
 	}
 	return saveGame
+}
+
+// "Gợi ý đưa vào bàn :
+// TH1 : user mới chưa chơi bao giờ  -> đưa vào MCB dựa theo số chips mang vào
+// TH2 : user đã chơi -> quay lại chơi -> số chips mang vào >= mức bet đã chơi
+// -> sever đưa vào lại MCB cũ.
+// TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
+// -> sever đưa vào MCB dựa theo số chips mang vào."
+func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
+	userId string, s *entity.SlotsMatchState) {
+	//TH1 : user mới chưa chơi bao giờ  -> đưa vào MCB dựa theo số chips mang vào
+	if s.Bet().Chips > 0 {
+		return
+	}
+	//load wallet
+	wallet, err := entity.ReadWalletUser(ctx, nk, logger, userId)
+	if err != nil {
+		logger.WithField("err", err.Error()).
+			WithField("user id", userId).
+			Error("load wallet user failed")
+	}
+	// TH2 : user đã chơi -> quay lại chơi -> số chips mang vào >= mức bet đã chơi
+	// -> sever đưa vào lại MCB cũ.
+	if wallet.Chips > s.Bet().Chips {
+		return
+	}
+	// TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
+	// -> sever đưa vào MCB dựa theo số chips mang vào."
+	betsLevel := make([]int64, 0, len(entity.BetLevels))
+	copy(betsLevel, entity.BetLevels)
+	// sort mcb desc
+	sort.Slice(betsLevel, func(i, j int) bool {
+		x := betsLevel[i]
+		y := betsLevel[j]
+		return x < y
+	})
+	for _, betLv := range betsLevel {
+		if betLv < wallet.Chips {
+			s.Bet().Chips = betLv
+			break
+		}
+	}
 }
