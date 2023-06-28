@@ -60,6 +60,7 @@ func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(matrix)
 	s.NumSpinLeft = -1
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.SpinList = make([]*pb.SpinSymbol, 0)
 	return s, nil
 }
 

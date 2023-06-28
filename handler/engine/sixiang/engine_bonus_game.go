@@ -30,6 +30,7 @@ func (e *bonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = 1
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.SpinList = make([]*pb.SpinSymbol, 0)
 	return s, nil
 }
 

@@ -33,6 +33,19 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = 5
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.NumSpinLeft+1)
+	s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
+	s.SpinList = make([]*pb.SpinSymbol, 0)
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
+			Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			Row:       int32(row),
+			Col:       int32(col),
+			Index:     int32(idx),
+			Ratio:     0,
+			WinJp:     pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
+			WinAmount: 0,
+		})
+	})
 	return s, nil
 }
 
@@ -67,7 +80,7 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 				return
 			}
 			// swap
-			s.MatrixSpecial.List[idx], s.MatrixSpecial.List[spinIndex] = s.MatrixSpecial.List[spinIndex], s.MatrixSpecial.List[idx]
+			s.MatrixSpecial.List[spinIndex], s.MatrixSpecial.List[idx] = s.MatrixSpecial.List[idx], s.MatrixSpecial.List[spinIndex]
 			randIdx, randSymbol = int(spinIndex), s.MatrixSpecial.Flip(int(spinIndex))
 		})
 	}
@@ -85,6 +98,7 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 		Index:  int32(randIdx),
 	}
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
+	s.SpinList[randIdx] = spin
 	s.NumSpinLeft--
 	return matchState, nil
 }
@@ -95,8 +109,10 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	if !s.IsSpinChange {
 		return nil, entity.ErrorSpinNotChange
 	}
-	lineWin := 0
+	totalLineWin := 0
+
 	for _, spin := range s.SpinSymbols {
+		lineWin := 0
 		switch spin.Symbol {
 		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX2:
 			s.NumSpinLeft += 2
@@ -104,8 +120,11 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 			s.NumSpinLeft += 3
 		default:
 			symInfo := entity.TarzanJungleTreasureSymbol[spin.Symbol]
-			lineWin += e.randomIntFn(int(symInfo.Value.Min), int(symInfo.Value.Max))
+			lineWin = e.randomIntFn(int(symInfo.Value.Min), int(symInfo.Value.Max))
 		}
+		totalLineWin += lineWin
+		s.SpinList[spin.Index].WinAmount = int64(lineWin * int(s.Bet().Chips) / 100)
+		s.SpinList[spin.Index].Ratio = float32(lineWin) / float32(100)
 	}
 
 	if s.NumSpinLeft <= 0 {
@@ -119,22 +138,22 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 		GameReward:         &pb.GameReward{},
 		SpinSymbols:        s.SpinSymbols,
 	}
-	chipsWin := int64(lineWin * int(slotDesk.ChipsMcb) / 100)
+	chipsWin := int64(totalLineWin * int(slotDesk.ChipsMcb) / 100)
 	// s.ChipWinByGame[s.CurrentSiXiangGame] = s.ChipWinByGame[s.CurrentSiXiangGame] + chipsWin
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipsWin)
 	// s.LineWinByGame[s.CurrentSiXiangGame] = s.LineWinByGame[s.CurrentSiXiangGame] + lineWin
-	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(totalLineWin))
 	slotDesk.GameReward.ChipsWin = chipsWin
 	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if !s.MatrixSpecial.TrackFlip[idx] {
 			slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		}
 	})
-	slotDesk.GameReward.RatioWin = float32(lineWin) / 100.0
-	slotDesk.GameReward.LineWin = int64(lineWin)
+	slotDesk.GameReward.RatioWin = float32(totalLineWin) / 100.0
+	slotDesk.GameReward.LineWin = int64(totalLineWin)
 	slotDesk.GameReward.TotalLineWin = s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.TotalRatioWin = float32(s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)) / 100.0
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
@@ -142,6 +161,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk.IsFinishGame {
 		s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
 	}
+	slotDesk.Matrix.SpinLists = s.SpinList
 	return slotDesk, nil
 }
 

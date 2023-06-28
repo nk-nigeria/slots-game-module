@@ -35,6 +35,7 @@ type SixiangSaveGame struct {
 }
 
 type TarzanSaveGame struct {
+	LastMcb         int64              `json:"last_mcb,omitempty"`
 	LetterSymbol    []pb.SiXiangSymbol `json:"letter_symbol,omitempty"`
 	PerlGreenForest int                `json:"perl_green_forest,omitempty"`
 	// chip tich luy
@@ -276,6 +277,9 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
 		if err != nil {
 			return
 		}
+		s.bet = &pb.InfoBet{
+			Chips: tarzanSg.LastMcb,
+		}
 		if s.LetterSymbol == nil {
 			s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
 		}
@@ -284,6 +288,9 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
 		}
 		s.PerlGreenForest = tarzanSg.PerlGreenForest
 		s.PerlGreenForestChips = tarzanSg.PerlGreenForestChips
+		if len(s.LetterSymbol) == len(TarzanLetterSymbol) {
+			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
+		}
 	}
 }
 
@@ -302,6 +309,7 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			LetterSymbol:         make([]pb.SiXiangSymbol, 0),
 			PerlGreenForest:      s.PerlGreenForest,
 			PerlGreenForestChips: s.PerlGreenForestChips,
+			LastMcb:              s.bet.Chips,
 		}
 		for sym := range s.LetterSymbol {
 			tarzanSg.LetterSymbol = append(tarzanSg.LetterSymbol, sym)

@@ -34,8 +34,8 @@ func (e *tarzanEngine) NewGame(matchState interface{}) (interface{}, error) {
 func (e *tarzanEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
-	s.PerlGreenForest++
-	s.PerlGreenForestChips += s.Bet().GetChips() / 2
+	// s.PerlGreenForest++
+	// s.PerlGreenForestChips += s.Bet().GetChips() / 2
 	return engine.Process(matchState)
 }
 

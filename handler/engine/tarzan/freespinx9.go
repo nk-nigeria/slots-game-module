@@ -35,6 +35,7 @@ func (e *freespinx9) NewGame(matchState interface{}) (interface{}, error) {
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.CountLineCrossFreeSpinSymbol = 0
 	s.NumSpinLeft = maxGemSpinFreeSpinX9
+	s.SpinList = make([]*pb.SpinSymbol, 0)
 	return matchState, nil
 }
 

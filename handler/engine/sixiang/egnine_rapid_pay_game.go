@@ -50,6 +50,18 @@ func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.DurationTriggerAutoSpin = durationAutoSpin
 	// s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.SpinList = make([]*pb.SpinSymbol, 0)
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
+			Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			Row:       int32(row),
+			Col:       int32(col),
+			Index:     int32(idx),
+			Ratio:     0,
+			WinJp:     pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
+			WinAmount: 0,
+		})
+	})
 	return s, nil
 }
 
@@ -105,6 +117,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 		Index:  int32(indexStart) + int32(idRandom),
 	}
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
+	s.SpinList[spin.Index] = spin
 	s.NumSpinLeft--
 	return nil, nil
 }
@@ -113,6 +126,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{
 		GameReward: &pb.GameReward{},
+		ChipsMcb:   s.Bet().Chips,
 	}
 	if len(s.SpinSymbols) == 0 {
 		return slotDesk, entity.ErrorMissingSpinSymbol
@@ -137,11 +151,14 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	}
 	ratio := float64(0)
 	for _, sym := range s.SpinSymbols {
-		ratio += float64(entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min)
+		sym.Ratio = entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min
+		s.SpinList[sym.Index].Ratio = sym.Ratio
+		s.SpinList[sym.Index].WinAmount = int64(float64(sym.Ratio) * float64(slotDesk.ChipsMcb))
+		ratio += float64(sym.Ratio)
 	}
 	slotDesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.SpinSymbols = s.SpinSymbols
-	slotDesk.ChipsMcb = s.Bet().Chips
+	slotDesk.Matrix.SpinLists = s.SpinList
 	slotDesk.GameReward.TotalChipsWinByGame = int64(ratioTotal * float64(slotDesk.ChipsMcb))
 	// s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))

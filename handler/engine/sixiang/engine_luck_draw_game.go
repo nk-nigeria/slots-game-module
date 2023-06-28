@@ -38,7 +38,7 @@ func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = -1
 	// s.ChipsWinInSpecialGame = 0
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
-	// s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
+	s.SpinList = make([]*pb.SpinSymbol, 0)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
 			Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,

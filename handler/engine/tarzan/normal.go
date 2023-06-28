@@ -42,6 +42,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(e.SpinMatrix(matrix))
 	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 	s.NumSpinLeft = -1
+	s.SpinList = make([]*pb.SpinSymbol, 0)
 	return s, nil
 }
 
@@ -94,7 +95,8 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 			s.LetterSymbol[symbol] = true
 		}
 	})
-
+	s.PerlGreenForest++
+	s.PerlGreenForestChips += s.Bet().GetChips() / 2
 	return matchState, nil
 }
 

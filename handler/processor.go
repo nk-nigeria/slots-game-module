@@ -403,6 +403,8 @@ func (p *processor) handlerRequestGetInfoTable(
 
 		matrix := s.Matrix
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
+		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
@@ -420,8 +422,9 @@ func (p *processor) handlerRequestGetInfoTable(
 	default:
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
+		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+
 	}
-	slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotdesk.Matrix.SpinLists = s.SpinList
 	slotdesk.NextSixiangGame = s.NextSiXiangGame
 	for gem := range s.GameEyePlayed() {
@@ -625,7 +628,7 @@ func (p *processor) reportStatistic(logger runtime.Logger, userId string, slotDe
 		})
 		report.AddPlayerData(&pb.PlayerData{
 			UserId:  userId,
-			Chip:    slotDesk.GameReward.BalanceChipsWalletAfter,
+			Chip:    slotDesk.GameReward.BalanceChipsWalletBefore,
 			ChipAdd: slotDesk.GameReward.BalanceChipsWalletAfter - slotDesk.GameReward.BalanceChipsWalletBefore,
 		})
 		// reportUrl := "http://103.226.250.195:8350"
@@ -679,13 +682,14 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 			gameReward.ChipFee = gameReward.TotalChipsWinByGame / 10
 			chipWinGame := gameReward.TotalChipsWinByGame -
 				gameReward.GetChipBetFee() - slotDesk.GameReward.ChipFee
-			gameReward.BalanceChipsWalletAfter = gameReward.BalanceChipsWalletBefore + chipWinGame + gameReward.ChipsBonus
+			gameReward.BalanceChipsWalletAfter = gameReward.BalanceChipsWalletBefore + chipWinGame
 			// update chip win/loose by game
 			p.updateChipUser(ctx, logger, nk,
 				s.GetPlayingPresences()[0].GetUserId(),
 				s.Label.Code, chipWinGame, nil)
 			// update bonus chip
 			if gameReward.UpdateChipsBonus && gameReward.ChipsBonus > 0 {
+				gameReward.BalanceChipsWalletAfter += gameReward.ChipsBonus
 				p.updateChipUser(ctx, logger, nk,
 					s.GetPlayingPresences()[0].GetUserId(),
 					s.Label.Code, gameReward.ChipsBonus, map[string]interface{}{"action": "bonus"},

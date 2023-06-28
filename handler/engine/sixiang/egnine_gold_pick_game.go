@@ -41,6 +41,7 @@ func (e *goldPickEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	// s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.SpinList = make([]*pb.SpinSymbol, 0)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
 			Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
