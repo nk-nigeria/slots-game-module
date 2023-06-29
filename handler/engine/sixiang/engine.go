@@ -2,7 +2,6 @@ package sixiang
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
@@ -46,16 +45,15 @@ func newEngineByGame(game pb.SiXiangGame) lib.Engine {
 
 func NewEngine() lib.Engine {
 	slotEngine := slotsEngine{}
+
 	slotEngine.engines = make(map[pb.SiXiangGame]lib.Engine)
-	i := 1
-	for {
-		game := pb.SiXiangGame(i)
-		if game == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED || i > 100 ||
-			game.String() == strconv.Itoa(i) {
-			break
+	// i := 1
+	for _, i := range pb.SiXiangGame_value {
+		if i == 0 {
+			continue
 		}
+		game := pb.SiXiangGame(i)
 		slotEngine.engines[game] = newEngineByGame(game)
-		i++
 	}
 	return &slotEngine
 }

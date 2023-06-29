@@ -319,8 +319,8 @@ func (p *processor) handlerRequestSpin(ctx context.Context,
 	}
 	bet := &pb.InfoBet{}
 	err := p.unmarshaler.Unmarshal(message.GetData(), bet)
-	// logger.Debug("Recv request add bet user %s , payload %s with parse error %v",
-	// 	message.GetUserId(), message.GetData(), err)
+	logger.Debug("Recv request add bet user %s , payload %s",
+		message.GetUserId(), message.GetData())
 	if err != nil {
 		logger.WithField("err", err.Error()).
 			WithField("msg", message.GetData()).

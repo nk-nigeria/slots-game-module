@@ -14,6 +14,7 @@ func Test_bonusEngine_NewGame(t *testing.T) {
 		e := NewBonusEngine(nil)
 		matchState := entity.NewSlotsMathState(nil)
 		got, err := e.NewGame(matchState)
+		e.Random(0, 0)
 		assert.NoError(t, err)
 		assert.NotNil(t, got)
 		assert.Equal(t, len(entity.ListSymbolBonusGame), len(matchState.MatrixSpecial.List))

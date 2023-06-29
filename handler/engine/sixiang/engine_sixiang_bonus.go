@@ -12,8 +12,8 @@ type sixiangBonusEngine struct {
 }
 
 func NewSixiangBonusEngine() lib.Engine {
-	engine := bonusEngine{}
-	return &engine
+	engine := &sixiangBonusEngine{}
+	return engine
 }
 
 func (e *sixiangBonusEngine) NewGame(matchState interface{}) (interface{}, error) {
@@ -22,6 +22,7 @@ func (e *sixiangBonusEngine) NewGame(matchState interface{}) (interface{}, error
 	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
 	s.SpinSymbols = nil
 	s.NumSpinLeft = 1
+	s.ClearGameEyePlayed()
 	return s, nil
 }
 

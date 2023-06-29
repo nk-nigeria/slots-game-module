@@ -11,18 +11,20 @@ import (
 
 type StateIdle struct {
 	lib.StateBase
+	timeout time.Duration
 }
 
 func NewIdleState(fn lib.FireFn) lib.StateHandler {
 	return &StateIdle{
 		StateBase: lib.NewStateBase(fn),
+		timeout:   10 * time.Second,
 	}
 }
 
 func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
-	state.SetUpCountDown(0 * time.Second)
+	state.SetUpCountDown(s.timeout)
 	dispatcher := procPkg.GetDispatcher()
 	if dispatcher == nil {
 		procPkg.GetLogger().Warn("missing dispatcher don't broadcast")
@@ -48,6 +50,7 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	if state.GetPresenceSize() > 0 {
 		s.Trigger(ctx, lib.TriggerStateFinishSuccess)
+		s.timeout = 0
 		return nil
 	}
 	if remain := state.GetRemainCountDown(); remain < 0 {
