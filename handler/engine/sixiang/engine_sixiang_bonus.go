@@ -35,9 +35,14 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
 	}
+	indexFlip := int(s.Bet().Id)
+
+	if s.Bet().Id < 0 || indexFlip >= len(s.MatrixSpecial.List) {
+		return s, entity.ErrorInfoBetInvalid
+	}
 	s.IsSpinChange = true
-	idRamdom, sym := s.MatrixSpecial.RandomSymbolNotFlip(e.Random)
-	row, col := s.MatrixSpecial.RowCol(idRamdom)
+	_, sym := s.MatrixSpecial.RandomSymbolNotFlip(e.Random)
+	row, col := s.MatrixSpecial.RowCol(indexFlip)
 	s.SpinSymbols = []*pb.SpinSymbol{
 		{
 			Symbol: sym,
@@ -45,7 +50,7 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 			Col:    int32(col),
 		},
 	}
-	s.MatrixSpecial.Flip(idRamdom)
+	s.MatrixSpecial.Flip(indexFlip)
 	s.NumSpinLeft--
 	return s, nil
 }
@@ -71,6 +76,7 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY
 	default:
 	}
+	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.IsFinishGame = true
