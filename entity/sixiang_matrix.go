@@ -168,8 +168,8 @@ func NewMatrixRapidPay() SlotMatrix {
 func NewMatrixSiXiangBonus() SlotMatrix {
 	sm := SlotMatrix{
 		List:      make([]pb.SiXiangSymbol, 0, len(ListSymbolSiXiangBonusGame)),
-		Cols:      len(ListSymbolBonusGame) / 2,
-		Rows:      2,
+		Cols:      len(ListSymbolSiXiangBonusGame) / 2,
+		Rows:      len(ListSymbolSiXiangBonusGame) / 2,
 		TrackFlip: map[int]bool{},
 	}
 	sm.Size = sm.Cols * sm.Rows
