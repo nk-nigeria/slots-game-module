@@ -36,12 +36,12 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 		return s, entity.ErrorSpinReachMax
 	}
 	indexFlip := int(s.Bet().Id)
-
 	if s.Bet().Id < 0 || indexFlip >= len(s.MatrixSpecial.List) {
 		return s, entity.ErrorInfoBetInvalid
 	}
 	s.IsSpinChange = true
-	_, sym := s.MatrixSpecial.RandomSymbolNotFlip(e.Random)
+	// _, sym := s.MatrixSpecial.RandomSymbolNotFlip(e.Random)
+	sym := s.MatrixSpecial.Flip(indexFlip)
 	row, col := s.MatrixSpecial.RowCol(indexFlip)
 	s.SpinSymbols = []*pb.SpinSymbol{
 		{
@@ -50,7 +50,6 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 			Col:    int32(col),
 		},
 	}
-	s.MatrixSpecial.Flip(indexFlip)
 	s.NumSpinLeft--
 	return s, nil
 }
