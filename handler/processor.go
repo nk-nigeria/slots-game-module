@@ -69,25 +69,34 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	}
 	// FIXME: remove after test
 	// {
-	// 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	// 	s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 	// 	s.NextSiXiangGame = s.CurrentSiXiangGame
 	// 	p.engine.NewGame(matchState)
 	// }
-	if s.GetPresenceSize() <= 0 {
-		logger.
-			WithField("game", s.Label.Code).
-			Info("no player broadcast new game data")
-		return
-	}
-	logger.
-		WithField("game", s.Label.Code).
-		// WithField("data", s.Matrix).
-		Info("new game")
+
 	presence := s.GetPresences()[0]
 	saveGame := p.loadSaveGame(ctx, logger, nk, db, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s.Label.Code)
-	s.LoadSaveGame(saveGame)
-	p.suggestMcb(ctx, logger, nk, presence.GetUserId(), s)
-	p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, presence.GetUserId(), s)
+	s.LoadSaveGame(saveGame, func(mcbInSaveGame int64) int64 {
+		return p.suggestMcb(ctx, logger, nk, presence.GetUserId(), mcbInSaveGame)
+	})
+	// p.suggestMcb(ctx, logger, nk, presence.GetUserId(), s)
+	s.Bet().EmitNewgameEvent = true
+
+	if s.CurrentSiXiangGame != s.NextSiXiangGame {
+		s.CurrentSiXiangGame = s.NextSiXiangGame
+		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+			p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
+		}
+	}
+	if s.Bet().EmitNewgameEvent {
+		for _, player := range s.GetPlayingPresences() {
+			p.handlerRequestGetInfoTable(ctx,
+				logger, nk, db,
+				dispatcher,
+				player.GetUserId(),
+				s)
+		}
+	}
 }
 
 func (p *processor) ProcessGame(ctx context.Context,
@@ -406,8 +415,11 @@ func (p *processor) handlerRequestGetInfoTable(
 		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
 		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
 		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
 		matrix := s.MatrixSpecial
@@ -765,10 +777,11 @@ func (p *processor) loadSaveGame(ctx context.Context, logger runtime.Logger, nk 
 // TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
 // -> sever đưa vào MCB dựa theo số chips mang vào."
 func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
-	userId string, s *entity.SlotsMatchState) {
+	userId string, mcbInSaveGame int64) int64 {
 	//TH1 : user mới chưa chơi bao giờ  -> đưa vào MCB dựa theo số chips mang vào
-	if s.Bet().Chips > 0 {
-		return
+	if mcbInSaveGame <= 0 {
+		logger.Error("mcb save game is zero. can not suggest chip mcb")
+		return 0
 	}
 	//load wallet
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, userId)
@@ -777,11 +790,11 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 			WithField("user id", userId).
 			Error("load wallet user failed")
 	}
-	s.Bet().Chips = entity.BetLevels[0]
+	mcbSuggest := entity.BetLevels[0]
 	// TH2 : user đã chơi -> quay lại chơi -> số chips mang vào >= mức bet đã chơi
 	// -> sever đưa vào lại MCB cũ.
-	if wallet.Chips > s.Bet().Chips {
-		return
+	if wallet.Chips > mcbInSaveGame {
+		return mcbSuggest
 	}
 	// TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
 	// -> sever đưa vào MCB dựa theo số chips mang vào."
@@ -795,10 +808,11 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 	})
 	for _, betLv := range betsLevel {
 		if betLv < wallet.Chips {
-			s.Bet().Chips = betLv
+			mcbSuggest = betLv
 			break
 		}
 	}
+	return mcbInSaveGame
 }
 
 func (p *processor) handlerChangeBet(

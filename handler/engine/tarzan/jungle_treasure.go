@@ -33,7 +33,6 @@ func (e *jungleTreasure) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = 5
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	e.sureTurnSpinSymboTurnX3 = e.randomIntFn(1, s.NumSpinLeft+1)
-	s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
 	s.SpinList = make([]*pb.SpinSymbol, 0)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
@@ -100,6 +99,8 @@ func (e *jungleTreasure) Process(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = []*pb.SpinSymbol{spin}
 	s.SpinList[randIdx] = spin
 	s.NumSpinLeft--
+	s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
+
 	return matchState, nil
 }
 

@@ -62,7 +62,6 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 		return matchState, entity.ErrorNoGameEngine
 	}
 
-	s.IsSpinChange = false
 	result, err := engine.Finish(matchState)
 	if err != nil {
 		return result, err

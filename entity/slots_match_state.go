@@ -249,7 +249,7 @@ func (s *SlotsMatchState) GameEyePlayed() map[pb.SiXiangGame]int {
 	return s.gameEyePlayed[int(s.Bet().Chips)]
 }
 
-func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
+func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mcbInSaveGame int64) int64) {
 	// save game expire
 	if time.Now().Unix()-saveGame.LastUpdateUnix > 30*86400 {
 		return
@@ -271,6 +271,12 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
 		s.bet = &pb.InfoBet{
 			Chips: sixiangSaveGame.LastMcb,
 		}
+		if suggestMcb != nil {
+			s.bet.Chips = suggestMcb(sixiangSaveGame.LastMcb)
+		}
+		if len(s.gameEyePlayed[int(s.Bet().Chips)]) == len(ListEyeSiXiang) {
+			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
+		}
 	case define.TarzanGameName:
 		tarzanSg := &TarzanSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &tarzanSg)
@@ -279,6 +285,9 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame) {
 		}
 		s.bet = &pb.InfoBet{
 			Chips: tarzanSg.LastMcb,
+		}
+		if suggestMcb != nil {
+			s.bet.Chips = suggestMcb(tarzanSg.LastMcb)
 		}
 		if s.LetterSymbol == nil {
 			s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
@@ -298,6 +307,10 @@ func (s *SlotsMatchState) SaveGameJson() string {
 	// return "test"
 	switch s.Label.Code {
 	case define.SixiangGameName:
+		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL)
+		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW)
+		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK)
+		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY)
 		sixiangSaveGame := &SixiangSaveGame{
 			GameEyePlayed: s.gameEyePlayed,
 			LastMcb:       s.bet.Chips,

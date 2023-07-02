@@ -22,7 +22,6 @@ func (e *sixiangBonusEngine) NewGame(matchState interface{}) (interface{}, error
 	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
 	s.SpinSymbols = nil
 	s.NumSpinLeft = 1
-	s.ClearGameEyePlayed()
 	return s, nil
 }
 
@@ -51,6 +50,7 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 		},
 	}
 	s.NumSpinLeft--
+	s.ClearGameEyePlayed()
 	return s, nil
 }
 
