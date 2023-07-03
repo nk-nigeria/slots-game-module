@@ -49,7 +49,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := s.Matrix
+	matrix := e.SpinMatrix(s.Matrix)
 	s.NumSpinRemain6thLetter++
 	// make sure num spin for 6th reach before appear 6th letter in matrix
 	for {
