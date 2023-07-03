@@ -84,5 +84,5 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 }
 
 func (e *sixiangBonusEngine) Loop(s interface{}) (interface{}, error) {
-	return s, nil
+	return nil, nil
 }

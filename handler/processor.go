@@ -120,12 +120,11 @@ func (p *processor) ProcessGame(ctx context.Context,
 			p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
 		}
 		if s.Bet().EmitNewgameEvent {
+			logger.Info("emit handlerRequestGetInfoTable by new game state")
 			for _, player := range s.GetPlayingPresences() {
 				p.handlerRequestGetInfoTable(ctx,
 					logger, nk, db,
-					dispatcher,
-					player.GetUserId(),
-					s)
+					dispatcher, player.GetUserId(), s)
 			}
 		}
 	}
@@ -145,6 +144,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN):
 			p.handlerRequestSpin(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_INFO_TABLE):
+			logger.Info("handlerRequestGetInfoTable by user request")
 			p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
 			p.handlerBuySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
@@ -328,7 +328,7 @@ func (p *processor) handlerRequestSpin(ctx context.Context,
 	}
 	bet := &pb.InfoBet{}
 	err := p.unmarshaler.Unmarshal(message.GetData(), bet)
-	logger.Debug("Recv request add bet user %s , payload %s",
+	logger.Debug("Recv request bet user %s , payload %s",
 		message.GetUserId(), message.GetData())
 	if err != nil {
 		logger.WithField("err", err.Error()).
