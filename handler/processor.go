@@ -18,7 +18,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -457,6 +456,7 @@ func (p *processor) handlerRequestGetInfoTable(
 	}
 	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotdesk.BetLevels = append(slotdesk.BetLevels, entity.BetLevels...)
+	slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
@@ -470,24 +470,38 @@ func (p *processor) handlerBuySixiangGemInfoTable(
 	userID string,
 	s *entity.SlotsMatchState,
 ) {
-	if s.Label.Code != define.SixiangGameName {
+	// if s.Label.Code != define.SixiangGameName {
+	// 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+	// 		Code:  int64(codes.Aborted),
+	// 		Error: entity.ErrorInvalidRequestGame.Error(),
+	// 	}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+	// 	return
+	// }
+	// numGemCollect := s.NumGameEyePlayed()
+	// if numGemCollect < 0 || numGemCollect > 4 {
+	// 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+	// 		Code:  int64(codes.Aborted),
+	// 		Error: entity.ErrorInternal.Error(),
+	// 	}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+	// 	return
+	// }
+	// ratio := entity.PriceBuySixiangGem[numGemCollect]
+	// chips := ratio * int(s.Bet().Chips)
+	chips, err := s.PriceBuySixiangGem()
+	if err != nil {
 		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
 			Code:  int64(codes.Aborted),
-			Error: entity.ErrorInvalidRequestGame.Error(),
+			Error: err.Error(),
 		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
 		return
 	}
-	numGemCollect := s.NumGameEyePlayed()
-	if numGemCollect < 0 || numGemCollect > 4 {
+	if chips == 0 {
 		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
 			Code:  int64(codes.Aborted),
 			Error: entity.ErrorInternal.Error(),
 		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
-		return
 	}
-	ratio := entity.PriceBuySixiangGem[numGemCollect]
-	chips := ratio * int(s.Bet().Chips)
-	err := p.checkEnoughChipFromWallet(ctx, logger, nk, userID, int64(chips))
+	err = p.checkEnoughChipFromWallet(ctx, logger, nk, userID, int64(chips))
 	if err != nil {
 		logger.WithField("err", err.Error()).Error("chip not enough for buy gem")
 		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
@@ -522,7 +536,7 @@ func (p *processor) handlerBuySixiangGemInfoTable(
 			break
 		}
 	}
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL && s.NumGameEyePlayed() >= 4 {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 	}
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_BUY_SIXIANG_GEM),

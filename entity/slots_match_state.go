@@ -26,7 +26,7 @@ func init() {
 	PriceBuySixiangGem[0] = 90
 	PriceBuySixiangGem[1] = 110
 	PriceBuySixiangGem[2] = 150
-	PriceBuySixiangGem[1] = 250
+	PriceBuySixiangGem[3] = 250
 }
 
 type SixiangSaveGame struct {
@@ -247,6 +247,28 @@ func (s *SlotsMatchState) ClearGameEyePlayed() {
 
 func (s *SlotsMatchState) GameEyePlayed() map[pb.SiXiangGame]int {
 	return s.gameEyePlayed[int(s.Bet().Chips)]
+}
+
+func (s *SlotsMatchState) PriceBuySixiangGem() (int64, error) {
+	if s.Label.Code != define.SixiangGameName {
+		// p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+		// 	Code:  int64(codes.Aborted),
+		// 	Error: entity.ErrorInvalidRequestGame.Error(),
+		// }, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+		return 0, ErrorInvalidRequestGame
+	}
+
+	numGemCollect := s.NumGameEyePlayed()
+	if numGemCollect < 0 || numGemCollect > 4 {
+		// p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+		// 	Code:  int64(codes.Aborted),
+		// 	Error: entity.ErrorInternal.Error(),
+		// }, []runtime.Presence{s.GetPresence(userID)}, nil, false)
+		return 0, nil
+	}
+	ratio := PriceBuySixiangGem[numGemCollect]
+	chips := int64(ratio) * s.Bet().Chips
+	return chips, nil
 }
 
 func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mcbInSaveGame int64) int64) {
