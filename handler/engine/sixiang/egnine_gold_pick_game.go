@@ -123,9 +123,10 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_TRYAGAIN {
 			continue
 		}
-		// if sym >= pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR {
-		// 	s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), sym)
-		// }
+		if sym >= pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR {
+			// s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), sym)
+			_, s.WinJp = entity.GoldPickSymbolToReward(sym)
+		}
 		spin.Ratio = float32(e.randomFloat64(
 			float64(entity.ListSymbolGoldPick[sym].Value.Min),
 			float64(entity.ListSymbolGoldPick[sym].Value.Max),
@@ -147,6 +148,7 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk.IsFinishGame {
 		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK)
 	}
+	slotDesk.WinJp = s.WinJp
 	slotDesk.Matrix.SpinLists = s.SpinList
 	return slotDesk, nil
 }

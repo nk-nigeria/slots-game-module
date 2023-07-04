@@ -101,20 +101,22 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 	for gem := range s.GameEyePlayed() {
 		slotDesk.SixiangGems = append(slotDesk.SixiangGems, gem)
 	}
-	var jpReward *pb.JackpotReward
-	switch s.WinJp {
-	case pb.WinJackpot_WIN_JACKPOT_MINOR:
-		jpReward = s.WinJPHistory().Minor
-	case pb.WinJackpot_WIN_JACKPOT_MAJOR:
-		jpReward = s.WinJPHistory().Major
-	case pb.WinJackpot_WIN_JACKPOT_MEGA:
-		jpReward = s.WinJPHistory().Mega
-	case pb.WinJackpot_WIN_JACKPOT_GRAND:
-		jpReward = s.WinJPHistory().Grand
-	}
-	if jpReward != nil {
-		jpReward.Count++
-		jpReward.Chips = jpReward.Count * jpReward.Ratio * s.Bet().Chips
+	if slotDesk.IsFinishGame {
+		var jpReward *pb.JackpotReward
+		switch slotDesk.WinJp {
+		case pb.WinJackpot_WIN_JACKPOT_MINOR:
+			jpReward = s.WinJPHistory().Minor
+		case pb.WinJackpot_WIN_JACKPOT_MAJOR:
+			jpReward = s.WinJPHistory().Major
+		case pb.WinJackpot_WIN_JACKPOT_MEGA:
+			jpReward = s.WinJPHistory().Mega
+		case pb.WinJackpot_WIN_JACKPOT_GRAND:
+			jpReward = s.WinJPHistory().Grand
+		}
+		if jpReward != nil {
+			jpReward.Count++
+			jpReward.Chips = jpReward.Count * jpReward.Ratio * s.Bet().Chips
+		}
 	}
 	slotDesk.WinJpHistory = s.WinJPHistory()
 	return slotDesk, nil

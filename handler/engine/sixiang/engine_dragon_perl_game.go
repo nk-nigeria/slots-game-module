@@ -219,7 +219,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	}
 	if slotDesk.IsFinishGame {
 		if len(s.MatrixSpecial.List) == 15 {
-			slotDesk.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
+			s.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
 		}
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
@@ -263,6 +263,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		slotDesk.GameReward.ChipsWin = s.Bet().Chips * int64(s.WinJp)
 	}
 
+	slotDesk.WinJp = s.WinJp
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.SpinSymbols = s.SpinSymbols

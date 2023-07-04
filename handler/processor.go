@@ -467,6 +467,7 @@ func (p *processor) handlerRequestGetInfoTable(
 	for k := range s.LetterSymbol {
 		slotdesk.LetterSymbols = append(slotdesk.LetterSymbols, k)
 	}
+	slotdesk.WinJpHistory = s.WinJPHistory()
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
