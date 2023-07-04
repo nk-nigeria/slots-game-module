@@ -112,33 +112,32 @@ func (p *processor) ProcessGame(ctx context.Context,
 	s := matchState.(*entity.SlotsMatchState)
 	s.InitNewRound()
 	defer s.SetAllowSpin(true)
-
-	if s.CurrentSiXiangGame != s.NextSiXiangGame {
-		s.CurrentSiXiangGame = s.NextSiXiangGame
-		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-			p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
-		}
-		if s.Bet().EmitNewgameEvent {
-			logger.Info("emit handlerRequestGetInfoTable by new game state")
-			for _, player := range s.GetPlayingPresences() {
-				p.handlerRequestGetInfoTable(ctx,
-					logger, nk, db,
-					dispatcher, player.GetUserId(), s)
-			}
-		}
-	}
 	// auto run in some game
-	{
-		res, _ := p.engine.Loop(s)
-		// logger.Info("loop")
-		if res != nil {
-			if slotDesk, ok := res.(*pb.SlotDesk); ok {
-				p.handlerResult(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
+	for _, message := range messages {
+		if s.CurrentSiXiangGame != s.NextSiXiangGame {
+			s.CurrentSiXiangGame = s.NextSiXiangGame
+			if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+				logger.
+					WithField("game", s.CurrentSiXiangGame.String()).
+					WithField("next game", s.NextSiXiangGame.String()).
+					Info("InitSpecialGameDesk")
+				p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
+			} else {
+				logger.
+					WithField("game", s.CurrentSiXiangGame.String()).
+					WithField("next game", s.NextSiXiangGame.String()).
+					Info("Ignore InitSpecialGameDesk")
+			}
+			if s.Bet().EmitNewgameEvent {
+				logger.Info("emit handlerRequestGetInfoTable by new game state")
+				for _, player := range s.GetPlayingPresences() {
+					p.handlerRequestGetInfoTable(ctx,
+						logger, nk, db,
+						dispatcher, player.GetUserId(), s)
+				}
 			}
 		}
-	}
 
-	for _, message := range messages {
 		switch message.GetOpCode() {
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN):
 			p.handlerRequestSpin(ctx, logger, nk, db, dispatcher, message, s)
@@ -146,10 +145,18 @@ func (p *processor) ProcessGame(ctx context.Context,
 			logger.Info("handlerRequestGetInfoTable by user request")
 			p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
-			p.handlerBuySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
+			p.handlerBuySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BET):
 			p.handlerChangeBet(ctx, logger, nk, db, dispatcher, message, s)
-
+		}
+	}
+	{
+		res, _ := p.engine.Loop(s)
+		// logger.Info("loop")
+		if res != nil {
+			if slotDesk, ok := res.(*pb.SlotDesk); ok {
+				p.handlerResult(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
+			}
 		}
 	}
 	p.ProcessApplyPresencesLeave(ctx, logger, nk, db, dispatcher, s)
@@ -457,6 +464,9 @@ func (p *processor) handlerRequestGetInfoTable(
 	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotdesk.BetLevels = append(slotdesk.BetLevels, entity.BetLevels...)
 	slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
+	for k := range s.LetterSymbol {
+		slotdesk.LetterSymbols = append(slotdesk.LetterSymbols, k)
+	}
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
@@ -467,7 +477,8 @@ func (p *processor) handlerBuySixiangGemInfoTable(
 	nk runtime.NakamaModule,
 	db *sql.DB,
 	dispatcher runtime.MatchDispatcher,
-	userID string,
+	// userID string,
+	message runtime.MatchData,
 	s *entity.SlotsMatchState,
 ) {
 	// if s.Label.Code != define.SixiangGameName {
@@ -487,6 +498,40 @@ func (p *processor) handlerBuySixiangGemInfoTable(
 	// }
 	// ratio := entity.PriceBuySixiangGem[numGemCollect]
 	// chips := ratio * int(s.Bet().Chips)
+	userID := message.GetUserId()
+	if userID == "" {
+		logger.Error("user id is empty. ignore req buy gem")
+		return
+	}
+	request := &pb.InfoBet{}
+	err := p.unmarshaler.Unmarshal(message.GetData(), request)
+	if err != nil {
+		logger.WithField("payload", message.GetData()).Error("invalid payload")
+		return
+	}
+	gemWantBuy := pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED
+	listSymbol := []pb.SiXiangGame{
+		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
+		pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+	}
+	for _, v := range listSymbol {
+		if request.GetId() == int32(v) {
+			gemWantBuy = v
+			break
+		}
+	}
+	if gemWantBuy == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
+		logger.WithField("payload", message.GetData()).Error("invalid type gem buy")
+		return
+	}
+	if len(s.GameEyePlayed()) > 0 {
+		if _, exist := s.GameEyePlayed()[gemWantBuy]; exist {
+			logger.WithField("gem", gemWantBuy.String()).Error("gem alreay collect")
+			return
+		}
+	}
 	chips, err := s.PriceBuySixiangGem()
 	if err != nil {
 		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
@@ -523,19 +568,15 @@ func (p *processor) handlerBuySixiangGemInfoTable(
 		return
 	}
 	// add SI XIANG GEMS
-	gamePlayed := s.GameEyePlayed()
-	listSymbol := []pb.SiXiangGame{
-		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
-		pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
-		pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
-		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
-	}
-	for _, sym := range listSymbol {
-		if _, ok := gamePlayed[sym]; !ok {
-			s.AddGameEyePlayed(sym)
-			break
-		}
-	}
+	// gamePlayed := s.GameEyePlayed()
+
+	// for _, sym := range listSymbol {
+	// 	if _, ok := gamePlayed[sym]; !ok {
+	// 		s.AddGameEyePlayed(sym)
+	// 		break
+	// 	}
+	// }
+	s.AddGameEyePlayed(gemWantBuy)
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL && s.NumGameEyePlayed() >= 4 {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 	}
@@ -713,28 +754,28 @@ func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk
 			p.updateChipUser(ctx, logger, nk,
 				s.GetPlayingPresences()[0].GetUserId(),
 				s.Label.Code, chipWinGame, nil)
+			chipBonus := gameReward.GetPerlGreenForestChips()
 			// update bonus chip
-			if gameReward.UpdateChipsBonus && gameReward.ChipsBonus > 0 {
-				gameReward.BalanceChipsWalletAfter += gameReward.ChipsBonus
+			if gameReward.UpdateChipsBonus && chipBonus > 0 {
+				gameReward.BalanceChipsWalletAfter += chipBonus
 				p.updateChipUser(ctx, logger, nk,
 					s.GetPlayingPresences()[0].GetUserId(),
-					s.Label.Code, gameReward.ChipsBonus, map[string]interface{}{"action": "bonus"},
+					s.Label.Code, chipBonus, map[string]interface{}{"action": "bonus_perl_green_forest"},
 				)
 			}
 			slotDesk.GameReward = gameReward
 		}
 	}
+	slotDesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
 	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
 	slotDesk.TsUnix = time.Now().Unix()
-	if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame {
-		p.delayTime = time.Now().Add(2 * time.Second)
-	} else {
-		// sixiang bonus
-		if s.NumGameEyePlayed() >= 4 {
-			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
-			p.delayTime = time.Now().Add(2 * time.Second)
-		}
+	// sixiang bonus
+	if s.NumGameEyePlayed() >= 4 {
+		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 	}
+	// if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame && s.Bet().EmitNewgameEvent {
+	// 	p.delayTime = time.Now().Add(2 * time.Second)
+	// }
 	p.broadcastMessage(logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotDesk,

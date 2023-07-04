@@ -57,7 +57,7 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		return result, err
 	}
 	slotDesk.PerlGreenForest = int32(s.PerlGreenForest)
-	slotDesk.GameReward.ChipsBonus = s.PerlGreenForestChips
+	slotDesk.GameReward.PerlGreenForestChips = s.PerlGreenForestChips
 	slotDesk.GameReward.UpdateChipsBonus = false
 	if s.PerlGreenForest >= 100 {
 		slotDesk.GameReward.UpdateChipsBonus = true

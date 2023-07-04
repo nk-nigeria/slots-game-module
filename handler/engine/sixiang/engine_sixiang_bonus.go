@@ -19,7 +19,7 @@ func NewSixiangBonusEngine() lib.Engine {
 func (e *sixiangBonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixSiXiangBonus()
-	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
+	s.MatrixSpecial = matrix
 	s.SpinSymbols = nil
 	s.NumSpinLeft = 1
 	return s, nil
@@ -34,11 +34,20 @@ func (e *sixiangBonusEngine) Process(matchState interface{}) (interface{}, error
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
 	}
-	indexFlip := int(s.Bet().Id)
-	if s.Bet().Id < 0 || indexFlip >= len(s.MatrixSpecial.List) {
+	gameSymbolSelect := pb.SiXiangSymbol(s.Bet().Id)
+	if s.Bet().Id < 0 || gameSymbolSelect == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 		return s, entity.ErrorInfoBetInvalid
 	}
 	s.IsSpinChange = true
+	indexFlip := -1
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if gameSymbolSelect == symbol {
+			indexFlip = idx
+		}
+	})
+	if indexFlip < 0 {
+		return s, entity.ErrorInfoBetInvalid
+	}
 	// _, sym := s.MatrixSpecial.RandomSymbolNotFlip(e.Random)
 	sym := s.MatrixSpecial.Flip(indexFlip)
 	row, col := s.MatrixSpecial.RowCol(indexFlip)
