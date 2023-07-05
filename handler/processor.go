@@ -854,7 +854,13 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 	// TH2 : user đã chơi -> quay lại chơi -> số chips mang vào >= mức bet đã chơi
 	// -> sever đưa vào lại MCB cũ.
 	if mcbInSaveGame > 0 && wallet.Chips > mcbInSaveGame {
-		return mcbInSaveGame
+		// if mcb in savegame not equal any value
+		// in bet level -> mcb in savegame invalid
+		for _, val := range entity.BetLevels {
+			if mcbInSaveGame == val {
+				return mcbInSaveGame
+			}
+		}
 	}
 	//TH1 : user mới chưa chơi bao giờ  -> đưa vào MCB dựa theo số chips mang vào
 	// TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
