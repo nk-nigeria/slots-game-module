@@ -145,7 +145,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 			logger.Info("handlerRequestGetInfoTable by user request")
 			p.getInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
-			p.buySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message, s)
+			p.buySixiangGem(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BET):
 			p.doChangeBet(ctx, logger, nk, db, dispatcher, message, s)
 		}
@@ -472,7 +472,7 @@ func (p *processor) getInfoTable(
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
 
-func (p *processor) buySixiangGemInfoTable(
+func (p *processor) buySixiangGem(
 	ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule,
@@ -507,7 +507,11 @@ func (p *processor) buySixiangGemInfoTable(
 	request := &pb.InfoBet{}
 	err := p.unmarshaler.Unmarshal(message.GetData(), request)
 	if err != nil {
-		logger.WithField("payload", message.GetData()).Error("invalid payload")
+		logger.WithField("payload", message.GetData()).Error("buy gem failed, invalid payload")
+		return
+	}
+	if s.Bet().Chips == 0 {
+		logger.Error("buy gem failed, chip mcb is zero")
 		return
 	}
 	gemWantBuy := pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED
@@ -839,11 +843,7 @@ func (p *processor) loadSaveGame(ctx context.Context, logger runtime.Logger, nk 
 // -> sever đưa vào MCB dựa theo số chips mang vào."
 func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
 	userId string, mcbInSaveGame int64) int64 {
-	//TH1 : user mới chưa chơi bao giờ  -> đưa vào MCB dựa theo số chips mang vào
-	if mcbInSaveGame <= 0 {
-		logger.Error("mcb save game is zero. can not suggest chip mcb")
-		return 0
-	}
+
 	//load wallet
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, userId)
 	if err != nil {
@@ -853,9 +853,10 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 	}
 	// TH2 : user đã chơi -> quay lại chơi -> số chips mang vào >= mức bet đã chơi
 	// -> sever đưa vào lại MCB cũ.
-	if wallet.Chips > mcbInSaveGame {
+	if mcbInSaveGame > 0 && wallet.Chips > mcbInSaveGame {
 		return mcbInSaveGame
 	}
+	//TH1 : user mới chưa chơi bao giờ  -> đưa vào MCB dựa theo số chips mang vào
 	// TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
 	// -> sever đưa vào MCB dựa theo số chips mang vào."
 	betsLevel := make([]int64, 0, len(entity.BetLevels))
