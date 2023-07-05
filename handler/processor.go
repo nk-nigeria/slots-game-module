@@ -89,7 +89,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	}
 	if s.Bet().EmitNewgameEvent {
 		for _, player := range s.GetPlayingPresences() {
-			p.handlerRequestGetInfoTable(ctx,
+			p.getInfoTable(ctx,
 				logger, nk, db,
 				dispatcher,
 				player.GetUserId(),
@@ -131,7 +131,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 			if s.Bet().EmitNewgameEvent {
 				logger.Info("emit handlerRequestGetInfoTable by new game state")
 				for _, player := range s.GetPlayingPresences() {
-					p.handlerRequestGetInfoTable(ctx,
+					p.getInfoTable(ctx,
 						logger, nk, db,
 						dispatcher, player.GetUserId(), s)
 				}
@@ -140,14 +140,14 @@ func (p *processor) ProcessGame(ctx context.Context,
 
 		switch message.GetOpCode() {
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN):
-			p.handlerRequestSpin(ctx, logger, nk, db, dispatcher, message, s)
+			p.doSpin(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_INFO_TABLE):
 			logger.Info("handlerRequestGetInfoTable by user request")
-			p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
+			p.getInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
-			p.handlerBuySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message, s)
+			p.buySixiangGemInfoTable(ctx, logger, nk, db, dispatcher, message, s)
 		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BET):
-			p.handlerChangeBet(ctx, logger, nk, db, dispatcher, message, s)
+			p.doChangeBet(ctx, logger, nk, db, dispatcher, message, s)
 		}
 	}
 	{
@@ -155,7 +155,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 		// logger.Info("loop")
 		if res != nil {
 			if slotDesk, ok := res.(*pb.SlotDesk); ok {
-				p.handlerResult(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
+				p.gameSummary(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
 			}
 		}
 	}
@@ -278,7 +278,7 @@ func (p *processor) ProcessPresencesJoin(ctx context.Context,
 		return
 	}
 	for _, newuser := range newJoins {
-		p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, newuser.GetUserId(), s)
+		p.getInfoTable(ctx, logger, nk, db, dispatcher, newuser.GetUserId(), s)
 	}
 }
 
@@ -321,7 +321,7 @@ func (p *processor) ProcessPresencesLeavePending(ctx context.Context,
 	}
 }
 
-func (p *processor) handlerRequestSpin(ctx context.Context,
+func (p *processor) doSpin(ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule,
 	db *sql.DB,
@@ -392,10 +392,10 @@ func (p *processor) handlerRequestSpin(ctx context.Context,
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	slotDesk.InfoBet = s.Bet()
-	p.handlerResult(ctx, logger, nk, dispatcher, message.GetUserId(), s, slotDesk, chipBetFee)
+	p.gameSummary(ctx, logger, nk, dispatcher, message.GetUserId(), s, slotDesk, chipBetFee)
 }
 
-func (p *processor) handlerRequestGetInfoTable(
+func (p *processor) getInfoTable(
 	ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule,
@@ -472,7 +472,7 @@ func (p *processor) handlerRequestGetInfoTable(
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
 
-func (p *processor) handlerBuySixiangGemInfoTable(
+func (p *processor) buySixiangGemInfoTable(
 	ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule,
@@ -723,7 +723,7 @@ func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtim
 	}
 	return nil
 }
-func (p *processor) handlerResult(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
+func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
 	dispatcher runtime.MatchDispatcher, userId string, s *entity.SlotsMatchState, slotDesk *pb.SlotDesk, chipBetFee int64) {
 	if slotDesk.IsFinishGame {
 		if chipBetFee <= 0 && (slotDesk.GameReward != nil && slotDesk.GameReward.ChipsWin <= 0) {
@@ -846,11 +846,10 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 			WithField("user id", userId).
 			Error("load wallet user failed")
 	}
-	mcbSuggest := entity.BetLevels[0]
 	// TH2 : user đã chơi -> quay lại chơi -> số chips mang vào >= mức bet đã chơi
 	// -> sever đưa vào lại MCB cũ.
 	if wallet.Chips > mcbInSaveGame {
-		return mcbSuggest
+		return mcbInSaveGame
 	}
 	// TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
 	// -> sever đưa vào MCB dựa theo số chips mang vào."
@@ -862,16 +861,17 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 		y := betsLevel[j]
 		return x < y
 	})
+	mcbSuggest := entity.BetLevels[0]
 	for _, betLv := range betsLevel {
 		if betLv < wallet.Chips {
 			mcbSuggest = betLv
 			break
 		}
 	}
-	return mcbInSaveGame
+	return mcbSuggest
 }
 
-func (p *processor) handlerChangeBet(
+func (p *processor) doChangeBet(
 	ctx context.Context,
 	logger runtime.Logger,
 	nk runtime.NakamaModule,
@@ -904,5 +904,6 @@ func (p *processor) handlerChangeBet(
 			Error("invalid bet ")
 		return
 	}
-	p.handlerRequestGetInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
+	s.SetBetInfo(bet)
+	p.getInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
 }
