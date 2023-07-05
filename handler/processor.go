@@ -871,7 +871,7 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 	sort.Slice(betsLevel, func(i, j int) bool {
 		x := betsLevel[i]
 		y := betsLevel[j]
-		return x < y
+		return x > y
 	})
 	mcbSuggest := entity.BetLevels[0]
 	for _, betLv := range betsLevel {
