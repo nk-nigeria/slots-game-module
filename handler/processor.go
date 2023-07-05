@@ -865,7 +865,7 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 	//TH1 : user mới chưa chơi bao giờ  -> đưa vào MCB dựa theo số chips mang vào
 	// TH3 : user đã chơi -> quay lại chơi -> số chips mang vào  < mức bet đã chơi
 	// -> sever đưa vào MCB dựa theo số chips mang vào."
-	betsLevel := make([]int64, 0, len(entity.BetLevels))
+	betsLevel := make([]int64, len(entity.BetLevels))
 	copy(betsLevel, entity.BetLevels)
 	// sort mcb desc
 	sort.Slice(betsLevel, func(i, j int) bool {
