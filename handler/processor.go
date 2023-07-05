@@ -724,7 +724,21 @@ func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtim
 	return nil
 }
 func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
-	dispatcher runtime.MatchDispatcher, userId string, s *entity.SlotsMatchState, slotDesk *pb.SlotDesk, chipBetFee int64) {
+	dispatcher runtime.MatchDispatcher, userId string, s *entity.SlotsMatchState,
+	slotDesk *pb.SlotDesk, chipBetFee int64,
+) {
+	wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
+	if err != nil {
+		logger.WithField("error", err.Error()).
+			WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
+			Error("get profile user failed")
+		return
+	}
+	if slotDesk.GameReward == nil {
+		slotDesk.GameReward = &pb.GameReward{}
+	}
+	slotDesk.GameReward.BalanceChipsWalletBefore = wallet.Chips
+	slotDesk.GameReward.BalanceChipsWalletAfter = wallet.Chips
 	if slotDesk.IsFinishGame {
 		if chipBetFee <= 0 && (slotDesk.GameReward != nil && slotDesk.GameReward.ChipsWin <= 0) {
 			logger.WithField("user", s.GetPlayingPresences()[0].GetUserId()).
@@ -732,16 +746,7 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 				WithField("next game", slotDesk.NextSixiangGame.String()).
 				Info("no need update wallet, because chip win <= 0")
 		} else {
-			wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
-			if err != nil {
-				logger.WithField("error", err.Error()).
-					WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
-					Error("get profile user failed")
-				return
-			}
-			if slotDesk.GameReward == nil {
-				slotDesk.GameReward = &pb.GameReward{}
-			}
+
 			gameReward := slotDesk.GameReward
 			gameReward.UpdateWallet = true
 			gameReward.BalanceChipsWalletBefore = wallet.Chips
