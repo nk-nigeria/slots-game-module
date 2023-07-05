@@ -16,7 +16,7 @@ const (
 	// duration auto spin if no interract after first countdown
 	durationAutoSpinNoInteract = 2 * time.Second
 	// duration auto spin if no interract first
-	durationAutoSpin = 10 * time.Second
+	durationAutoSpin = 2 * time.Second
 )
 
 type rapidPayEngine struct {
