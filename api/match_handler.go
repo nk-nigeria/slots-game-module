@@ -53,7 +53,7 @@ func NewMatchHandler(
 				tarzan.NewEngine()),
 			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
 		}
-	case define.JuicyGarden:
+	case define.JuicyGardenName:
 		{
 			matchHandler = &MatchHandler{
 				processor: handler.NewMatchProcessor(marshaler, unmarshaler, juicy.NewEngine()),
