@@ -300,11 +300,13 @@ func (s *SlotsMatchState) WinJPHistory() *pb.JackpotHistory {
 }
 
 func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mcbInSaveGame int64) int64) {
+	defer func() {
+		if s.bet.Chips < 0 && suggestMcb != nil {
+			s.bet.Chips = suggestMcb(0)
+		}
+	}()
 	// save game expire
-	if time.Now().Unix()-saveGame.LastUpdateUnix > 30*86400 {
-		return
-	}
-	if len(saveGame.Data) == 0 {
+	if saveGame.LastUpdateUnix == 0 || time.Now().Unix()-saveGame.LastUpdateUnix > 30*86400 {
 		return
 	}
 	switch s.Label.Code {

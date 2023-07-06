@@ -59,7 +59,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	s.NextSiXiangGame = s.CurrentSiXiangGame
 
 	s.SetBetInfo(&pb.InfoBet{
-		Chips: 10000,
+		Chips: -1,
 	})
 	_, err := p.engine.NewGame(matchState)
 	if err != nil {
