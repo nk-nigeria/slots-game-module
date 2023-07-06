@@ -228,3 +228,27 @@ func Test_normalEngine_CheckJpMatrix(t *testing.T) {
 		assert.Equal(t, false, engine.CheckJpMatrix(matrix))
 	})
 }
+
+func Test_normalEngine_GetNextSiXiangGame(t *testing.T) {
+	engine := NewNormalEngine(nil).(*normalEngine)
+	for i := 0; i < 5*3; i += 5 {
+		matrix := entity.NewSiXiangMatrixNormal()
+		matrix.List[0+i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		matrix.List[2+i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		matrix.List[4+i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		s := entity.NewSlotsMathState(nil)
+		s.SetMatrix(matrix)
+		nextGame := engine.GetNextSiXiangGame(s)
+		assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_BONUS, nextGame)
+	}
+	for i := 0; i < 5*3; i += 5 {
+		matrix := entity.NewSiXiangMatrixNormal()
+		matrix.List[1+i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		matrix.List[3+i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		s := entity.NewSlotsMathState(nil)
+		s.SetMatrix(matrix)
+		nextGame := engine.GetNextSiXiangGame(s)
+		assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, nextGame)
+	}
+
+}

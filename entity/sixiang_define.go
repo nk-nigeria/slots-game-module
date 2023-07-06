@@ -241,7 +241,7 @@ type SymbolInfo struct {
 }
 
 var MapPaylineIdx = orderedmap.New[int, []int]()
-var RellsAllowScatter = map[int]bool{0: true, 2: true, 4: true}
+var RowsAllowScatter = map[int]bool{0: true, 2: true, 4: true}
 
 var RatioPaylineMap map[pb.SiXiangSymbol]map[int32]float64
 var ListSymbolSpinInSixiangNormal []pb.SiXiangSymbol

@@ -28,7 +28,7 @@ func init() {
 
 }
 func AllowScatter(col int) bool {
-	return entity.RellsAllowScatter[col]
+	return entity.RowsAllowScatter[col]
 }
 
 func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
@@ -50,14 +50,11 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.IsSpinChange = true
 	matrix := e.SpinMatrix(s.Matrix)
-	// if s.Bet().GetReqSpecGame() != 0 {
-	// 	matrix.List[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
-	// 	matrix.List[2] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
-	// 	matrix.List[4] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
-	// 	// matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-	// 	// 	matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
-	// 	// })
-	// }
+	if s.Bet().GetReqSpecGame() != 0 {
+		matrix.List[0+5] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		matrix.List[2+5] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		matrix.List[4+5] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+	}
 	s.SetMatrix(matrix)
 	spreadMatrix := e.SpreadWildInMatrix(matrix)
 	s.SetWildMatrix(spreadMatrix)
@@ -293,8 +290,8 @@ func (e *normalEngine) TotalRateToTypeBigWin(totalRate float64) pb.BigWin {
 func (e *normalEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	matrix := s.Matrix
 	numScatter := 0
-	matrix.ForEachLine(func(line int, symbols []pb.SiXiangSymbol) {
-		if !entity.RellsAllowScatter[line] {
+	matrix.ForEachCol(func(col int, symbols []pb.SiXiangSymbol) {
+		if !entity.RowsAllowScatter[col] {
 			return
 		}
 		for _, symbol := range symbols {
