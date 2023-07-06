@@ -10,47 +10,25 @@ import (
 
 var _ lib.Engine = &normalEngine{}
 
-var RellsAllowScatter = map[int]bool{0: true, 2: true, 4: true}
+type normalEngine struct {
+	randomIntFn func(min, max int) int
+}
 
-var RatioPaylineMap map[pb.SiXiangSymbol]map[int32]float64
+func NewNormalEngine(randFn func(min, max int) int) lib.Engine {
+	engine := normalEngine{
+		randomIntFn: randFn,
+	}
+	if engine.randomIntFn == nil {
+		engine.randomIntFn = entity.RandomInt
+	}
+	return &engine
+}
 
 func init() {
-	RatioPaylineMap = make(map[pb.SiXiangSymbol]map[int32]float64)
-	{
-		var m = map[int32]float64{3: 0.5, 4: 2.5, 5: 5}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_10] = m
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_J] = m
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q] = m
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_K] = m
-	}
-	{
-		var m = map[int32]float64{3: 2, 4: 10, 5: 20}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_BLUE_DRAGON] = m
-	}
-	{
-		var m = map[int32]float64{3: 1.5, 4: 7.5, 5: 15}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_WHITE_TIGER] = m
-	}
-	{
-		var m = map[int32]float64{3: 1.2, 4: 6, 5: 12}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_WARRIOR] = m
-	}
-	{
-		var m = map[int32]float64{3: 1, 4: 5, 5: 10}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_VERMILION_BIRD] = m
-	}
 
 }
 func AllowScatter(col int) bool {
-	return RellsAllowScatter[col]
-}
-
-type normalEngine struct {
-}
-
-func NewNormalEngine() lib.Engine {
-	engine := normalEngine{}
-	return &engine
+	return entity.RellsAllowScatter[col]
 }
 
 func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
@@ -72,14 +50,14 @@ func (e *normalEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.IsSpinChange = true
 	matrix := e.SpinMatrix(s.Matrix)
-	if s.Bet().GetReqSpecGame() != 0 {
-		matrix.List[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
-		matrix.List[2] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
-		matrix.List[4] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
-		// matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		// 	matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
-		// })
-	}
+	// if s.Bet().GetReqSpecGame() != 0 {
+	// 	matrix.List[0] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+	// 	matrix.List[2] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+	// 	matrix.List[4] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+	// 	// matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	// 	// 	matrix.List[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
+	// 	// })
+	// }
 	s.SetMatrix(matrix)
 	spreadMatrix := e.SpreadWildInMatrix(matrix)
 	s.SetWildMatrix(spreadMatrix)
@@ -157,11 +135,14 @@ func (e *normalEngine) Loop(s interface{}) (interface{}, error) {
 func (e *normalEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	// matrix := matchState.GetMatrix()
 	mapColExistScatter := make(map[int]bool)
-	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
+	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
+	matrix.ForEeach(func(idx, row, col int, _ pb.SiXiangSymbol) {
 		for {
-			numRandom := e.Random(0, len(entity.ListSymbol))
-			symbol := entity.ListSymbol[numRandom]
-			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+			// numRandom := e.Random(0, len(entity.ListSymbol))
+			// symbol := entity.ListSymbol[numRandom]
+			randSymbol := entity.ListSymbolSpinInSixiangNormal[e.Random(0, len(entity.ListSymbolSpinInSixiangNormal))]
+			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
 				// Scatter only allow appear in list RellsAllowScatter
 				if !AllowScatter(col) {
 					continue
@@ -172,11 +153,11 @@ func (e *normalEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 				}
 				mapColExistScatter[col] = true
 			}
-			matrix.List[idx] = symbol
+			spinMatrix.List[idx] = randSymbol
 			break
 		}
 	})
-	return matrix
+	return spinMatrix
 }
 
 func (e *normalEngine) SpreadWildInMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
@@ -292,7 +273,7 @@ func (e *normalEngine) FilterPayline(paylines []*pb.Payline, fn func(numOccur in
 }
 
 func (e *normalEngine) RatioPayline(payline *pb.Payline) float64 {
-	return RatioPaylineMap[payline.Symbol][payline.NumOccur]
+	return entity.RatioPaylineMap[payline.Symbol][payline.NumOccur]
 }
 
 func (e *normalEngine) TotalRateToTypeBigWin(totalRate float64) pb.BigWin {
@@ -313,7 +294,7 @@ func (e *normalEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangG
 	matrix := s.Matrix
 	numScatter := 0
 	matrix.ForEachLine(func(line int, symbols []pb.SiXiangSymbol) {
-		if !RellsAllowScatter[line] {
+		if !entity.RellsAllowScatter[line] {
 			return
 		}
 		for _, symbol := range symbols {

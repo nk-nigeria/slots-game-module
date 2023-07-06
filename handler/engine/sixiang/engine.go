@@ -20,7 +20,7 @@ type slotsEngine struct {
 func newEngineByGame(game pb.SiXiangGame) lib.Engine {
 	switch game {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
-		return NewNormalEngine()
+		return NewNormalEngine(nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_BONUS:
 		return NewBonusEngine(nil)
 	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL:
@@ -40,7 +40,7 @@ func newEngineByGame(game pb.SiXiangGame) lib.Engine {
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
 		return NewSixiangBonusInGameEngine(4)
 	}
-	return NewNormalEngine()
+	return NewNormalEngine(nil)
 }
 
 func NewEngine() lib.Engine {

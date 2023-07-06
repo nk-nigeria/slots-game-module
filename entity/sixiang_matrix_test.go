@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	api "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,4 +62,44 @@ func TestNewSlotMatrix(t *testing.T) {
 		assert.NotNil(t, matrix.List)
 		assert.NotNil(t, matrix.TrackFlip)
 	})
+}
+
+func TestSlotMatrix_ForEeach(t *testing.T) {
+	slostMatrix := NewSiXiangMatrixNormal()
+	slostMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		t.Logf("id: %d row %d col %d", idx, row, col)
+	})
+	assert.Equal(t, true, false)
+}
+
+func TestSlotMatrix_ForEeachNotFlip(t *testing.T) {
+	type fields struct {
+		List      []pb.SiXiangSymbol
+		Cols      int
+		Rows      int
+		Size      int
+		TrackFlip map[int]bool
+	}
+	type args struct {
+		fn func(idx, row, col int, symbol pb.SiXiangSymbol)
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sm := &SlotMatrix{
+				List:      tt.fields.List,
+				Cols:      tt.fields.Cols,
+				Rows:      tt.fields.Rows,
+				Size:      tt.fields.Size,
+				TrackFlip: tt.fields.TrackFlip,
+			}
+			sm.ForEeachNotFlip(tt.args.fn)
+		})
+	}
 }
