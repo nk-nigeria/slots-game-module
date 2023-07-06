@@ -23,7 +23,7 @@ func InitModule(_ context.Context, logger runtime.Logger, _ *sql.DB, _ runtime.N
 	unmarshaler := &protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
-	gameNames := []string{define.SixiangGameName, define.TarzanGameName, define.JuicyGarden}
+	gameNames := []string{define.SixiangGameName, define.TarzanGameName, define.JuicyGardenName}
 	for _, gameName := range gameNames {
 		name := gameName
 		if err := initializer.RegisterMatch(name, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
