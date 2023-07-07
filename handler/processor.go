@@ -79,7 +79,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 		return p.suggestMcb(ctx, logger, nk, presence.GetUserId(), mcbInSaveGame)
 	})
 	// p.suggestMcb(ctx, logger, nk, presence.GetUserId(), s)
-	s.Bet().EmitNewgameEvent = true
+	s.Bet().EmitNewgameEvent = false
 
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
 		s.CurrentSiXiangGame = s.NextSiXiangGame
@@ -87,14 +87,12 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 			p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
 		}
 	}
-	if s.Bet().EmitNewgameEvent {
-		for _, player := range s.GetPlayingPresences() {
-			p.getInfoTable(ctx,
-				logger, nk, db,
-				dispatcher,
-				player.GetUserId(),
-				s)
-		}
+	for _, player := range s.GetPlayingPresences() {
+		p.getInfoTable(ctx,
+			logger, nk, db,
+			dispatcher,
+			player.GetUserId(),
+			s)
 	}
 }
 
@@ -499,6 +497,10 @@ func (p *processor) buySixiangGem(
 	// }
 	// ratio := entity.PriceBuySixiangGem[numGemCollect]
 	// chips := ratio * int(s.Bet().Chips)
+	if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		logger.WithField("payload", message.GetData()).Error("buy gem failed, only allow buy in normal game")
+		return
+	}
 	userID := message.GetUserId()
 	if userID == "" {
 		logger.Error("user id is empty. ignore req buy gem")
@@ -582,8 +584,11 @@ func (p *processor) buySixiangGem(
 	// 	}
 	// }
 	s.AddGameEyePlayed(gemWantBuy)
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL && s.NumGameEyePlayed() >= 4 {
-		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
+	// if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL && s.NumGameEyePlayed() >= 4 {
+	// 	s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
+	// }
+	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		s.NextSiXiangGame = gemWantBuy
 	}
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_BUY_SIXIANG_GEM),
 		&pb.InfoBet{}, []runtime.Presence{s.GetPresence(userID)}, nil, false)

@@ -105,21 +105,22 @@ func (e *bonusEngine) Loop(s interface{}) (interface{}, error) {
 }
 
 func (e *bonusEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	switch s.SpinSymbols[0].Symbol {
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX10,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX20,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX30,
-		pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX50:
-		return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL:
-		return pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_LUCKYDRAW:
-		return pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDPICK:
-		return pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK
-	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_RAPIDPAY:
-		return pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-	default:
-		return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-	}
+	// switch s.SpinSymbols[0].Symbol {
+	// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX10,
+	// 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX20,
+	// 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX30,
+	// 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX50:
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+	// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL:
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
+	// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_LUCKYDRAW:
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
+	// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDPICK:
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK
+	// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_RAPIDPAY:
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	// default:
+	// 	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+	// }
+	return entity.SixiangSymbolToSixiangGame(s.SpinSymbols[0].Symbol)
 }

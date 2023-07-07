@@ -341,7 +341,7 @@ func init() {
 			listSymbolExceptWilAndScatter = append(listSymbolExceptWilAndScatter, sym)
 		}
 		ListSymbolSpinInSixiangNormal = append(ListSymbolSpinInSixiangNormal, ShuffleSlice(ListSymbol)...)
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 4; i++ {
 			ListSymbolSpinInSixiangNormal = append(ListSymbolSpinInSixiangNormal, ShuffleSlice(listSymbolExceptWilAndScatter)...)
 		}
 	}
@@ -350,4 +350,18 @@ func init() {
 func IsSixiangEyeSymbol(sym pb.SiXiangSymbol) bool {
 	_, ok := ListEyeSiXiang[sym]
 	return ok
+}
+
+func SixiangSymbolToSixiangGame(symbol pb.SiXiangSymbol) pb.SiXiangGame {
+	switch symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_DRAGONBALL:
+		return pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_LUCKYDRAW:
+		return pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDPICK:
+		return pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_RAPIDPAY:
+		return pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	}
+	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }

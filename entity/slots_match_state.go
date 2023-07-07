@@ -94,7 +94,7 @@ type SlotsMatchState struct {
 	DurationTriggerAutoSpin time.Duration
 	NumSpinRemain6thLetter  int
 	LetterSymbol            map[pb.SiXiangSymbol]bool `json:"letter_symbol,omitempty"`
-	winJPHistory            map[int]*pb.JackpotHistory
+	winJPHistory            *pb.JackpotHistory
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -116,10 +116,26 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		gameEyePlayed:          make(map[int]map[pb.SiXiangGame]int),
 		NumSpinRemain6thLetter: MinNumSpinLetter6th,
 		LetterSymbol:           make(map[pb.SiXiangSymbol]bool),
-		winJPHistory:           make(map[int]*pb.JackpotHistory),
+		// winJPHistory:           make(map[int]*pb.JackpotHistory),
 	}
-	// m.SaveGame = make(map[string]*pb.SaveGame)
-
+	m.winJPHistory = &pb.JackpotHistory{
+		Minor: &pb.JackpotReward{
+			WinJackpot: pb.WinJackpot_WIN_JACKPOT_MINOR,
+			Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MINOR),
+		},
+		Major: &pb.JackpotReward{
+			WinJackpot: pb.WinJackpot_WIN_JACKPOT_MAJOR,
+			Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MAJOR),
+		},
+		Mega: &pb.JackpotReward{
+			WinJackpot: pb.WinJackpot_WIN_JACKPOT_MEGA,
+			Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MEGA),
+		},
+		Grand: &pb.JackpotReward{
+			WinJackpot: pb.WinJackpot_WIN_JACKPOT_GRAND,
+			Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_GRAND),
+		},
+	}
 	return &m
 }
 
@@ -274,29 +290,11 @@ func (s *SlotsMatchState) PriceBuySixiangGem() (int64, error) {
 }
 
 func (s *SlotsMatchState) WinJPHistory() *pb.JackpotHistory {
-	v, exist := s.winJPHistory[int(s.bet.Chips)]
-	if !exist {
-		v = &pb.JackpotHistory{
-			Minor: &pb.JackpotReward{
-				WinJackpot: pb.WinJackpot_WIN_JACKPOT_MINOR,
-				Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MINOR),
-			},
-			Major: &pb.JackpotReward{
-				WinJackpot: pb.WinJackpot_WIN_JACKPOT_MAJOR,
-				Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MAJOR),
-			},
-			Mega: &pb.JackpotReward{
-				WinJackpot: pb.WinJackpot_WIN_JACKPOT_MEGA,
-				Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MEGA),
-			},
-			Grand: &pb.JackpotReward{
-				WinJackpot: pb.WinJackpot_WIN_JACKPOT_GRAND,
-				Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_GRAND),
-			},
-		}
-		s.winJPHistory[int(s.bet.Chips)] = v
-	}
-	return v
+	s.winJPHistory.Minor.Chips = s.winJPHistory.Minor.Ratio * s.bet.Chips
+	s.winJPHistory.Major.Chips = s.winJPHistory.Major.Ratio * s.bet.Chips
+	s.winJPHistory.Mega.Chips = s.winJPHistory.Mega.Ratio * s.bet.Chips
+	s.winJPHistory.Grand.Chips = s.winJPHistory.Grand.Ratio * s.bet.Chips
+	return s.winJPHistory
 }
 
 func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mcbInSaveGame int64) int64) {
