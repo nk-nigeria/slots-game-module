@@ -99,7 +99,7 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 		GameReward: &pb.GameReward{},
 	}
 	if !s.IsSpinChange {
-		return slotDesk, entity.ErrorSpinNotChange
+		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	s.IsSpinChange = false
 	for id, symbol := range matrix.List {
@@ -143,6 +143,7 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk.IsFinishGame {
 		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW)
 	}
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 

@@ -129,10 +129,10 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 		ChipsMcb:   s.Bet().Chips,
 	}
 	if len(s.SpinSymbols) == 0 {
-		return slotDesk, entity.ErrorMissingSpinSymbol
+		return s.LastResult, entity.ErrorMissingSpinSymbol
 	}
 	if !s.IsSpinChange {
-		return slotDesk, entity.ErrorSpinNotChange
+		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	s.IsSpinChange = false
 	if s.NumSpinLeft <= 0 || s.SpinSymbols[0].Symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_RAPIDPAY_END {
@@ -169,6 +169,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk.IsFinishGame {
 		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY)
 	}
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 

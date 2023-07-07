@@ -78,7 +78,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 		GameReward: &pb.GameReward{},
 	}
 	if !s.IsSpinChange {
-		return slotDesk, entity.ErrorSpinNotChange
+		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	s.IsSpinChange = false
 	slotDesk.Matrix.Lists = make([]pb.SiXiangSymbol, slotDesk.Matrix.Cols*slotDesk.Matrix.Rows)
@@ -97,6 +97,7 @@ func (e *bonusEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.ChipsMcb = s.Bet().Chips
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 

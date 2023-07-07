@@ -211,7 +211,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		GameReward: &pb.GameReward{},
 	}
 	if !s.IsSpinChange {
-		return slotDesk, entity.ErrorSpinNotChange
+		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	s.IsSpinChange = false
 	if s.NumSpinLeft <= 0 || len(s.MatrixSpecial.TrackFlip) == 15 {
@@ -278,6 +278,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 	if slotDesk.IsFinishGame {
 		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL)
 	}
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 

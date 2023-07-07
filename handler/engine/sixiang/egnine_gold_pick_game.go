@@ -100,7 +100,7 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	}
 	s := matchState.(*entity.SlotsMatchState)
 	if !s.IsSpinChange {
-		return slotDesk, entity.ErrorSpinNotChange
+		return s.LastResult, entity.ErrorSpinNotChange
 	}
 
 	s.IsSpinChange = false
@@ -150,6 +150,7 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 	}
 	slotDesk.WinJp = s.WinJp
 	slotDesk.Matrix.SpinLists = s.SpinList
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 

@@ -149,10 +149,12 @@ func (p *processor) ProcessGame(ctx context.Context,
 		}
 	}
 	{
-		res, _ := p.engine.Loop(s)
-		// logger.Info("loop")
-		if res != nil {
+		res, err := p.engine.Loop(s)
+		if err != nil {
+			logger.WithField("err", err).Error("loop with error")
+		} else if res != nil {
 			if slotDesk, ok := res.(*pb.SlotDesk); ok {
+				logger.Info("game summary in loop auto")
 				p.gameSummary(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
 			}
 		}
@@ -785,7 +787,8 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
 	slotDesk.TsUnix = time.Now().Unix()
 	// sixiang bonus
-	if s.NumGameEyePlayed() >= 4 {
+	if slotDesk.IsFinishGame && s.NumGameEyePlayed() >= 4 {
+		logger.WithField("game", s).Info("collect full 4 gem -> goto sixiang bonus")
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 	}
 	// if slotDesk.CurrentSixiangGame != slotDesk.NextSixiangGame && s.Bet().EmitNewgameEvent {

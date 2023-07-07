@@ -69,7 +69,7 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 		GameReward: &pb.GameReward{},
 	}
 	if !s.IsSpinChange {
-		return slotDesk, entity.ErrorSpinNotChange
+		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	s.IsSpinChange = false
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
@@ -89,6 +89,8 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.IsFinishGame = true
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	s.LastResult = slotDesk
+
 	return slotDesk, nil
 }
 

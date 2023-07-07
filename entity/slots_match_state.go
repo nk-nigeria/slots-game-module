@@ -95,6 +95,7 @@ type SlotsMatchState struct {
 	NumSpinRemain6thLetter  int
 	LetterSymbol            map[pb.SiXiangSymbol]bool `json:"letter_symbol,omitempty"`
 	winJPHistory            *pb.JackpotHistory
+	LastResult              *pb.SlotDesk
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {

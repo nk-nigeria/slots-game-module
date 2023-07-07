@@ -82,7 +82,7 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	slotDesk := &pb.SlotDesk{}
 	if !s.IsSpinChange {
-		return slotDesk, entity.ErrorSpinNotChange
+		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	slotDesk.GameReward = &pb.GameReward{}
 	s.IsSpinChange = false
@@ -122,6 +122,7 @@ func (e *normalEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.IsFinishGame = true
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 
