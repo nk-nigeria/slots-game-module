@@ -313,6 +313,7 @@ func init() {
 		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_J] = m
 		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q] = m
 		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_K] = m
+		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_A] = m
 	}
 	{
 		var m = map[int32]float64{3: 2, 4: 10, 5: 20}
