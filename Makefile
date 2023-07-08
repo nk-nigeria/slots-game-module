@@ -12,8 +12,8 @@ update-submodule-stg:
 	git checkout staging && git pull
 	git submodule update --init
 	git submodule update --remote
-	cd ./cgp-common && git checkout main && cd ..
-	go get github.com/ciaolink-game-platform/cgp-common@main
+	cd ./cgp-common && git checkout staging && cd ..
+	go get github.com/ciaolink-game-platform/cgp-common@staging
 
 build:
 	./sync_pkg_3.11.sh
@@ -24,8 +24,8 @@ syncdev:
 	rsync -aurv --delete ./bin/${APP_NAME} root@cgpdev:/root/cgp-server-dev/dist/data/modules/
 	ssh root@cgpdev 'cd /root/cgp-server-dev && docker restart nakama_dev'
 syncstg:
-	rsync -aurv --delete ./bin/${APP_NAME} root@cgpdev:/root/cgp-server/data/modules/
-	# ssh root@cgpdev 'cd /root/cgp-server && docker restart nakama'
+	rsync -aurv --delete ./bin/${APP_NAME} root@cgpdev:/root/cgp-server/dist/data/modules/
+	ssh root@cgpdev 'cd /root/cgp-server && docker restart nakama'
 
 dev: update-submodule-dev build
 stg: update-submodule-stg build

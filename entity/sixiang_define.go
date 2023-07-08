@@ -341,7 +341,8 @@ func init() {
 			listSymbolExceptWilAndScatter = append(listSymbolExceptWilAndScatter, sym)
 		}
 		ListSymbolSpinInSixiangNormal = append(ListSymbolSpinInSixiangNormal, ShuffleSlice(ListSymbol)...)
-		for i := 0; i < 4; i++ {
+		ListSymbolSpinInSixiangNormal = append(ListSymbolSpinInSixiangNormal, ShuffleSlice(ListSymbol)...)
+		for i := 0; i < 2; i++ {
 			ListSymbolSpinInSixiangNormal = append(ListSymbolSpinInSixiangNormal, ShuffleSlice(listSymbolExceptWilAndScatter)...)
 		}
 	}
