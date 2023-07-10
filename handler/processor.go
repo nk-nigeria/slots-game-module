@@ -592,6 +592,7 @@ func (p *processor) buySixiangGem(
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		s.NextSiXiangGame = gemWantBuy
 	}
+	p.saveGame(ctx, logger, nk, db, dispatcher, userID, s.SaveGameJson(), s.Label.Code)
 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_BUY_SIXIANG_GEM),
 		&pb.InfoBet{}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
 }
