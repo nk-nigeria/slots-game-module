@@ -335,7 +335,7 @@ func init() {
 		ListSymbolSpinInSixiangNormal = make([]pb.SiXiangSymbol, 0)
 		listSymbolExceptWilAndScatter := make([]pb.SiXiangSymbol, 0, len(ListSymbol))
 		for _, sym := range ListSymbol {
-			if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD || sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+			if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 				continue
 			}
 			listSymbolExceptWilAndScatter = append(listSymbolExceptWilAndScatter, sym)
