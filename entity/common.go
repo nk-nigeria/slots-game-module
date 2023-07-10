@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/snowflake"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 const (
@@ -100,4 +101,61 @@ func SliceRepeat[T any](size int, v T) []T {
 		retval = append(retval, v)
 	}
 	return retval
+}
+
+func LuckySymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
+	var bigWin pb.BigWin
+	var winJp pb.WinJackpot
+	switch symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MINOR:
+		bigWin = pb.BigWin_BIG_WIN_NICE
+		winJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MAJOR:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_MEGA:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GRAND:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_GRAND
+	}
+	return bigWin, winJp
+}
+
+func GoldPickSymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
+	var bigWin pb.BigWin
+	var winJp pb.WinJackpot
+	switch symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR:
+		bigWin = pb.BigWin_BIG_WIN_NICE
+		winJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MAJOR:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MEGA:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+	}
+	return bigWin, winJp
+}
+
+func DragonPearlSymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
+	var bigWin pb.BigWin = pb.BigWin_BIG_WIN_UNSPECIFIED
+	var winJp pb.WinJackpot = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
+	switch symbol {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MINOR:
+		bigWin = pb.BigWin_BIG_WIN_NICE
+		winJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MAJOR:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_GRAND:
+		bigWin = pb.BigWin_BIG_WIN_MEGA
+		winJp = pb.WinJackpot_WIN_JACKPOT_GRAND
+	}
+	return bigWin, winJp
 }

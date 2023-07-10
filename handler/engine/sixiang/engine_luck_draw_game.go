@@ -59,22 +59,34 @@ func (e *luckyDrawEngine) Random(min, max int) int {
 
 func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	s.IsSpinChange = true
+	if s.Bet().Id < 0 {
+		return nil, entity.ErrorSpinIndexRequired
+	}
+	if s.MatrixSpecial.IsFlip(int(s.Bet().Id)) {
+		return nil, entity.ErrorSpinIndexAleadyTaken
+	}
 	// bet := s.GetBetInfo()
-	idsNotFlip := make([]int, 0)
-	for id := range s.MatrixSpecial.List {
-		if !s.MatrixSpecial.TrackFlip[id] {
-			idsNotFlip = append(idsNotFlip, id)
+	// check if all id already flip
+	{
+		idsNotFlip := make([]int, 0)
+		for id := range s.MatrixSpecial.List {
+			if !s.MatrixSpecial.IsFlip(id) {
+				idsNotFlip = append(idsNotFlip, id)
+			}
+		}
+		if len(idsNotFlip) == 0 {
+			return s, entity.ErrorSpinReachMax
 		}
 	}
-	if len(idsNotFlip) == 0 {
-		return s, entity.ErrorSpinReachMax
-	}
-	id := e.Random(0, len(idsNotFlip))
-	idFlip := idsNotFlip[id]
-	s.MatrixSpecial.TrackFlip[idFlip] = true
+	s.IsSpinChange = true
+	// id := e.Random(0, len(idsNotFlip))
+	// id:=
+	// idFlip := idsNotFlip[id]
+	idFlip := int(s.Bet().Id)
+	// s.MatrixSpecial.TrackFlip[idFlip] = true
 	spinSymbol := &pb.SpinSymbol{
-		Symbol: s.MatrixSpecial.List[idFlip],
+		Symbol: s.MatrixSpecial.Flip(idFlip),
+		Index:  int32(idFlip),
 	}
 	row, col := s.MatrixSpecial.RowCol(idFlip)
 	spinSymbol.Row = int32(row)
@@ -102,20 +114,27 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	s.IsSpinChange = false
-	for id, symbol := range matrix.List {
-		if s.MatrixSpecial.TrackFlip[id] {
+	// for id, symbol := range matrix.List {
+	// 	if s.MatrixSpecial.IsFlip(id) {
+	// 		slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, symbol)
+	// 	} else {
+	// 		slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)
+	// 	}
+	// }
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if s.MatrixSpecial.IsFlip(idx) {
 			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, symbol)
 		} else {
 			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)
 		}
-	}
+	})
 	ratioWin := float32(0)
 	for _, spin := range s.SpinSymbols {
 		sym := spin.Symbol
-		// if sym < pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1 {
-		// 	s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), sym)
-		// 	continue
-		// }
+		if sym < pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1 {
+			// s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), sym)
+			continue
+		}
 		spin.Ratio = float32(e.randomFloat64(float64(entity.ListSymbolLuckyDraw[sym].Value.Min), float64(entity.ListSymbolLuckyDraw[sym].Value.Max)))
 		ratioWin += spin.Ratio
 		s.SpinList[spin.Index].Ratio = spin.Ratio

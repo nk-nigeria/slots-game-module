@@ -96,6 +96,8 @@ type SlotsMatchState struct {
 	LetterSymbol            map[pb.SiXiangSymbol]bool `json:"letter_symbol,omitempty"`
 	winJPHistory            *pb.JackpotHistory
 	LastResult              *pb.SlotDesk
+	Rtp                     lib.Rtp
+	NotDropEyeSymbol        bool
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -118,6 +120,10 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		NumSpinRemain6thLetter: MinNumSpinLetter6th,
 		LetterSymbol:           make(map[pb.SiXiangSymbol]bool),
 		// winJPHistory:           make(map[int]*pb.JackpotHistory),
+		Rtp: lib.Rtp{
+			Id:            0,
+			PercentExpect: 120,
+		},
 	}
 	m.winJPHistory = &pb.JackpotHistory{
 		Minor: &pb.JackpotReward{

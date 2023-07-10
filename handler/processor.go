@@ -381,6 +381,7 @@ func (p *processor) doSpin(ctx context.Context,
 	_, err = p.engine.Process(s)
 	if err != nil {
 		logger.WithField("error", err.Error()).
+			WithField("bet info", s.Bet()).
 			Error("engine process failed")
 		return
 	}
@@ -405,65 +406,74 @@ func (p *processor) getInfoTable(
 	s *entity.SlotsMatchState,
 ) {
 	logger.WithField("user", userID).Info("request info table")
-	slotdesk := &pb.SlotDesk{
-		ChipsMcb:           s.Bet().Chips,
-		CurrentSixiangGame: s.CurrentSiXiangGame,
-		NextSixiangGame:    s.NextSiXiangGame,
-		TsUnix:             time.Now().Unix(),
+	// slotdesk := &pb.SlotDesk{
+	// 	ChipsMcb:           s.Bet().Chips,
+	// 	CurrentSixiangGame: s.CurrentSiXiangGame,
+	// 	NextSixiangGame:    s.NextSiXiangGame,
+	// 	TsUnix:             time.Now().Unix(),
+	// }
+	res, _ := p.engine.Finish(s)
+	slotdesk, ok := res.(*pb.SlotDesk)
+	if !ok || slotdesk == nil {
+		logger.Info("slotdesk is nil")
+		return
 	}
-	switch s.CurrentSiXiangGame {
-	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
-		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
-		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
+	// switch s.CurrentSiXiangGame {
+	// case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
 
-		matrix := s.Matrix
-		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+	// 	matrix := s.Matrix
+	// 	slotdesk.Matrix = matrix.ToPbSlotMatrix()
+	// 	slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 
-	case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
-		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
-		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
-		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
-		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
-		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
-		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
-		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
-		matrix := s.MatrixSpecial
-		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-		for idx, symbol := range matrix.List {
-			if matrix.TrackFlip[idx] {
-				slotdesk.Matrix.Lists[idx] = symbol
-			} else {
-				slotdesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
-			}
-		}
-	default:
-		matrix := s.MatrixSpecial
-		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+	// case pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
+	// 	pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
+	// 	matrix := s.MatrixSpecial
+	// 	slotdesk.Matrix = matrix.ToPbSlotMatrix()
+	// 	for idx, symbol := range matrix.List {
+	// 		if matrix.TrackFlip[idx] {
+	// 			slotdesk.Matrix.Lists[idx] = symbol
+	// 		} else {
+	// 			slotdesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+	// 		}
+	// 	}
+	// default:
+	// 	matrix := s.MatrixSpecial
+	// 	slotdesk.Matrix = matrix.ToPbSlotMatrix()
+	// 	slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 
-	}
-	slotdesk.Matrix.SpinLists = s.SpinList
-	slotdesk.NextSixiangGame = s.NextSiXiangGame
-	for gem := range s.GameEyePlayed() {
-		slotdesk.SixiangGems = append(slotdesk.SixiangGems, gem)
-	}
+	// }
+	// slotdesk.Matrix.SpinLists = s.SpinList
+	// slotdesk.NextSixiangGame = s.NextSiXiangGame
+
 	wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
 	if err != nil {
 		logger.WithField("error", err.Error()).
 			WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
 			Error("get profile user failed")
 	} else {
-		gameReward := &pb.GameReward{}
-		gameReward.UpdateWallet = true
+		gameReward := slotdesk.GameReward
+		if gameReward == nil {
+			gameReward = &pb.GameReward{}
+		}
+		gameReward.UpdateWallet = false
 		gameReward.BalanceChipsWalletBefore = wallet.Chips
 		gameReward.BalanceChipsWalletAfter = gameReward.BalanceChipsWalletBefore
 		// gameReward.TotalChipsWinByGame = slotdesk.GameReward.TotalChipsWinByGame
 		slotdesk.GameReward = gameReward
 	}
-	slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
-	slotdesk.BetLevels = append(slotdesk.BetLevels, entity.BetLevels...)
+	// slotdesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotdesk.ChipsMcb = s.Bet().Chips
+	slotdesk.InfoBet = s.Bet()
 	slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
+
 	for k := range s.LetterSymbol {
 		slotdesk.LetterSymbols = append(slotdesk.LetterSymbols, k)
 	}
@@ -703,7 +713,7 @@ func (p *processor) reportStatistic(logger runtime.Logger, userId string, slotDe
 		report.AddMatch(&pb.MatchData{
 			GameId:   0,
 			GameCode: s.Label.Code,
-			Mcb:      int64(s.Label.Bet),
+			Mcb:      int64(s.Bet().Chips),
 			ChipFee:  slotDesk.GameReward.ChipFee,
 		})
 		report.AddPlayerData(&pb.PlayerData{

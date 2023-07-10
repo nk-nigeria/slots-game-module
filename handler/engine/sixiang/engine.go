@@ -64,7 +64,58 @@ func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
 	if !ok {
 		return nil, status.Error(codes.Unimplemented, "not implement new game "+s.CurrentSiXiangGame.String())
 	}
+	s.LastResult = nil
 	engine.NewGame(s)
+	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL {
+		return s, nil
+	}
+	slotdesk := &pb.SlotDesk{
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		InfoBet:            s.Bet(),
+		ChipsMcb:           s.Bet().Chips,
+		NumSpinLeft:        int64(s.NumSpinLeft),
+		Matrix:             &pb.SlotMatrix{},
+		SpreadMatrix:       &pb.SlotMatrix{},
+	}
+	slotdesk.BetLevels = append(slotdesk.BetLevels, entity.BetLevels...)
+
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
+
+		matrix := s.Matrix
+		slotdesk.Matrix = matrix.ToPbSlotMatrix()
+		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+
+	case
+		// pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
+		matrix := s.MatrixSpecial
+		slotdesk.Matrix = matrix.ToPbSlotMatrix()
+		for idx, symbol := range matrix.List {
+			if matrix.TrackFlip[idx] {
+				slotdesk.Matrix.Lists[idx] = symbol
+			} else {
+				slotdesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+			}
+		}
+	default:
+		matrix := s.MatrixSpecial
+		slotdesk.Matrix = matrix.ToPbSlotMatrix()
+		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+
+	}
+	slotdesk.Matrix.SpinLists = s.SpinList
+	slotdesk.NextSixiangGame = s.NextSiXiangGame
+	s.LastResult = slotdesk
 	return nil, nil
 }
 
@@ -102,6 +153,8 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 		slotDesk.SixiangGems = append(slotDesk.SixiangGems, gem)
 	}
 	slotDesk.WinJpHistory = s.WinJPHistory()
+	slotDesk.BetLevels = append(slotDesk.BetLevels, entity.BetLevels...)
+
 	return slotDesk, nil
 }
 
