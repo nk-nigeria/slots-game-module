@@ -62,6 +62,10 @@ func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 	if s.Bet().Id < 0 {
 		return nil, entity.ErrorSpinIndexRequired
 	}
+	if int(s.Bet().Id) >= len(s.MatrixSpecial.List) {
+		return nil, entity.ErrorInfoBetInvalid
+	}
+
 	if s.MatrixSpecial.IsFlip(int(s.Bet().Id)) {
 		return nil, entity.ErrorSpinIndexAleadyTaken
 	}
@@ -131,16 +135,16 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	ratioWin := float32(0)
 	for _, spin := range s.SpinSymbols {
 		sym := spin.Symbol
+		// ignore jp symbol, 3 symbol jp -> end game and + chip win of this jp
 		if sym < pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1 {
-			// s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), sym)
 			continue
 		}
 		spin.Ratio = float32(e.randomFloat64(float64(entity.ListSymbolLuckyDraw[sym].Value.Min), float64(entity.ListSymbolLuckyDraw[sym].Value.Max)))
 		ratioWin += spin.Ratio
 		s.SpinList[spin.Index].Ratio = spin.Ratio
-		s.SpinList[spin.Index].WinAmount = int64(float64(spin.Ratio) * float64(s.Bet().GetChips()))
+		s.SpinList[spin.Index].WinAmount = int64(spin.Ratio*10) * s.Bet().GetChips() / 10
 	}
-	slotDesk.GameReward.ChipsWin = int64(float64(ratioWin) * float64(s.Bet().GetChips()))
+	slotDesk.GameReward.ChipsWin = int64(ratioWin*10) * s.Bet().GetChips() / 10
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
@@ -157,7 +161,6 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.RatioWin = ratioWin
-	// slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	slotDesk.Matrix.SpinLists = s.SpinList
 	if slotDesk.IsFinishGame {
 		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW)

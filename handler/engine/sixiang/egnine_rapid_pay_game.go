@@ -153,13 +153,13 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	for _, sym := range s.SpinSymbols {
 		sym.Ratio = entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min
 		s.SpinList[sym.Index].Ratio = sym.Ratio
-		s.SpinList[sym.Index].WinAmount = int64(float64(sym.Ratio) * float64(slotDesk.ChipsMcb))
+		s.SpinList[sym.Index].WinAmount = int64(sym.Ratio*10) * int64(slotDesk.ChipsMcb) / 10
 		ratio += float64(sym.Ratio)
 	}
 	slotDesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.Matrix.SpinLists = s.SpinList
-	slotDesk.GameReward.TotalChipsWinByGame = int64(ratioTotal * float64(slotDesk.ChipsMcb))
+	slotDesk.GameReward.TotalChipsWinByGame = int64(ratioTotal*10) * int64(slotDesk.ChipsMcb) / 10
 	// s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.ChipsWin = int64(ratio * float64(slotDesk.ChipsMcb))
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame

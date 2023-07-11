@@ -95,28 +95,27 @@ func (e *goldPickEngine) Process(matchState interface{}) (interface{}, error) {
 }
 
 func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
-	slotDesk := &pb.SlotDesk{
-		GameReward: &pb.GameReward{},
-	}
 	s := matchState.(*entity.SlotsMatchState)
 	if !s.IsSpinChange {
 		return s.LastResult, entity.ErrorSpinNotChange
 	}
-
+	slotDesk := &pb.SlotDesk{
+		GameReward: &pb.GameReward{},
+		ChipsMcb:   s.Bet().Chips,
+	}
 	s.IsSpinChange = false
 	if s.NumSpinLeft <= 0 {
 		slotDesk.IsFinishGame = true
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
+
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
-	// for id, sym := range s.MatrixSpecial.List {
-	// 	if s.MatrixSpecial.TrackFlip[id] {
-	// 		value := entity.ListSymbolGoldPick[sym].Value
-	// 		ratio += e.randomFloat64(float64(value.Min), float64(value.Max))
-	// 	} else {
-	// 		slotDesk.Matrix.Lists[id] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
-	// 	}
-	// }
+	for id := range s.MatrixSpecial.List {
+		if !s.MatrixSpecial.IsFlip(id) {
+			slotDesk.Matrix.Lists[id] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+		}
+	}
+
 	ratioWin := float32(0)
 	for _, spin := range s.SpinSymbols {
 		sym := spin.Symbol
@@ -133,10 +132,9 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 		))
 		ratioWin += spin.Ratio
 		s.SpinList[spin.Index].Ratio = spin.Ratio
-		s.SpinList[spin.Index].WinAmount = int64(float64(ratioWin) * float64(spin.Ratio))
+		s.SpinList[spin.Index].WinAmount = int64(slotDesk.ChipsMcb) * int64(spin.Ratio*10) / 10
 	}
-	slotDesk.ChipsMcb = s.Bet().GetChips()
-	slotDesk.GameReward.ChipsWin = int64(float64(ratioWin) * float64(slotDesk.ChipsMcb))
+	slotDesk.GameReward.ChipsWin = int64(ratioWin*10) * int64(slotDesk.ChipsMcb) / 10
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame

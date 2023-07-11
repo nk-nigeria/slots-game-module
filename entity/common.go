@@ -124,8 +124,8 @@ func LuckySymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
 }
 
 func GoldPickSymbolToReward(symbol pb.SiXiangSymbol) (pb.BigWin, pb.WinJackpot) {
-	var bigWin pb.BigWin
-	var winJp pb.WinJackpot
+	var bigWin pb.BigWin = pb.BigWin_BIG_WIN_UNSPECIFIED
+	var winJp pb.WinJackpot = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	switch symbol {
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR:
 		bigWin = pb.BigWin_BIG_WIN_NICE

@@ -61,7 +61,6 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	if engine == nil {
 		return matchState, entity.ErrorNoGameEngine
 	}
-
 	result, err := engine.Finish(matchState)
 	if err != nil {
 		return result, err
@@ -73,6 +72,7 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.IsInSixiangBonus = true
 	s.ClearGameEyePlayed()
+	slotDesk.SixiangGems = make([]pb.SiXiangGame, 0)
 	s.LastResult = slotDesk
 	return slotDesk, nil
 }

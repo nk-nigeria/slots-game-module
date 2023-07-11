@@ -271,6 +271,9 @@ func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int,
 			listIdNotFlip = append(listIdNotFlip, id)
 		}
 	}
+	if len(listIdNotFlip) == 0 {
+		return -1, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+	}
 	id := randomFn(0, len(listIdNotFlip))
 	idInList := listIdNotFlip[id]
 	symbol := sm.List[idInList]
