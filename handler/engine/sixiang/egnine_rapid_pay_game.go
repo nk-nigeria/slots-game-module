@@ -12,7 +12,7 @@ var _ lib.Engine = &rapidPayEngine{}
 
 const (
 	defaultRapidPayGemSpin = entity.Row_5 + 1
-	defaultAddRatioMcb     = float64(0.1)
+	defaultAddRatioMcb     = float64(0.5)
 	// duration auto spin if no interract after first countdown
 	durationAutoSpinNoInteract = 2 * time.Second
 	// duration auto spin if no interract first
@@ -146,7 +146,10 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
 	for idx, sym := range s.MatrixSpecial.List {
 		if s.MatrixSpecial.TrackFlip[idx] {
-			ratioTotal += float64(entity.ListSymbolRapidPay[sym].Value.Min)
+			v := entity.ListSymbolRapidPay[sym].Value.Min
+			if v > 0 {
+				ratioTotal *= float64(v)
+			}
 		}
 	}
 	ratio := float64(0)
@@ -154,7 +157,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 		sym.Ratio = entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min
 		s.SpinList[sym.Index].Ratio = sym.Ratio
 		s.SpinList[sym.Index].WinAmount = int64(sym.Ratio*10) * int64(slotDesk.ChipsMcb) / 10
-		ratio += float64(sym.Ratio)
+		ratio *= float64(sym.Ratio)
 	}
 	slotDesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	slotDesk.SpinSymbols = s.SpinSymbols

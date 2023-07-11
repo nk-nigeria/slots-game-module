@@ -174,7 +174,7 @@ func (s *SlotsMatchState) InitNewRound() {
 	s.WaitSpinMatrix = false
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.paylines = nil
-	s.WildMatrix = SlotMatrix{}
+	// s.WildMatrix = SlotMatrix{}
 }
 func (s *SlotsMatchState) IsAllowSpin() bool {
 	return s.allowSpin

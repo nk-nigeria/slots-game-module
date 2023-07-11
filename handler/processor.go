@@ -425,11 +425,9 @@ func (p *processor) getInfoTable(
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
 		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
 		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
-
 		matrix := s.Matrix
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
-		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
-
+		slotdesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
 	case
 		pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
@@ -452,7 +450,6 @@ func (p *processor) getInfoTable(
 		matrix := s.MatrixSpecial
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 		slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
-
 	}
 	slotdesk.Matrix.SpinLists = s.SpinList
 	slotdesk.NextSixiangGame = s.NextSiXiangGame
