@@ -52,6 +52,10 @@ func (e *sixiangBonusIngameEngine) Process(matchState interface{}) (interface{},
 	if engine == nil {
 		return matchState, entity.ErrorNoGameEngine
 	}
+	// clear after spin
+	if s.IsSpinChange {
+		s.ClearGameEyePlayed()
+	}
 	return engine.Process(matchState)
 }
 
@@ -65,18 +69,43 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 	if err != nil {
 		return result, err
 	}
-	slotDesk := result.(*pb.SlotDesk)
+	slotDesk, ok := result.(*pb.SlotDesk)
+	if !ok {
+		return result, nil
+	}
+	slotDesk = e.processResult(s, slotDesk)
+	return slotDesk, nil
+}
+
+func (e *sixiangBonusIngameEngine) Loop(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	engine := e.enginesGame[s.CurrentSiXiangGame]
+	if engine == nil {
+		return matchState, entity.ErrorNoGameEngine
+	}
+	result, err := engine.Loop(s)
+	if err != nil {
+		return nil, err
+	}
+	if s.IsSpinChange {
+		s.ClearGameEyePlayed()
+	}
+	slotDesk, ok := result.(*pb.SlotDesk)
+	if !ok {
+		return result, nil
+	}
+	slotDesk = e.processResult(s, slotDesk)
+	return slotDesk, nil
+}
+
+func (e *sixiangBonusIngameEngine) processResult(s *entity.SlotsMatchState, slotDesk *pb.SlotDesk) *pb.SlotDesk {
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, -slotDesk.GameReward.ChipsWin)
 	slotDesk.GameReward.ChipsWin *= int64(e.ratioBonus)
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.IsInSixiangBonus = true
-	s.ClearGameEyePlayed()
 	slotDesk.SixiangGems = make([]pb.SiXiangGame, 0)
+	s.ClearGameEyePlayed()
 	s.LastResult = slotDesk
-	return slotDesk, nil
-}
-
-func (e *sixiangBonusIngameEngine) Loop(s interface{}) (interface{}, error) {
-	return s, nil
+	return slotDesk
 }

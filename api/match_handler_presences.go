@@ -14,7 +14,9 @@ import (
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
 	s := state.(*entity.SlotsMatchState)
-	logger.Info("match join attempt, state=%v, meta=%v", s, metadata)
+	logger.WithField("game", s.Label.Code).
+		WithField("metadata", metadata).
+		Info("match join attempt")
 
 	// check password
 	if s.Label.Open == 0 {
@@ -27,16 +29,13 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	// Check if it's a user attempting to rejoin after a disconnect.
 	if p, _ := s.Presences.Get(presence.GetUserId()); p != nil {
 		// 	// User rejoining after a disconnect.
-		logger.Info("user %s rejoin after disconnect", presence.GetUserId())
+		logger.WithField("user", presence.GetUserId()).Info("user join after disconnect")
 		s.RemoveLeavePresence(presence.GetUserId())
-
 		s.JoinsInProgress++
 		return s, true, ""
 
 	}
-
 	// join as new user
-
 	// Check if match is full.
 	if s.Presences.Size()+s.JoinsInProgress >= entity.MaxPresences {
 		return s, false, "match full"
@@ -47,11 +46,12 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 		return s, false, status.Error(codes.Internal, "read chip balance failed").Error()
 	}
 	if wallet.Chips < int64(s.Label.Bet) {
-		logger.Warn("[Reject] reject allow user %s join game, not enough chip join game, balance user chip %d , game bet %d",
-			presence.GetUserId(), wallet.Chips, s.Label.Bet)
+		logger.WithField("user", presence.GetUserId()).
+			WithField("wallet chip", wallet.Chips).
+			WithField("bet chip", s.Label.Bet).
+			Warn("Reject] user join game cause by not enough chip join game")
 		return s, false, status.Error(codes.Internal, "chip balance not enough").Error()
 	}
-
 	// New player attempting to connect.
 	s.JoinsInProgress++
 	return s, true, ""
@@ -67,8 +67,10 @@ func (m *MatchHandler) MatchJoin(
 	state interface{},
 	presences []runtime.Presence) interface{} {
 	s := state.(*entity.SlotsMatchState)
-	logger.Info("match join, state=%v, presences=%v", s, presences)
-
+	logger.
+		WithField("game", s.Label.Code).
+		WithField("presences", presences).
+		Info("macth join")
 	m.processor.ProcessPresencesJoin(ctx,
 		logger,
 		nk,
@@ -90,8 +92,10 @@ func (m *MatchHandler) MatchLeave(ctx context.Context,
 	presences []runtime.Presence,
 ) interface{} {
 	s := state.(*entity.SlotsMatchState)
-
-	logger.Info("match leave, state=%v, presences=%v", s, presences)
+	logger.
+		WithField("precenses", presences).
+		WithField("game", s.Label.Code).
+		Info("match leave")
 
 	if m.machine.IsPlayingState() || m.machine.IsReward() {
 		m.processor.ProcessPresencesLeavePending(ctx,
@@ -136,6 +140,11 @@ func (m *MatchHandler) MatchLoop(ctx context.Context, logger runtime.Logger, db 
 }
 
 func (m *MatchHandler) MatchTerminate(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, graceSeconds int) interface{} {
-	logger.Info("match terminate, state=%v")
+	s, ok := state.(*entity.SlotsMatchState)
+	if !ok {
+		logger.WithField("state", s).Info("match terminate")
+		return state
+	}
+	logger.WithField("game", s.Label.Code).Info("match terminate")
 	return state
 }

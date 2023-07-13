@@ -1,6 +1,7 @@
 package sixiang
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -71,13 +72,13 @@ func (e *rapidPayEngine) Random(min, max int) int {
 
 func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	if s.NumSpinLeft <= 0 {
+		return s, entity.ErrorSpinReachMax
+	}
 	defer func() {
 		s.LastSpinTime = time.Now()
 		s.DurationTriggerAutoSpin = durationAutoSpin
 	}()
-	if s.NumSpinLeft <= 0 {
-		return s, entity.ErrorSpinReachMax
-	}
 	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
 	s.IsSpinChange = true
 	indexStart := (s.NumSpinLeft - 1) * s.MatrixSpecial.Cols
@@ -152,7 +153,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 			}
 		}
 	}
-	ratio := float64(0)
+	ratio := float64(defaultAddRatioMcb)
 	for _, sym := range s.SpinSymbols {
 		sym.Ratio = entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min
 		s.SpinList[sym.Index].Ratio = sym.Ratio
@@ -179,12 +180,14 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 func (e *rapidPayEngine) Loop(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	delay := time.Since(s.LastSpinTime)
+	fmt.Printf("loop delay %d game %s", delay.Milliseconds(), s.CurrentSiXiangGame.String())
+	fmt.Println("sss")
 	if delay > s.DurationTriggerAutoSpin {
 		e.Process(s)
 		s.DurationTriggerAutoSpin = durationAutoSpinNoInteract
 		return e.Finish(s)
 	}
-	return s, nil
+	return nil, nil
 }
 
 // row 0: x4 END

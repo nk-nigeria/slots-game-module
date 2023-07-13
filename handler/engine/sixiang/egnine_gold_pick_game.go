@@ -132,9 +132,9 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 		))
 		ratioWin += spin.Ratio
 		s.SpinList[spin.Index].Ratio = spin.Ratio
-		s.SpinList[spin.Index].WinAmount = int64(slotDesk.ChipsMcb) * int64(spin.Ratio*10) / 10
+		s.SpinList[spin.Index].WinAmount = int64(slotDesk.ChipsMcb) * int64(spin.Ratio*100) / 100
 	}
-	slotDesk.GameReward.ChipsWin = int64(ratioWin*10) * int64(slotDesk.ChipsMcb) / 10
+	slotDesk.GameReward.ChipsWin = int64(ratioWin*100) * int64(slotDesk.ChipsMcb) / 100
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame

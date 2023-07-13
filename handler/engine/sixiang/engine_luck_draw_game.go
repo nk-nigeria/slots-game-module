@@ -69,6 +69,11 @@ func (e *luckyDrawEngine) Process(matchState interface{}) (interface{}, error) {
 	if s.MatrixSpecial.IsFlip(int(s.Bet().Id)) {
 		return nil, entity.ErrorSpinIndexAleadyTaken
 	}
+	// check if game already collect 3 jp symbol
+	if e.GetNextSiXiangGame(s) == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		return nil, entity.ErrorInvalidRequestGame
+
+	}
 	// bet := s.GetBetInfo()
 	// check if all id already flip
 	{
@@ -193,7 +198,7 @@ func (e *luckyDrawEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXia
 	if isFinishGame {
 		return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 	}
-	return pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
+	return s.CurrentSiXiangGame
 }
 
 func (e *luckyDrawEngine) PrintMatrix(matrix entity.SlotMatrix) {

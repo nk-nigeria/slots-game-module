@@ -71,31 +71,22 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.Error("invalid match init parameter \"bet\"")
 		return nil, 0, ""
 	}
-
 	name, ok := params["name"].(string)
 	if !ok {
 		logger.Warn("invalid match init parameter \"name\"")
-		//return nil, 0, ""
 	}
 	code, ok := params["code"].(string)
 	if !ok {
 		logger.Warn("invalid match init parameter \"code\"")
-		//return nil, 0, ""
 	}
-
 	password, ok := params["password"].(string)
 	if !ok {
 		logger.Warn("invalid match init parameter \"password\"")
-		//return nil, 0, ""
 	}
-
 	open := int32(1)
 	if password != "" {
 		open = 0
 	}
-
-	// mockCodeCard, _ := params["mock_code_card"].(int32)
-
 	label := &lib.MatchLabel{
 		Open:     open,
 		Bet:      bet,
@@ -110,15 +101,12 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.Error("match init json label failed ", err)
 		return nil, tickRate, ""
 	}
-
-	logger.Info("match init label= %s", string(labelJSON))
+	logger.WithField("label", string(labelJSON)).Info("match init")
 	matchState := entity.NewSlotsMathState(label)
 	if matchState == nil {
 		return nil, tickRate, string(labelJSON)
 	}
-
 	procPkg := lib.NewProcessorPackage(matchState, m.processor, logger, nil, nil, nil, nil, nil)
 	m.machine.TriggerIdle(lib.GetContextWithProcessorPackager(procPkg))
-
 	return matchState, tickRate, string(labelJSON)
 }

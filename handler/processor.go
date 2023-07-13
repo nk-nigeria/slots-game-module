@@ -81,12 +81,8 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	// p.suggestMcb(ctx, logger, nk, presence.GetUserId(), s)
 	s.Bet().EmitNewgameEvent = false
 
-	if s.CurrentSiXiangGame != s.NextSiXiangGame {
-		s.CurrentSiXiangGame = s.NextSiXiangGame
-		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-			p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
-		}
-	}
+	p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
+
 	for _, player := range s.GetPlayingPresences() {
 		p.getInfoTable(ctx,
 			logger, nk, db,
@@ -158,6 +154,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 		} else if res != nil {
 			if slotDesk, ok := res.(*pb.SlotDesk); ok {
 				logger.Info("game summary in loop auto")
+				slotDesk.InfoBet = s.Bet()
 				p.gameSummary(ctx, logger, nk, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s, slotDesk, 0)
 			}
 		}
@@ -385,6 +382,7 @@ func (p *processor) doSpin(ctx context.Context,
 	if err != nil {
 		logger.WithField("error", err.Error()).
 			WithField("bet info", s.Bet()).
+			WithField("game", s.Label.Code).WithField("state", s.CurrentSiXiangGame).
 			Error("engine process failed")
 		return
 	}
@@ -396,6 +394,9 @@ func (p *processor) doSpin(ctx context.Context,
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	slotDesk.InfoBet = s.Bet()
+	// logger.WithField("###### @@@@@@ ", s.GameEyePlayed()).
+	// WithField("bet", s.Bet()).
+	// Info("########")
 	p.gameSummary(ctx, logger, nk, dispatcher, message.GetUserId(), s, slotDesk, chipBetFee)
 }
 
@@ -422,12 +423,16 @@ func (p *processor) getInfoTable(
 	// 	return
 	// }
 	switch s.CurrentSiXiangGame {
-	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
+		slotdesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+		slotdesk.Matrix = slotdesk.SpreadMatrix
+	case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
 		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
 		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
 		matrix := s.Matrix
 		slotdesk.Matrix = matrix.ToPbSlotMatrix()
 		slotdesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+
 	case
 		pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
@@ -532,6 +537,10 @@ func (p *processor) buySixiangGem(
 	}
 	if s.Bet().Chips == 0 {
 		logger.Error("buy gem failed, chip mcb is zero")
+		return
+	}
+	if s.NumGameEyePlayed() >= 4 {
+		logger.Error("buy gem failed, num gem >=4")
 		return
 	}
 	gemWantBuy := pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED
@@ -683,22 +692,28 @@ func (p *processor) InitSpecialGameDesk(ctx context.Context,
 	matchState interface{}) {
 	s, ok := matchState.(*entity.SlotsMatchState)
 	if !ok {
+		logger.
+			WithField("s is nil", s).
+			Error("InitSpecialGameDesk failed")
 		return
 	}
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
+		prevGame := s.CurrentSiXiangGame
 		s.CurrentSiXiangGame = s.NextSiXiangGame
-		if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-			logger.
-				WithField("prev", s.CurrentSiXiangGame.String()).
-				WithField("new game", s.NextSiXiangGame.String()).
-				Info("InitSpecialGameDesk")
-			p.engine.NewGame(matchState)
-		} else {
-			logger.
-				WithField("prev", s.CurrentSiXiangGame.String()).
-				WithField("new game", s.NextSiXiangGame.String()).
-				Info("Ignore InitSpecialGameDesk")
-		}
+		p.engine.NewGame(s)
+		// if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		logger.
+			WithField("prev", prevGame.String()).
+			WithField("new game", s.NextSiXiangGame.String()).
+			Info("InitSpecialGameDesk success")
+		// p.engine.NewGame(s)
+		// } else {
+		// 	logger.
+		// 		WithField("prev", s.CurrentSiXiangGame.String()).
+		// 		WithField("new game", s.NextSiXiangGame.String()).
+		// 		Info("Ignore InitSpecialGameDesk")
+
+		// }
 		if s.Bet().EmitNewgameEvent {
 			logger.Info("emit handlerRequestGetInfoTable by new game state")
 			for _, player := range s.GetPlayingPresences() {

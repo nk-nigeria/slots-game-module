@@ -33,7 +33,11 @@ func AllowScatter(col int) bool {
 
 func (e *normalEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	s.SpinList = make([]*pb.SpinSymbol, 0)
+	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
 	if len(s.Matrix.List) > 0 {
+		spreadMatrix := e.SpreadWildInMatrix(s.Matrix)
+		s.SetWildMatrix(spreadMatrix)
 		return s, nil
 	}
 	matrix := entity.NewSiXiangMatrixNormal()
