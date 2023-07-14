@@ -108,6 +108,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 	s.InitNewRound()
 	defer s.SetAllowSpin(true)
 	p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
+	s.Bet().EmitNewgameEvent = false
 	// auto run in some game
 	for _, message := range messages {
 		// if s.CurrentSiXiangGame != s.NextSiXiangGame {
