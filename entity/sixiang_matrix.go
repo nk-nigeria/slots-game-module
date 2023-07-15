@@ -211,7 +211,7 @@ func (sm *SlotMatrix) ForEeach(fn func(idx, row, col int, symbol pb.SiXiangSymbo
 
 func (sm *SlotMatrix) ForEeachNotFlip(fn func(idx, row, col int, symbol pb.SiXiangSymbol)) {
 	sm.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		if sm.TrackFlip[idx] {
+		if sm.IsFlip(idx) {
 			return
 		}
 		fn(idx, row, col, symbol)
@@ -267,7 +267,7 @@ func (sm *SlotMatrix) ToPbSlotMatrix() *pb.SlotMatrix {
 func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int, pb.SiXiangSymbol) {
 	listIdNotFlip := make([]int, 0)
 	for id := range sm.List {
-		if !sm.TrackFlip[id] {
+		if !sm.IsFlip(id) {
 			listIdNotFlip = append(listIdNotFlip, id)
 		}
 	}
@@ -278,6 +278,16 @@ func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int,
 	idInList := listIdNotFlip[id]
 	symbol := sm.List[idInList]
 	return idInList, symbol
+}
+
+func (sm *SlotMatrix) CountSymbolCond(cond func(index int, symbol pb.SiXiangSymbol) bool) int {
+	count := 0
+	sm.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if cond(idx, symbol) {
+			count++
+		}
+	})
+	return count
 }
 
 func (sm *SlotMatrix) Flip(idx int) pb.SiXiangSymbol {

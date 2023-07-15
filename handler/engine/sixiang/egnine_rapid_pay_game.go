@@ -15,7 +15,7 @@ const (
 	defaultRapidPayGemSpin = entity.Row_5 + 1
 	defaultAddRatioMcb     = float64(0.5)
 	// duration auto spin if no interract after first countdown
-	durationAutoSpinNoInteract = 2 * time.Second
+	durationAutoSpinNoInteract = 10 * time.Second
 	// duration auto spin if no interract first
 	durationAutoSpin = 2 * time.Second
 )

@@ -25,7 +25,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 		for k := range entity.ListEyeSiXiang {
 			list = append(list, k)
 		}
-		matchStateExpect.EyeSymbolRemains = entity.ShuffleSlice(list)
+		// matchStateExpect.EyeSymbolRemains = entity.ShuffleSlice(list)
 	}
 	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
 	tests := []struct {
@@ -50,7 +50,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.want.CurrentSiXiangGame, tt.args.matchState.CurrentSiXiangGame)
 			assert.Equal(t, tt.want.NumSpinLeft, tt.args.matchState.NumSpinLeft)
-			assert.Equal(t, tt.want.EyeSymbolRemains, tt.args.matchState.EyeSymbolRemains)
+			// assert.Equal(t, tt.want.EyeSymbolRemains, tt.args.matchState.EyeSymbolRemains)
 			// assert.Equal(t,
 			// 	tt.want.CollectionSymbol[tt.args.matchState.CurrentSiXiangGame][int(tt.args.matchState.Bet().Chips)],
 			// 	tt.args.matchState.CollectionSymbol[tt.args.matchState.CurrentSiXiangGame][int(tt.args.matchState.Bet().GetChips())])
@@ -122,6 +122,10 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 				assert.Equal(t, 1, len(matchState.SpinSymbols), msg)
 				assert.Equal(t, gemSpinRemain-1, matchState.NumSpinLeft, msg)
 			}
+			t.Logf("len trackflip %d", len(matchState.MatrixSpecial.TrackFlip))
+			if len(matchState.MatrixSpecial.TrackFlip) >= 15 {
+				break
+			}
 			// }
 		}
 		for k, v := range trackSymbolSpin {
@@ -131,6 +135,33 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 	})
 }
 
+func Test_dragonPearlEngine_Process_CheckMinMaxEyeFlip(t *testing.T) {
+	name := "Test_dragonPearlEngine_Process_CheckMinMaxEyeFlip"
+	t.Run(name, func(t *testing.T) {
+		for i := 0; i < 10000; i++ {
+			e := NewDragonPearlEngine(nil, nil)
+			matchState := entity.NewSlotsMathState(nil)
+			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
+			e.NewGame(matchState)
+			for {
+				e.Process(matchState)
+				res, err := e.Finish(matchState)
+				assert.NoError(t, err)
+				assert.NotNil(t, res)
+				result, ok := res.(*api.SlotDesk)
+				assert.Equal(t, true, ok)
+				if result.IsFinishGame {
+					numEye := matchState.MatrixSpecial.CountSymbolCond(func(index int, symbol api.SiXiangSymbol) bool {
+						return entity.IsSixiangEyeSymbol(symbol) && matchState.MatrixSpecial.IsFlip(index)
+					})
+					assert.LessOrEqual(t, 1, numEye)
+					assert.GreaterOrEqual(t, 3, numEye)
+					break
+				}
+			}
+		}
+	})
+}
 func Test_dragonPearlEngine_Finish(t *testing.T) {
 	type want struct {
 		slotDesk   *api.SlotDesk

@@ -66,8 +66,8 @@ type SlotsMatchState struct {
 	SpinSymbols []*pb.SpinSymbol
 	NumSpinLeft int // gem using for spin in dragon perl
 	// lần quay chắc chắn ra ngọc
-	TurnSureSpinEye  int
-	EyeSymbolRemains []pb.SiXiangSymbol
+	TurnSureSpinEye int
+	// EyeSymbolRemains []pb.SiXiangSymbol
 	// [mcb]gamebonus
 	gameEyePlayed map[int]map[pb.SiXiangGame]int
 	// Danh sach ngoc tứ linh spin được theo chip bet. [game][bet][symbol]qty_of_symbol
