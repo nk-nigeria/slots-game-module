@@ -257,12 +257,19 @@ func Test_dragonPearlEngine_FinishWithJpSymbol(t *testing.T) {
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
 		e.NewGame(matchState)
 		e.Process(matchState)
-		matchState.SpinSymbols[0].WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+		matchState.SpinSymbols[0].Symbol = api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA
+
+		matchState.SpinSymbols[0].WinJp = api.WinJackpot_WIN_JACKPOT_MEGA
 		res, err := e.Finish(matchState)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		result, ok := res.(*api.SlotDesk)
 		assert.Equal(t, true, ok)
-		assert.LessOrEqual(t, matchState.Bet().Chips*int64(pb.WinJackpot_WIN_JACKPOT_MEGA.Number()), result.GameReward.TotalChipsWinByGame)
+		assert.LessOrEqual(t, matchState.Bet().Chips*int64(pb.WinJackpot_WIN_JACKPOT_MEGA.Number()),
+			result.GameReward.ChipsWin)
+		assert.LessOrEqual(t, matchState.Bet().Chips*int64(pb.WinJackpot_WIN_JACKPOT_MEGA.Number()),
+			result.GameReward.TotalChipsWinByGame)
+
 	})
+
 }
