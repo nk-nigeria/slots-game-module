@@ -7,6 +7,7 @@ import (
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	api "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -245,4 +246,23 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 			assert.Equal(t, 15, len(slotDesk.Matrix.Lists))
 		})
 	}
+}
+
+func Test_dragonPearlEngine_FinishWithJpSymbol(t *testing.T) {
+	name := "Test_dragonPearlEngine_FinishWithJpSymbol"
+	t.Run(name, func(t *testing.T) {
+		e := NewDragonPearlEngine(nil, nil)
+		matchState := entity.NewSlotsMathState(nil)
+		matchState.Bet().Chips = 1000
+		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
+		e.NewGame(matchState)
+		e.Process(matchState)
+		matchState.SpinSymbols[0].WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+		res, err := e.Finish(matchState)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		result, ok := res.(*api.SlotDesk)
+		assert.Equal(t, true, ok)
+		assert.LessOrEqual(t, matchState.Bet().Chips*int64(pb.WinJackpot_WIN_JACKPOT_MEGA.Number()), result.GameReward.TotalChipsWinByGame)
+	})
 }

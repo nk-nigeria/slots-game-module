@@ -269,6 +269,7 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		} else {
 			ratioJpGemWin += sym.Ratio
 		}
+		ratioJpGemWin += float32(sym.WinJp.Number())
 		sym.WinAmount = int64(sym.Ratio*100) * int64(s.Bet().Chips) / 100
 		s.SpinList[sym.Index].WinAmount = sym.WinAmount
 		s.SpinList[sym.Index].Ratio = sym.Ratio
