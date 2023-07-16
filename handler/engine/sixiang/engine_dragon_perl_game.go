@@ -126,6 +126,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 					Row:    int32(row),
 					Col:    int32(col),
 					Index:  int32(idx),
+					Ratio:  1.0,
 				}
 			}
 		})
@@ -174,6 +175,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				Row:    int32(row),
 				Col:    int32(col),
 				Index:  int32(idxRandom),
+				Ratio:  1.0,
 			}
 			break
 		}
@@ -193,6 +195,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER:
 		// x2 money in gem
 		s.NumSpinLeft += 1
+		s.SpinSymbols[0].Ratio = 2.0
 		e.ratioGem *= 2
 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_WARRIOR:
 		s.NumSpinLeft += 1
@@ -209,6 +212,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				Row:    int32(row),
 				Col:    int32(col),
 				Index:  int32(idx),
+				Ratio:  1.0,
 			}
 			s.SpinSymbols = append(s.SpinSymbols, newSpin)
 			s.SpinList[idx] = spinSymbol
@@ -277,7 +281,9 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 			ratioJPBonus = float32(r)
 		}
 	}
+	// chip win by gem
 	slotDesk.GameReward.ChipsWin = int64(ratioJPBonus*ratioLuckyGemWin*100) * s.Bet().Chips / 100
+	// chip win by Jackpot
 	slotDesk.GameReward.ChipsWin += int64(ratioJpGemWin*100) * s.Bet().Chips / 100
 
 	// totalChipsWin := float64(ratioJPBonus) * float64(ratioWin*float64(s.Bet().Chips))

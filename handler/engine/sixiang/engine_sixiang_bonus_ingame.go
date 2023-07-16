@@ -80,6 +80,9 @@ func (e *sixiangBonusIngameEngine) Finish(matchState interface{}) (interface{}, 
 func (e *sixiangBonusIngameEngine) Loop(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.enginesGame[s.CurrentSiXiangGame]
+	if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY {
+		return s, nil
+	}
 	if engine == nil {
 		return matchState, entity.ErrorNoGameEngine
 	}
