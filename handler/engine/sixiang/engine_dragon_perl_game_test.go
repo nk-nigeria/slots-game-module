@@ -93,6 +93,7 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 		trackSymbolSpinExpect[api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM4] = 2
 		trackSymbolSpinExpect[api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_GEM_RANDOM5] = 1
 		e.NewGame(matchState)
+		matchState.Bet().Chips = 1000
 		for {
 			gemSpinRemain := 3
 			matchState.NumSpinLeft = gemSpinRemain
@@ -258,18 +259,53 @@ func Test_dragonPearlEngine_FinishWithJpSymbol(t *testing.T) {
 		e.NewGame(matchState)
 		e.Process(matchState)
 		matchState.SpinSymbols[0].Symbol = api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_JP_MEGA
-
 		matchState.SpinSymbols[0].WinJp = api.WinJackpot_WIN_JACKPOT_MEGA
+		idx := matchState.SpinSymbols[0].Index
+		matchState.SpinList[idx].Symbol = matchState.SpinSymbols[0].Symbol
+		matchState.SpinList[idx].WinJp = matchState.SpinSymbols[0].WinJp
 		res, err := e.Finish(matchState)
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
 		result, ok := res.(*api.SlotDesk)
 		assert.Equal(t, true, ok)
+		assert.Less(t, int64(0), result.GameReward.ChipsWin)
+		assert.Less(t, int64(0), result.GameReward.TotalChipsWinByGame)
+
 		assert.LessOrEqual(t, matchState.Bet().Chips*int64(pb.WinJackpot_WIN_JACKPOT_MEGA.Number()),
 			result.GameReward.ChipsWin)
 		assert.LessOrEqual(t, matchState.Bet().Chips*int64(pb.WinJackpot_WIN_JACKPOT_MEGA.Number()),
 			result.GameReward.TotalChipsWinByGame)
 
 	})
+}
 
+func Test_dragonPearlEngine_EyeTiger(t *testing.T) {
+	name := "Test_dragonPearlEngine_EyeTiger"
+	t.Run(name, func(t *testing.T) {
+		e := NewDragonPearlEngine(nil, nil)
+		matchState := entity.NewSlotsMathState(nil)
+		matchState.Bet().Chips = 1000
+		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
+		e.NewGame(matchState)
+		e.Process(matchState)
+		matchState.SpinSymbols[0].Symbol = api.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER
+		matchState.SpinSymbols[0].WinJp = api.WinJackpot_WIN_JACKPOT_UNSPECIFIED
+		idx := matchState.SpinSymbols[0].Index
+		matchState.SpinList[idx].Symbol = matchState.SpinSymbols[0].Symbol
+		matchState.SpinList[idx].WinJp = matchState.SpinSymbols[0].WinJp
+		assert.Less(t, int64(0), matchState.LastResult.GameReward.TotalChipsWinByGame)
+		lastResult := *matchState.LastResult
+		res, err := e.Finish(matchState)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		result, ok := res.(*api.SlotDesk)
+		t.Logf("prev ratio %v, current ratio %v",
+			lastResult.GameReward.TotalRatioWin,
+			result.GameReward.TotalRatioWin,
+		)
+		assert.Equal(t, true, ok)
+		assert.Less(t, int64(0), result.GameReward.TotalChipsWinByGame)
+		assert.LessOrEqual(t, int64(float64(lastResult.GameReward.TotalChipsWinByGame)*1.99),
+			result.GameReward.TotalChipsWinByGame)
+	})
 }
