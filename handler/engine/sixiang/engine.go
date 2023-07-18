@@ -156,6 +156,7 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 		slotDesk.SixiangGems = append(slotDesk.SixiangGems, gem)
 	}
 	slotDesk.WinJpHistory = s.WinJPHistory()
+	slotDesk.BetLevels = make([]int64, 0)
 	slotDesk.BetLevels = append(slotDesk.BetLevels, entity.BetLevels...)
 	return slotDesk, nil
 }

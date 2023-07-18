@@ -836,6 +836,7 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 		}
 	}
 	slotDesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
+	slotDesk.BetLevels = make([]int64, 0)
 	slotDesk.BetLevels = append(slotDesk.BetLevels, 100, 200, 500, 1000)
 	slotDesk.TsUnix = time.Now().Unix()
 	// sixiang bonus
