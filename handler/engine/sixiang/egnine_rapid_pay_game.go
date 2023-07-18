@@ -17,7 +17,9 @@ const (
 	// duration auto spin if no interract after first countdown
 	durationAutoSpinNoInteract = 10 * time.Second
 	// duration auto spin if no interract first
-	durationAutoSpin = 2 * time.Second
+	durationAutoSpin       = 2 * time.Second
+	delayAnimationNewGame  = 8 * time.Second // animation at begin game
+	delayAnimationSpinGame = 200 * time.Millisecond
 )
 
 type rapidPayEngine struct {
@@ -48,7 +50,8 @@ func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = defaultRapidPayGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	s.LastSpinTime = time.Now()
-	s.DurationTriggerAutoSpin = durationAutoSpin
+	s.DurationTriggerAutoSpin = durationAutoSpinNoInteract
+	s.DurationTriggerAutoSpin += delayAnimationNewGame //(8s animation in client)
 	// s.ResetCollection(s.CurrentSiXiangGame, int(s.Bet().Chips))
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.SpinList = make([]*pb.SpinSymbol, 0)
@@ -77,7 +80,7 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 	}
 	defer func() {
 		s.LastSpinTime = time.Now()
-		s.DurationTriggerAutoSpin = durationAutoSpin
+		s.DurationTriggerAutoSpin = durationAutoSpinNoInteract + delayAnimationSpinGame
 	}()
 	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
 	s.IsSpinChange = true
@@ -100,14 +103,17 @@ func (e *rapidPayEngine) Process(matchState interface{}) (interface{}, error) {
 		}
 	}
 	arrSpin := s.MatrixSpecial.List[indexStart : indexStart+s.MatrixSpecial.Cols]
-	var idRandom int
+	var idRandom int = int(s.Bet().Id)
 	var symRandom pb.SiXiangSymbol
-	for {
+	if idRandom <= 0 || idRandom >= len(arrSpin) {
 		idRandom = e.randomIntFn(0, len(arrSpin))
+	}
+	for {
 		symRandom = arrSpin[idRandom]
 		if symRandom != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 			break
 		}
+		idRandom = e.randomIntFn(0, len(arrSpin))
 	}
 	row, col := s.MatrixSpecial.RowCol(int(indexStart) + idRandom)
 	s.MatrixSpecial.Flip(int(indexStart) + idRandom)
@@ -180,11 +186,11 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 func (e *rapidPayEngine) Loop(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	delay := time.Since(s.LastSpinTime)
-	fmt.Printf("loop delay %d game %s", delay.Milliseconds(), s.CurrentSiXiangGame.String())
-	fmt.Println("sss")
+	fmt.Printf("loop delay %d game %s \r\n", delay.Milliseconds(), s.CurrentSiXiangGame.String())
+	// fmt.Println("sss")
 	if delay > s.DurationTriggerAutoSpin {
 		e.Process(s)
-		s.DurationTriggerAutoSpin = durationAutoSpinNoInteract
+		s.DurationTriggerAutoSpin = durationAutoSpin + delayAnimationSpinGame
 		return e.Finish(s)
 	}
 	return nil, nil

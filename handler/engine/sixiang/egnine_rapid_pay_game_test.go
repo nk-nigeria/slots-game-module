@@ -81,6 +81,26 @@ func Test_rapidPayEngine_Process(t *testing.T) {
 	}
 }
 
+func Test_rapidPayEngine_ProcessPlayGame(t *testing.T) {
+	name := "Test_rapidPayEngine_Process"
+	s := entity.NewSlotsMathState(nil)
+	s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
+	engine := NewRapidPayEngine(nil, nil)
+	engine.NewGame(s)
+	s.Bet().Chips = 1000
+	t.Run(name, func(t *testing.T) {
+		for {
+			// s.Bet().Id = int32(engine.Random(0, 4))
+			s.Bet().Id = 4
+			res, err := engine.Process(s)
+			if err != nil {
+				break
+			}
+			assert.NotNil(t, res)
+		}
+	})
+}
+
 func Test_rapidPayEngine_Finish(t *testing.T) {
 
 	type test struct {

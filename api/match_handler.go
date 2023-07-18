@@ -21,7 +21,7 @@ import (
 var _ runtime.Match = &MatchHandler{}
 
 const (
-	tickRate = 2
+	tickRate = 4
 )
 
 type MatchHandler struct {

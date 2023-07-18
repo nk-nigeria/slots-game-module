@@ -183,6 +183,27 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	if spinSymbol == nil {
 		return s, entity.ErrorInternal
 	}
+	// cheat alway drop eye tiger
+	// if entity.IsSixiangEyeSymbol(spinSymbol.Symbol) &&
+	// 	spinSymbol.Symbol != pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER {
+	// 	// check index eye
+	// 	idxTiger := -1
+	// 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	// 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER {
+	// 			idxTiger = idx
+	// 		}
+	// 	})
+	// 	if idxTiger == -1 {
+	// 		// in matrix init not contain eye tiger
+	// 		spinSymbol.Symbol = pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER
+	// 		s.MatrixSpecial.List[spinSymbol.Index] = spinSymbol.Symbol
+	// 	} else if !s.MatrixSpecial.IsFlip(idxTiger) {
+	// 		// swap to another eye
+	// 		s.MatrixSpecial.List[idxTiger] = spinSymbol.Symbol
+	// 		spinSymbol.Symbol = pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER
+	// 		s.MatrixSpecial.List[spinSymbol.Index] = spinSymbol.Symbol
+	// 	}
+	// }
 	s.MatrixSpecial.Flip(int(spinSymbol.GetIndex()))
 	s.SpinSymbols = []*pb.SpinSymbol{spinSymbol}
 	s.NumSpinLeft--
@@ -259,16 +280,20 @@ func (e *dragonPearlEngine) Finish(matchState interface{}) (interface{}, error) 
 		slotDesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 	})
 	if s.SpinSymbols[0].Symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_DRAGONPEARL_EYE_TIGER {
-		e.ratioGem *= 2
+		e.ratioGem = 2
+		// update old result
+		for _, sym := range s.SpinList {
+			sym.Ratio, sym.WinAmount = e.calcRewardBySymbol(sym, s.Bet().Chips)
+		}
 	}
 	for _, sym := range s.SpinSymbols {
 		sym.Ratio, sym.WinAmount = e.calcRewardBySymbol(sym, s.Bet().Chips)
 		slotDesk.GameReward.ChipsWin += sym.WinAmount
 		slotDesk.GameReward.RatioWin += sym.Ratio
+		s.SpinList[sym.Index].Ratio = sym.Ratio
+		s.SpinList[sym.Index].WinAmount = sym.WinAmount
 	}
-
 	for _, sym := range s.SpinList {
-		sym.Ratio, sym.WinAmount = e.calcRewardBySymbol(sym, s.Bet().Chips)
 		slotDesk.GameReward.TotalChipsWinByGame += sym.WinAmount
 		slotDesk.GameReward.TotalRatioWin += sym.Ratio
 	}
