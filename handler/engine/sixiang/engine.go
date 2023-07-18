@@ -2,6 +2,7 @@ package sixiang
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
@@ -65,6 +66,7 @@ func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
 		return nil, status.Error(codes.Unimplemented, "not implement new game "+s.CurrentSiXiangGame.String())
 	}
 	s.LastResult = nil
+	s.LastSpinTime = time.Now()
 	engine.NewGame(s)
 	// if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL {
 	// 	return s, nil
