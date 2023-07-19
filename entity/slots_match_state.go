@@ -297,10 +297,19 @@ func (s *SlotsMatchState) PriceBuySixiangGem() (int64, error) {
 }
 
 func (s *SlotsMatchState) WinJPHistory() *pb.JackpotHistory {
-	s.winJPHistory.Minor.Chips = s.winJPHistory.Minor.Ratio * s.bet.Chips
-	s.winJPHistory.Major.Chips = s.winJPHistory.Major.Ratio * s.bet.Chips
-	s.winJPHistory.Mega.Chips = s.winJPHistory.Mega.Ratio * s.bet.Chips
-	s.winJPHistory.Grand.Chips = s.winJPHistory.Grand.Ratio * s.bet.Chips
+	ratio := int64(1)
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
+		ratio = 4
+	}
+	s.winJPHistory.Minor.Chips = s.winJPHistory.Minor.Ratio * s.bet.Chips * ratio
+	s.winJPHistory.Major.Chips = s.winJPHistory.Major.Ratio * s.bet.Chips * ratio
+	s.winJPHistory.Mega.Chips = s.winJPHistory.Mega.Ratio * s.bet.Chips * ratio
+	s.winJPHistory.Grand.Chips = s.winJPHistory.Grand.Ratio * s.bet.Chips * ratio
+
 	return s.winJPHistory
 }
 

@@ -19,10 +19,10 @@ func NewSixiangBonusInGameEngine(
 		ratioBonus:  ratioBonus,
 		enginesGame: make(map[pb.SiXiangGame]lib.Engine),
 	}
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL] = NewDragonPearlEngine(nil, nil)
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW] = NewLuckyDrawEngine(nil, nil)
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK] = NewGoldPickEngine(nil, nil)
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY] = NewRapidPayEngine(nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL] = NewDragonPearlEngine(ratioBonus, nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW] = NewLuckyDrawEngine(engine.ratioBonus, nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK] = NewGoldPickEngine(engine.ratioBonus, nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY] = NewRapidPayEngine(engine.ratioBonus, nil, nil)
 
 	return &engine
 }
@@ -102,12 +102,14 @@ func (e *sixiangBonusIngameEngine) Loop(matchState interface{}) (interface{}, er
 }
 
 func (e *sixiangBonusIngameEngine) processResult(s *entity.SlotsMatchState, slotDesk *pb.SlotDesk) *pb.SlotDesk {
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, -slotDesk.GameReward.ChipsWin)
-	slotDesk.GameReward.ChipsWin *= int64(e.ratioBonus)
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
-	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
+	// s.ChipStat.AddChipWin(s.CurrentSiXiangGame, -slotDesk.GameReward.ChipsWin)
+
+	// slotDesk.GameReward.ChipsWin *= int64(e.ratioBonus)
+	// // s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
+	// slotDesk.GameReward.TotalChipsWinByGame *= int64(e.ratioBonus)
 	slotDesk.IsInSixiangBonus = true
-	slotDesk.SixiangGems = make([]pb.SiXiangGame, 0)
+	// slotDesk.SixiangGems = make([]pb.SiXiangGame, 0)
+	// slotDesk.GameReward.RatioBonus = float32(e.ratioBonus)
 	s.ClearGameEyePlayed()
 	s.LastResult = slotDesk
 	return slotDesk

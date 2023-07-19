@@ -41,13 +41,13 @@ func Test_sixiangBonusIngameEngine_NewGame(t *testing.T) {
 		var expectEngine lib.Engine
 		switch game {
 		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL:
-			expectEngine = NewDragonPearlEngine(nil, nil)
+			expectEngine = NewDragonPearlEngine(4, nil, nil)
 		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW:
-			expectEngine = NewLuckyDrawEngine(nil, nil)
+			expectEngine = NewLuckyDrawEngine(4, nil, nil)
 		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK:
-			expectEngine = NewGoldPickEngine(nil, nil)
+			expectEngine = NewGoldPickEngine(4, nil, nil)
 		case pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
-			expectEngine = NewRapidPayEngine(nil, nil)
+			expectEngine = NewRapidPayEngine(4, nil, nil)
 		}
 		tests = append(tests, test{
 			name: "Test_sixiangBonusIngameEngine_NewGame_" + game.String(),
@@ -100,13 +100,13 @@ func Test_sixiangBonusIngameEngine_Process(t *testing.T) {
 		var expectEngine lib.Engine
 		switch game {
 		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL:
-			expectEngine = NewDragonPearlEngine(nil, nil)
+			expectEngine = NewDragonPearlEngine(4, nil, nil)
 		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW:
-			expectEngine = NewLuckyDrawEngine(nil, nil)
+			expectEngine = NewLuckyDrawEngine(4, nil, nil)
 		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK:
-			expectEngine = NewGoldPickEngine(nil, nil)
+			expectEngine = NewGoldPickEngine(4, nil, nil)
 		case api.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY:
-			expectEngine = NewRapidPayEngine(nil, nil)
+			expectEngine = NewRapidPayEngine(4, nil, nil)
 		}
 		tests = append(tests, test{
 			name: "Test_sixiangBonusIngameEngine_NewGame_" + game.String(),

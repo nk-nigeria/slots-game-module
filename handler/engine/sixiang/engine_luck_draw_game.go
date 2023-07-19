@@ -11,12 +11,15 @@ import (
 var _ lib.Engine = &luckyDrawEngine{}
 
 type luckyDrawEngine struct {
-	randomIntFn   func(min, max int) int
-	randomFloat64 func(min, max float64) float64
+	randomIntFn         func(min, max int) int
+	randomFloat64       func(min, max float64) float64
+	ratioInSixiangBonus int
 }
 
-func NewLuckyDrawEngine(randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
-	engine := luckyDrawEngine{}
+func NewLuckyDrawEngine(ratioInSixiangBonus int, randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
+	engine := luckyDrawEngine{
+		ratioInSixiangBonus: ratioInSixiangBonus,
+	}
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
@@ -118,18 +121,12 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 			Cols:  int32(matrix.Cols),
 		},
 		GameReward: &pb.GameReward{},
+		ChipsMcb:   s.Bet().Chips,
 	}
 	if !s.IsSpinChange {
 		return s.LastResult, entity.ErrorSpinNotChange
 	}
 	s.IsSpinChange = false
-	// for id, symbol := range matrix.List {
-	// 	if s.MatrixSpecial.IsFlip(id) {
-	// 		slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, symbol)
-	// 	} else {
-	// 		slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)
-	// 	}
-	// }
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if s.MatrixSpecial.IsFlip(idx) {
 			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, symbol)
@@ -137,19 +134,24 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 			slotDesk.Matrix.Lists = append(slotDesk.Matrix.Lists, pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED)
 		}
 	})
-	ratioWin := float32(0)
 	for _, spin := range s.SpinSymbols {
 		sym := spin.Symbol
 		// ignore jp symbol, 3 symbol jp -> end game and + chip win of this jp
 		if sym < pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1 {
 			continue
 		}
-		spin.Ratio = float32(e.randomFloat64(float64(entity.ListSymbolLuckyDraw[sym].Value.Min), float64(entity.ListSymbolLuckyDraw[sym].Value.Max)))
-		ratioWin += spin.Ratio
+		ratio, chips := e.calcRewardBySymbol(spin, s.Bet().Chips)
+		spin.Ratio = ratio
+		spin.WinAmount = chips
 		s.SpinList[spin.Index].Ratio = spin.Ratio
-		s.SpinList[spin.Index].WinAmount = int64(spin.Ratio*10) * s.Bet().GetChips() / 10
+		s.SpinList[spin.Index].WinAmount = spin.WinAmount
+		slotDesk.GameReward.ChipsWin += spin.WinAmount
+		slotDesk.GameReward.RatioWin += spin.Ratio
 	}
-	slotDesk.GameReward.ChipsWin = int64(ratioWin*10) * s.Bet().GetChips() / 10
+	for _, spin := range s.SpinList {
+		// _, chips := e.calcRewardBySymbol(spin, s.Bet().Chips)
+		slotDesk.GameReward.TotalChipsWinByGame += spin.WinAmount
+	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
@@ -158,14 +160,12 @@ func (e *luckyDrawEngine) Finish(matchState interface{}) (interface{}, error) {
 		slotDesk.IsFinishGame = true
 		symbolWin := s.SpinSymbols[0].Symbol
 		slotDesk.BigWin, slotDesk.WinJp = entity.LuckySymbolToReward(symbolWin)
-		slotDesk.GameReward.ChipsWin += int64(slotDesk.WinJp) * s.Bet().Chips
+		chipsJpWin := int64(slotDesk.WinJp) * s.Bet().Chips * int64(e.ratioInSixiangBonus)
+		slotDesk.GameReward.ChipsWin += chipsJpWin
+		slotDesk.GameReward.TotalChipsWinByGame += chipsJpWin
 	}
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.SpinSymbols = s.SpinSymbols
-	slotDesk.ChipsMcb = s.Bet().Chips
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
-	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
-	slotDesk.GameReward.RatioWin = ratioWin
 	slotDesk.Matrix.SpinLists = s.SpinList
 	if slotDesk.IsFinishGame {
 		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW)
@@ -210,4 +210,20 @@ func (e *luckyDrawEngine) PrintMatrix(matrix entity.SlotMatrix) {
 		fmt.Printf("%8d", symbol.Number())
 	})
 	fmt.Println("")
+}
+
+// return ratio, chip
+func (e *luckyDrawEngine) calcRewardBySymbol(spin *pb.SpinSymbol, mcb int64) (float32, int64) {
+	sym := spin.Symbol
+	if sym < pb.SiXiangSymbol_SI_XIANG_SYMBOL_LUCKYDRAW_GOLD_1 {
+		return 0, 0
+	}
+	ratio := float64(spin.Ratio)
+	if ratio <= 0 {
+		ratio = e.randomFloat64(float64(entity.ListSymbolLuckyDraw[sym].Value.Min),
+			float64(entity.ListSymbolLuckyDraw[sym].Value.Max))
+	}
+	ratio *= float64(e.ratioInSixiangBonus)
+	chips := int64(ratio*100) * mcb / 100
+	return float32(ratio), chips
 }

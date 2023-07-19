@@ -45,7 +45,7 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := NewDragonPearlEngine(nil, nil)
+			e := NewDragonPearlEngine(4, nil, nil)
 			got, err := e.NewGame(tt.args.matchState)
 			assert.NotNil(t, got)
 			assert.NoError(t, err)
@@ -79,7 +79,7 @@ func Test_dragonPearlEngine_Process(t *testing.T) {
 	trackSymbolSpin := make(map[api.SiXiangSymbol]int)
 	t.Run(name, func(t *testing.T) {
 
-		e := NewDragonPearlEngine(nil, nil)
+		e := NewDragonPearlEngine(4, nil, nil)
 		matchState := entity.NewSlotsMathState(nil)
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
 		trackSymbolSpinExpect := make(map[api.SiXiangSymbol]int)
@@ -141,9 +141,10 @@ func Test_dragonPearlEngine_Process_CheckMinMaxEyeFlip(t *testing.T) {
 	name := "Test_dragonPearlEngine_Process_CheckMinMaxEyeFlip"
 	t.Run(name, func(t *testing.T) {
 		for i := 0; i < 10000; i++ {
-			e := NewDragonPearlEngine(nil, nil)
+			e := NewDragonPearlEngine(4, nil, nil)
 			matchState := entity.NewSlotsMathState(nil)
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
+			matchState.Bet().Chips = 1000
 			e.NewGame(matchState)
 			for {
 				e.Process(matchState)
@@ -175,7 +176,7 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 		want    want
 		wantErr bool
 	}
-	engine := NewDragonPearlEngine(func(min, max int) int { return min }, func(min, max float64) float64 { return min })
+	engine := NewDragonPearlEngine(4, func(min, max int) int { return min }, func(min, max float64) float64 { return min })
 
 	tests := make([]test, 0)
 	// test gem random
@@ -252,7 +253,7 @@ func Test_dragonPearlEngine_Finish(t *testing.T) {
 func Test_dragonPearlEngine_FinishWithJpSymbol(t *testing.T) {
 	name := "Test_dragonPearlEngine_FinishWithJpSymbol"
 	t.Run(name, func(t *testing.T) {
-		e := NewDragonPearlEngine(nil, nil)
+		e := NewDragonPearlEngine(4, nil, nil)
 		matchState := entity.NewSlotsMathState(nil)
 		matchState.Bet().Chips = 1000
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL
@@ -282,7 +283,7 @@ func Test_dragonPearlEngine_FinishWithJpSymbol(t *testing.T) {
 func Test_dragonPearlEngine_EyeTiger(t *testing.T) {
 	name := "Test_dragonPearlEngine_EyeTiger"
 	t.Run(name, func(t *testing.T) {
-		e := NewDragonPearlEngine(nil, nil)
+		e := NewDragonPearlEngine(4, nil, nil)
 		matchState := entity.NewSlotsMathState(nil)
 		matchState.Bet().Chips = 1000
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL

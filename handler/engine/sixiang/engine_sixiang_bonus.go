@@ -90,7 +90,6 @@ func (e *sixiangBonusEngine) Finish(matchState interface{}) (interface{}, error)
 	slotDesk.IsFinishGame = true
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	s.LastResult = slotDesk
-
 	return slotDesk, nil
 }
 

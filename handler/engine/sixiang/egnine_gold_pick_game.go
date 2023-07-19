@@ -9,16 +9,19 @@ import (
 var _ lib.Engine = &goldPickEngine{}
 
 type goldPickEngine struct {
-	randomIntFn   func(min, max int) int
-	randomFloat64 func(min, max float64) float64
+	randomIntFn         func(min, max int) int
+	randomFloat64       func(min, max float64) float64
+	ratioInSixiangBonus int
 }
 
 const (
 	defaultGoldPickGemSpin = 20
 )
 
-func NewGoldPickEngine(randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
-	engine := goldPickEngine{}
+func NewGoldPickEngine(ratioInSixiangBonus int, randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
+	engine := goldPickEngine{
+		ratioInSixiangBonus: ratioInSixiangBonus,
+	}
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
@@ -115,34 +118,28 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 			slotDesk.Matrix.Lists[id] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 		}
 	}
-
-	ratioWin := float32(0)
 	for _, spin := range s.SpinSymbols {
 		sym := spin.Symbol
-		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_TRYAGAIN {
-			continue
-		}
 		if sym >= pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_JP_MINOR {
 			// s.AddCollectionSymbol(s.CurrentSiXiangGame, int(s.Bet().Chips), sym)
 			_, s.WinJp = entity.GoldPickSymbolToReward(sym)
 		}
-		spin.Ratio = float32(e.randomFloat64(
-			float64(entity.ListSymbolGoldPick[sym].Value.Min),
-			float64(entity.ListSymbolGoldPick[sym].Value.Max),
-		))
-		ratioWin += spin.Ratio
+		ratio, chips := e.calcRewardBySymbol(spin, s.Bet().Chips)
+		spin.Ratio = ratio
+		spin.WinAmount = chips
 		s.SpinList[spin.Index].Ratio = spin.Ratio
-		s.SpinList[spin.Index].WinAmount = int64(slotDesk.ChipsMcb) * int64(spin.Ratio*100) / 100
+		s.SpinList[spin.Index].WinAmount = chips
+		slotDesk.GameReward.ChipsWin += chips
 	}
-	slotDesk.GameReward.ChipsWin = int64(ratioWin*100) * int64(slotDesk.ChipsMcb) / 100
+	for _, spin := range s.SpinList {
+		// _, chips := e.calcRewardBySymbol(spin, s.Bet().Chips)
+		slotDesk.GameReward.TotalChipsWinByGame += spin.WinAmount
+	}
 	slotDesk.SpinSymbols = s.SpinSymbols
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
+	// s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
-	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
-	// slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, int(s.Bet().Chips))
-	slotDesk.GameReward.RatioWin = ratioWin
 	if slotDesk.IsFinishGame {
 		s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK)
 	}
@@ -154,4 +151,22 @@ func (e *goldPickEngine) Finish(matchState interface{}) (interface{}, error) {
 
 func (e *goldPickEngine) Loop(s interface{}) (interface{}, error) {
 	return s, nil
+}
+
+// return ratio, chip
+func (e *goldPickEngine) calcRewardBySymbol(spin *pb.SpinSymbol, mcb int64) (float32, int64) {
+	sym := spin.Symbol
+	if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_GOLD_PICK_TRYAGAIN {
+		return 0, 0
+	}
+	ratio := float64(spin.Ratio)
+	if ratio <= 0 {
+		ratio = e.randomFloat64(
+			float64(entity.ListSymbolGoldPick[sym].Value.Min),
+			float64(entity.ListSymbolGoldPick[sym].Value.Max),
+		)
+	}
+	ratio *= float64(e.ratioInSixiangBonus)
+	chips := ratio * 100 * float64(mcb) / 100
+	return float32(ratio), int64(chips)
 }

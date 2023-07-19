@@ -1,7 +1,6 @@
 package sixiang
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -23,12 +22,15 @@ const (
 )
 
 type rapidPayEngine struct {
-	randomIntFn   func(min, max int) int
-	randomFloat64 func(min, max float64) float64
+	randomIntFn         func(min, max int) int
+	randomFloat64       func(min, max float64) float64
+	ratioInSixiangBonus int
 }
 
-func NewRapidPayEngine(randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
-	engine := rapidPayEngine{}
+func NewRapidPayEngine(ratioInSixiangBonus int, randomIntFn func(min, max int) int, randomFloat64 func(min, max float64) float64) lib.Engine {
+	engine := rapidPayEngine{
+		ratioInSixiangBonus: ratioInSixiangBonus,
+	}
 	if randomIntFn != nil {
 		engine.randomIntFn = randomIntFn
 	} else {
@@ -159,9 +161,10 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 			}
 		}
 	}
+	ratioTotal *= float64(e.ratioInSixiangBonus)
 	ratio := float64(defaultAddRatioMcb)
 	for _, sym := range s.SpinSymbols {
-		sym.Ratio = entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min
+		sym.Ratio = entity.ListSymbolRapidPay[sym.GetSymbol()].Value.Min * float32(e.ratioInSixiangBonus)
 		s.SpinList[sym.Index].Ratio = sym.Ratio
 		s.SpinList[sym.Index].WinAmount = int64(sym.Ratio*10) * int64(slotDesk.ChipsMcb) / 10
 		ratio *= float64(sym.Ratio)
@@ -186,7 +189,7 @@ func (e *rapidPayEngine) Finish(matchState interface{}) (interface{}, error) {
 func (e *rapidPayEngine) Loop(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	delay := time.Since(s.LastSpinTime)
-	fmt.Printf("loop delay %d game %s \r\n", delay.Milliseconds(), s.CurrentSiXiangGame.String())
+	// fmt.Printf("loop delay %d game %s \r\n", delay.Milliseconds(), s.CurrentSiXiangGame.String())
 	// fmt.Println("sss")
 	if delay > s.DurationTriggerAutoSpin {
 		e.Process(s)

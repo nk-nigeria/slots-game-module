@@ -11,7 +11,7 @@ import (
 func Test_rapidPayEngine_NewGame(t *testing.T) {
 	name := "Test_rapidPayEngine_NewGame"
 	t.Run(name, func(t *testing.T) {
-		e := NewRapidPayEngine(nil, nil)
+		e := NewRapidPayEngine(4, nil, nil)
 		matchState := entity.NewSlotsMathState(nil)
 		got, err := e.NewGame(matchState)
 		assert.NotNil(t, got)
@@ -40,7 +40,7 @@ func Test_rapidPayEngine_Process(t *testing.T) {
 		want want
 	}
 
-	engine := NewRapidPayEngine(
+	engine := NewRapidPayEngine(4,
 		func(min, max int) int { return min },
 		func(min, max float64) float64 { return min },
 	)
@@ -85,7 +85,7 @@ func Test_rapidPayEngine_ProcessPlayGame(t *testing.T) {
 	name := "Test_rapidPayEngine_Process"
 	s := entity.NewSlotsMathState(nil)
 	s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_RAPIDPAY
-	engine := NewRapidPayEngine(nil, nil)
+	engine := NewRapidPayEngine(4, nil, nil)
 	engine.NewGame(s)
 	s.Bet().Chips = 1000
 	t.Run(name, func(t *testing.T) {
@@ -109,7 +109,7 @@ func Test_rapidPayEngine_Finish(t *testing.T) {
 		want    *api.SlotDesk
 		wantErr bool
 	}
-	engine := NewRapidPayEngine(
+	engine := NewRapidPayEngine(4,
 		func(min, max int) int { return min },
 		func(min, max float64) float64 { return min },
 	)

@@ -466,6 +466,9 @@ func (p *processor) getInfoTable(
 			WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
 			Error("get profile user failed")
 	} else {
+		if s.LastResult != nil {
+			slotdesk.GameReward = s.LastResult.GameReward
+		}
 		gameReward := slotdesk.GameReward
 		if gameReward == nil {
 			gameReward = &pb.GameReward{}
