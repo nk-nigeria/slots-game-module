@@ -19,10 +19,10 @@ func NewSixiangBonusInGameEngine(
 		ratioBonus:  ratioBonus,
 		enginesGame: make(map[pb.SiXiangGame]lib.Engine),
 	}
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL] = NewDragonPearlEngine(ratioBonus, nil, nil)
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW] = NewLuckyDrawEngine(engine.ratioBonus, nil, nil)
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK] = NewGoldPickEngine(engine.ratioBonus, nil, nil)
-	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY] = NewRapidPayEngine(engine.ratioBonus, nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL] = NewDragonPearlEngine(1, nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW] = NewLuckyDrawEngine(1, nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK] = NewGoldPickEngine(1, nil, nil)
+	engine.enginesGame[pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY] = NewRapidPayEngine(1, nil, nil)
 
 	return &engine
 }
@@ -36,6 +36,10 @@ func (e *sixiangBonusIngameEngine) NewGame(matchState interface{}) (interface{},
 	_, err := engine.NewGame(matchState)
 	if err != nil {
 		return s, err
+	}
+	if s.LastResult != nil && s.LastResult.GameReward != nil {
+		s.LastResult.GameReward.TotalChipsWinByGame *= int64(e.ratioBonus)
+		s.LastResult.GameReward.ChipsWin *= int64(e.ratioBonus)
 	}
 	// s.CurrentSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_BONUS
 	// s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
@@ -107,6 +111,8 @@ func (e *sixiangBonusIngameEngine) processResult(s *entity.SlotsMatchState, slot
 	// slotDesk.GameReward.ChipsWin *= int64(e.ratioBonus)
 	// // s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
 	// slotDesk.GameReward.TotalChipsWinByGame *= int64(e.ratioBonus)
+	slotDesk.GameReward.ChipsWin *= int64(e.ratioBonus)
+	slotDesk.GameReward.TotalChipsWinByGame *= int64(e.ratioBonus)
 	slotDesk.IsInSixiangBonus = true
 	// slotDesk.SixiangGems = make([]pb.SiXiangGame, 0)
 	// slotDesk.GameReward.RatioBonus = float32(e.ratioBonus)
