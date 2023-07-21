@@ -270,6 +270,10 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 		sym.RatioBonus = 0
 		s.SpinList[sym.GetIndex()].Ratio = sym.Ratio
 		s.SpinList[sym.GetIndex()].RatioBonus = float32(e.ratioGem)
+		s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
+		s.SpinList[index] = spinSymbol
+	default:
+		s.NumSpinLeft++
 	}
 	return s, nil
 }
