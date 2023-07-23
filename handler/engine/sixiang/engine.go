@@ -136,9 +136,8 @@ func (e *slotsEngine) Info(matchState interface{}) (interface{}, error) {
 		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
 		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
-		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
-		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
-		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK:
+		matrix = s.MatrixSpecial.ToPbSlotMatrix()
 		for idx, symbol := range s.MatrixSpecial.List {
 			if s.MatrixSpecial.IsFlip(idx) {
 				matrix.Lists[idx] = symbol
@@ -150,6 +149,7 @@ func (e *slotsEngine) Info(matchState interface{}) (interface{}, error) {
 		matrix = s.MatrixSpecial.ToPbSlotMatrix()
 		spreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	}
+	matrix.SpinLists = s.SpinList
 	slotdesk := &pb.SlotDesk{
 		Matrix:             matrix,
 		SpreadMatrix:       spreadMatrix,
@@ -157,7 +157,7 @@ func (e *slotsEngine) Info(matchState interface{}) (interface{}, error) {
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 		TsUnix:             time.Now().Unix(),
-		SpinSymbols:        s.SpinList,
+		SpinSymbols:        s.SpinSymbols,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		InfoBet:            s.Bet(),
 		WinJpHistory:       s.WinJPHistory(),

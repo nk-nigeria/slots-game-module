@@ -110,6 +110,7 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 		matrix = s.MatrixSpecial.ToPbSlotMatrix()
 		spreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
 	}
+	matrix.SpinLists = s.SpinList
 	slotdesk := &pb.SlotDesk{
 		Matrix:             matrix,
 		SpreadMatrix:       spreadMatrix,
@@ -117,7 +118,7 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 		TsUnix:             time.Now().Unix(),
-		SpinSymbols:        s.SpinList,
+		SpinSymbols:        s.SpinSymbols,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		InfoBet:            s.Bet(),
 		WinJpHistory:       s.WinJPHistory(),

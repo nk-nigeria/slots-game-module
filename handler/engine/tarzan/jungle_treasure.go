@@ -161,6 +161,7 @@ func (e *jungleTreasure) Finish(matchState interface{}) (interface{}, error) {
 	// reset letter
 	if slotDesk.IsFinishGame {
 		s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
+		s.SaveGameJson()
 	}
 	slotDesk.Matrix.SpinLists = s.SpinList
 	return slotDesk, nil

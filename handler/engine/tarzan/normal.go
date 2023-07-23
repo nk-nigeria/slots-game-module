@@ -91,12 +91,19 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 		}
 	}
 	// end set custom game
+	newLetterSymbolAppear := false
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.TarzanLetterSymbol[symbol] {
-			// s.AddCollectionSymbol(s.CurrentSiXiangGame, 0, symbol)
+			if s.LetterSymbol[symbol] {
+				newLetterSymbolAppear = true
+			}
 			s.LetterSymbol[symbol] = true
 		}
 	})
+	// save if spin new letter symbol
+	if newLetterSymbolAppear {
+		s.SaveGameJson()
+	}
 	s.PerlGreenForest++
 	s.PerlGreenForestChips += s.Bet().GetChips() / 2
 	return matchState, nil

@@ -168,6 +168,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 					for eyeSymbol, inList := range mapEye {
 						if inList == 1 {
 							s.MatrixSpecial.List[idxRandom] = eyeSymbol
+							symbol = eyeSymbol
 							break
 						}
 					}

@@ -592,13 +592,14 @@ func (p *processor) broadcastMessage(logger runtime.Logger,
 	if opCode == int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE) {
 		return nil
 	}
-	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
+	// logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
 	if err != nil {
 		logger.
 			WithField("message", string(dataJson)).
 			Error("Error BroadcastMessage")
 		return err
 	}
+	logger.Info("broadcast message opcode %v, to %v", opCode, presences)
 	return nil
 }
 
