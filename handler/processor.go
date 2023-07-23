@@ -729,7 +729,6 @@ func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtim
 	if err != nil {
 		return err
 	}
-	// chipBet := chipRequired
 	if wallet.Chips < chipRequired {
 		return entity.ErrorChipNotEnough
 	}

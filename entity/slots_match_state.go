@@ -98,7 +98,6 @@ type SlotsMatchState struct {
 	LastResult              *pb.SlotDesk
 	Rtp                     lib.Rtp
 	NotDropEyeSymbol        bool
-	Wallet                  *Wallet
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -178,13 +177,7 @@ func (s *SlotsMatchState) InitNewRound() {
 	// s.WildMatrix = SlotMatrix{}
 }
 func (s *SlotsMatchState) IsAllowSpin() bool {
-	if !s.allowSpin {
-		return false
-	}
-	if s.Wallet == nil {
-		return s.allowSpin
-	}
-	return s.Wallet.Chips >= s.bet.Chips
+	return s.allowSpin
 }
 
 func (s *SlotsMatchState) SetAllowSpin(val bool) {
