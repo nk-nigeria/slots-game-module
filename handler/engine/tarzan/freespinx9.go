@@ -52,10 +52,8 @@ func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
 // Finish implements lib.Engine
 func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	// prevChipWin := s.ChipWinByGame[s.CurrentSiXiangGame]
-	prevChipWin := s.ChipStat.ChipWin(s.CurrentSiXiangGame)
-	// prevLineWin := s.LineWinByGame[s.CurrentSiXiangGame]
-	prevLineWin := s.ChipStat.LineWin(s.CurrentSiXiangGame)
+	// prevChipWin := s.ChipStat.ChipWin(s.CurrentSiXiangGame)
+	// prevLineWin := s.ChipStat.LineWin(s.CurrentSiXiangGame)
 	result, err := e.normal.Finish(matchState)
 	if err != nil {
 		return result, err
@@ -85,8 +83,8 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, prevChipWin)
-	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, prevLineWin)
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, slotDesk.GameReward.LineWin)
 	// Finish when gem spin = 0
 	// tiền thưởng = (tổng số tiền thắng trong 9 Freespin) x (hệ số nhân bonus ở trên)
 	slotDesk.GameReward.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
@@ -103,4 +101,8 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 
 func (e *freespinx9) Loop(s interface{}) (interface{}, error) {
 	return s, nil
+}
+
+func (e *freespinx9) Info(matchState interface{}) (interface{}, error) {
+	return nil, nil
 }

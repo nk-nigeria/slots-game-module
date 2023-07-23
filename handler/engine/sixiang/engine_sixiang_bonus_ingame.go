@@ -105,6 +105,10 @@ func (e *sixiangBonusIngameEngine) Loop(matchState interface{}) (interface{}, er
 	return slotDesk, nil
 }
 
+func (e *sixiangBonusIngameEngine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 func (e *sixiangBonusIngameEngine) processResult(s *entity.SlotsMatchState, slotDesk *pb.SlotDesk) *pb.SlotDesk {
 	// s.ChipStat.AddChipWin(s.CurrentSiXiangGame, -slotDesk.GameReward.ChipsWin)
 

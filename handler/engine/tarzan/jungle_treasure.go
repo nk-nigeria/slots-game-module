@@ -174,3 +174,7 @@ func (e *jungleTreasure) Random(min int, max int) int {
 func (e *jungleTreasure) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
+
+func (e *jungleTreasure) Info(matchState interface{}) (interface{}, error) {
+	return nil, nil
+}

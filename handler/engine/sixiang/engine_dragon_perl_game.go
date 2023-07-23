@@ -360,6 +360,10 @@ func (e *dragonPearlEngine) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
 
+func (e *dragonPearlEngine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 // return ratio, chip
 // func (e *dragonPearlEngine) calcRewardBySymbol(sym *pb.SpinSymbol, mcb int64) (float32, int64) {
 // 	symbol := sym.Symbol

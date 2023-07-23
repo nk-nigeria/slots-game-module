@@ -68,56 +68,6 @@ func (e *slotsEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s.LastResult = nil
 	s.LastSpinTime = time.Now()
 	engine.NewGame(s)
-	// if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL {
-	// 	return s, nil
-	// }
-	// slotdesk := &pb.SlotDesk{
-	// 	CurrentSixiangGame: s.CurrentSiXiangGame,
-	// 	NextSixiangGame:    s.NextSiXiangGame,
-	// 	InfoBet:            s.Bet(),
-	// 	ChipsMcb:           s.Bet().Chips,
-	// 	NumSpinLeft:        int64(s.NumSpinLeft),
-	// 	Matrix:             &pb.SlotMatrix{},
-	// 	SpreadMatrix:       &pb.SlotMatrix{},
-	// }
-	// slotdesk.BetLevels = append(slotdesk.BetLevels, entity.BetLevels...)
-
-	// switch s.CurrentSiXiangGame {
-	// case pb.SiXiangGame_SI_XIANG_GAME_NORMAL, pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
-
-	// 	matrix := s.Matrix
-	// 	slotdesk.Matrix = matrix.ToPbSlotMatrix()
-	// 	slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
-
-	// case
-	// 	// pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
-	// 	// pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
-	// 	pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
-	// 	matrix := s.MatrixSpecial
-	// 	slotdesk.Matrix = matrix.ToPbSlotMatrix()
-	// 	for idx, symbol := range matrix.List {
-	// 		if matrix.TrackFlip[idx] {
-	// 			slotdesk.Matrix.Lists[idx] = symbol
-	// 		} else {
-	// 			slotdesk.Matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
-	// 		}
-	// 	}
-	// default:
-	// 	matrix := s.MatrixSpecial
-	// 	slotdesk.Matrix = matrix.ToPbSlotMatrix()
-	// 	slotdesk.SpreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
-
-	// }
-	// slotdesk.Matrix.SpinLists = s.SpinList
-	// slotdesk.NextSixiangGame = s.NextSiXiangGame
-	// s.LastResult = slotdesk
 	return nil, nil
 }
 
@@ -167,8 +117,65 @@ func (e *slotsEngine) Loop(matchState interface{}) (interface{}, error) {
 	return engine.Loop(s)
 }
 
+func (e *slotsEngine) Info(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	var matrix *pb.SlotMatrix
+	var spreadMatrix *pb.SlotMatrix
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
+		spreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+		matrix = spreadMatrix
+	case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME:
+		matrix = s.Matrix.ToPbSlotMatrix()
+		spreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+	case
+		pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE,
+		pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
+		for idx, symbol := range s.MatrixSpecial.List {
+			if s.MatrixSpecial.IsFlip(idx) {
+				matrix.Lists[idx] = symbol
+			} else {
+				matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+			}
+		}
+	default:
+		matrix = s.MatrixSpecial.ToPbSlotMatrix()
+		spreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+	}
+	slotdesk := &pb.SlotDesk{
+		Matrix:             matrix,
+		SpreadMatrix:       spreadMatrix,
+		ChipsMcb:           s.Bet().Chips,
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		TsUnix:             time.Now().Unix(),
+		SpinSymbols:        s.SpinList,
+		NumSpinLeft:        int64(s.NumSpinLeft),
+		InfoBet:            s.Bet(),
+		WinJpHistory:       s.WinJPHistory(),
+		BetLevels:          entity.BetLevels[:],
+	}
+	slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
+	// slotdesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
+	// for k := range s.LetterSymbol {
+	// 	slotdesk.LetterSymbols = append(slotdesk.LetterSymbols, k)
+	// }
+	slotdesk.SixiangGems = make([]pb.SiXiangGame, 0)
+	for gem := range s.GameEyePlayed() {
+		slotdesk.SixiangGems = append(slotdesk.SixiangGems, gem)
+	}
+	return slotdesk, nil
+}
+
 func (e *slotsEngine) PrintMatrix(matrix entity.SlotMatrix) {
-	// matrix := matchState.GetMatrix()
 	matrix.ForEeach(func(idx, _, col int, symbol pb.SiXiangSymbol) {
 		if idx != 0 && col == 0 {
 			fmt.Println("")

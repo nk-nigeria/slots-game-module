@@ -105,6 +105,10 @@ func (e *bonusEngine) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
 
+func (e *bonusEngine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 func (e *bonusEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	// switch s.SpinSymbols[0].Symbol {
 	// case pb.SiXiangSymbol_SI_XIANG_SYMBOL_BONUS_GOLDX10,

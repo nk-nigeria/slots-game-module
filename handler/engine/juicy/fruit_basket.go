@@ -67,3 +67,7 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 func (e *fruitBasket) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
+
+func (e *fruitBasket) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}

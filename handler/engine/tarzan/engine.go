@@ -1,6 +1,8 @@
 package tarzan
 
 import (
+	"time"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -34,8 +36,6 @@ func (e *tarzanEngine) NewGame(matchState interface{}) (interface{}, error) {
 func (e *tarzanEngine) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
-	// s.PerlGreenForest++
-	// s.PerlGreenForestChips += s.Bet().GetChips() / 2
 	return engine.Process(matchState)
 }
 
@@ -64,19 +64,11 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		s.PerlGreenForestChips = 0
 		s.PerlGreenForest = 0
 	}
-
-	// slotDesk.BigWin = e.transformLineWinToBigWin(s.LineWinByGame[s.CurrentSiXiangGame])
 	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-	// slotDesk.CollectionSymbols = s.CollectionSymbolToSlice(s.CurrentSiXiangGame, 0)
 	return slotDesk, err
 }
 
 func (e *tarzanEngine) Loop(matchState interface{}) (interface{}, error) {
-	// defer func() {
-	// 	if r := recover(); r != nil {
-	// 		fmt.Println("Recovered. Error:\n", r)
-	// 	}
-	// }()
 	s := matchState.(*entity.SlotsMatchState)
 	engine := e.engines[s.CurrentSiXiangGame]
 	return engine.Loop(s)
@@ -93,4 +85,52 @@ func (e *tarzanEngine) transformLineWinToBigWin(lineWin int) pb.BigWin {
 		return pb.BigWin_BIG_WIN_BIG
 	}
 	return pb.BigWin_BIG_WIN_UNSPECIFIED
+}
+
+func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	var matrix *pb.SlotMatrix
+	var spreadMatrix *pb.SlotMatrix
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
+		spreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+		matrix = spreadMatrix
+	case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9:
+		matrix = s.Matrix.ToPbSlotMatrix()
+		spreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+	case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE:
+		for idx, symbol := range s.MatrixSpecial.List {
+			if s.MatrixSpecial.IsFlip(idx) {
+				matrix.Lists[idx] = symbol
+			} else {
+				matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+			}
+		}
+	default:
+		matrix = s.MatrixSpecial.ToPbSlotMatrix()
+		spreadMatrix = s.MatrixSpecial.ToPbSlotMatrix()
+	}
+	slotdesk := &pb.SlotDesk{
+		Matrix:             matrix,
+		SpreadMatrix:       spreadMatrix,
+		ChipsMcb:           s.Bet().Chips,
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		TsUnix:             time.Now().Unix(),
+		SpinSymbols:        s.SpinList,
+		NumSpinLeft:        int64(s.NumSpinLeft),
+		InfoBet:            s.Bet(),
+		WinJpHistory:       s.WinJPHistory(),
+		BetLevels:          entity.BetLevels[:],
+	}
+	// slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
+	slotdesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
+	for k := range s.LetterSymbol {
+		slotdesk.LetterSymbols = append(slotdesk.LetterSymbols, k)
+	}
+	// slotdesk.SixiangGems = make([]pb.SiXiangGame, 0)
+	// for gem := range s.GameEyePlayed() {
+	// 	slotdesk.SixiangGems = append(slotdesk.SixiangGems, gem)
+	// }
+	return slotdesk, nil
 }

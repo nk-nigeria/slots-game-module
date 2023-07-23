@@ -29,6 +29,10 @@ func (e *engine) Finish(matchState interface{}) (interface{}, error) {
 	return e.engines[s.CurrentSiXiangGame].Finish(matchState)
 }
 
+func (e *engine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 // NewGame implements lib.Engine
 func (e *engine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)

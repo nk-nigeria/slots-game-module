@@ -40,6 +40,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewTarzanMatrix()
 	s.SetMatrix(e.SpinMatrix(matrix))
+	s.SetWildMatrix(s.Matrix)
 	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 	s.NumSpinLeft = -1
 	s.SpinList = make([]*pb.SpinSymbol, 0)
@@ -50,6 +51,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := e.SpinMatrix(s.Matrix)
+	s.IsSpinChange = true
 	s.NumSpinRemain6thLetter++
 	// make sure num spin for 6th reach before appear 6th letter in matrix
 	for {
@@ -72,7 +74,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	}
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
-	// custom game
+	// cheat custom game
 	{
 		switch s.Bet().ReqSpecGame {
 		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
@@ -103,24 +105,19 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 // Finish implements lib.Engine
 func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	s.ChipStat.Reset(s.CurrentSiXiangGame)
-	slotDesk := &pb.SlotDesk{
-		GameReward: &pb.GameReward{},
+	if !s.IsSpinChange {
+		return s.LastResult, nil
 	}
-	slotDesk.Paylines = e.Paylines(s.WildMatrix)
-	slotDesk.ChipsMcb = s.Bet().Chips
-	lineWin := int64(len(slotDesk.Paylines))
+	s.IsSpinChange = false
+	paylines := e.Paylines(s.WildMatrix)
+	lineWin := int64(len(paylines))
 	matrix := s.Matrix
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
 			lineWin += 200
 		}
 	})
-	// s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin * slotDesk.ChipsMcb / 100)
-	chipWin := int64(lineWin * slotDesk.ChipsMcb / 100)
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipWin)
-	// s.LineWinByGame[s.CurrentSiXiangGame] = int(lineWin)
-	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, lineWin)
+	chipWin := int64(lineWin * s.Bet().Chips / 100)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	// if next game is freex9, save index freespin symbol
 	if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
@@ -130,19 +127,23 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 			}
 		})
 	}
-	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
-	slotDesk.SpreadMatrix = s.WildMatrix.ToPbSlotMatrix()
-	// slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.GameReward.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
-	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
-	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.IsFinishGame = true
-	slotDesk.NumSpinLeft = -1
-	slotDesk.GameReward.RatioWin = float32(lineWin) / 100.0
-	slotDesk.GameReward.TotalRatioWin = slotDesk.GameReward.RatioWin
-	slotDesk.GameReward.LineWin = lineWin
-	slotDesk.GameReward.TotalLineWin = slotDesk.GameReward.LineWin
+	slotDesk := &pb.SlotDesk{
+		GameReward: &pb.GameReward{
+			ChipsWin:            chipWin,
+			TotalChipsWinByGame: chipWin,
+			RatioWin:            float32(lineWin) / 100,
+			LineWin:             lineWin,
+			TotalRatioWin:       float32(lineWin),
+		},
+		ChipsMcb:           s.Bet().Chips,
+		Paylines:           paylines,
+		Matrix:             s.Matrix.ToPbSlotMatrix(),
+		SpreadMatrix:       s.WildMatrix.ToPbSlotMatrix(),
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		IsFinishGame:       true,
+		NumSpinLeft:        -1,
+	}
 	for k := range s.LetterSymbol {
 		slotDesk.LetterSymbols = append(slotDesk.LetterSymbols, k)
 	}
@@ -158,10 +159,16 @@ func (e *normal) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
 
-func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
+func (e *normal) Info(matchState interface{}) (interface{}, error) {
+	return nil, nil
+}
+
+func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 	numTarzanSymbolSpin := 0
 	numLetterSymbolSpin := 0
 	numFreeSpinSymbolSpin := 0
+	matrix := entity.NewSlotMatrix(m.Rows, m.Cols)
+	matrix.List = make([]pb.SiXiangSymbol, m.Size)
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 	loop:
 		for {
@@ -257,7 +264,6 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 			continue
 		}
 		payline := &pb.Payline{
-			// Id: int32(idx),
 			Indices: make([]int32, 0),
 		}
 		payline.Id = int32(pair.Key)

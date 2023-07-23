@@ -153,6 +153,10 @@ func (e *goldPickEngine) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
 
+func (e *goldPickEngine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 // return ratio, chip
 func (e *goldPickEngine) calcRewardBySymbol(spin *pb.SpinSymbol, mcb int64) (float32, int64) {
 	sym := spin.Symbol

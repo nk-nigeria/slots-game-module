@@ -177,7 +177,16 @@ func (s *SlotsMatchState) InitNewRound() {
 	// s.WildMatrix = SlotMatrix{}
 }
 func (s *SlotsMatchState) IsAllowSpin() bool {
-	return s.allowSpin
+	if !s.allowSpin {
+		return false
+	}
+	if s.LastResult != nil && s.LastResult.GameReward != nil {
+		gw := s.LastResult.GameReward
+		if gw.BalanceChipsWalletAfter < s.bet.Chips {
+			return false
+		}
+	}
+	return true
 }
 
 func (s *SlotsMatchState) SetAllowSpin(val bool) {

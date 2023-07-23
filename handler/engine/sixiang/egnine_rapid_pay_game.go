@@ -199,6 +199,10 @@ func (e *rapidPayEngine) Loop(matchState interface{}) (interface{}, error) {
 	return nil, nil
 }
 
+func (e *rapidPayEngine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 // row 0: x4 END
 // row 1:x3 x4 END
 // row 2: x2 x3 x4 END

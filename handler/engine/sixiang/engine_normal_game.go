@@ -137,6 +137,10 @@ func (e *normalEngine) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
 
+func (e *normalEngine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 func (e *normalEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	// matrix := matchState.GetMatrix()
 	mapColExistScatter := make(map[int]bool)

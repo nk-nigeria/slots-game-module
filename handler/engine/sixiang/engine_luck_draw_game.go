@@ -178,6 +178,10 @@ func (e *luckyDrawEngine) Loop(s interface{}) (interface{}, error) {
 	return s, nil
 }
 
+func (e *luckyDrawEngine) Info(s interface{}) (interface{}, error) {
+	return s, nil
+}
+
 func (e *luckyDrawEngine) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	matrix := s.MatrixSpecial
 	trackFlipSameSymbol := make(map[pb.SiXiangSymbol]int)
