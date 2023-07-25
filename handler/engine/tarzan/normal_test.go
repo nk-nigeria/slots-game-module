@@ -168,3 +168,16 @@ func Test_normal_Finish(t *testing.T) {
 		assert.NotZero(t, len(slotdesk.SpreadMatrix.Lists))
 	})
 }
+
+func Test_normal_Process_Stress(t *testing.T) {
+	name := "Test_normal_Process_Stress"
+	t.Run(name, func(t *testing.T) {
+		e := NewNormal(nil)
+		matchState := entity.NewSlotsMathState(nil)
+		for i := 0; i < 10000; i++ {
+			got, err := e.Process(matchState)
+			assert.NoError(t, err)
+			assert.NotNil(t, got)
+		}
+	})
+}

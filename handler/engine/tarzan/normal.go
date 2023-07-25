@@ -1,6 +1,7 @@
 package tarzan
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
@@ -50,27 +51,43 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrix := e.SpinMatrix(s.Matrix)
 	s.IsSpinChange = true
+	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
+	matrix := e.SpinMatrix(s.Matrix)
 	s.NumSpinRemain6thLetter++
+	// spin letter symbol
+	numLetterPerSpin := 0
+	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
 	// make sure num spin for 6th reach before appear 6th letter in matrix
-	for {
-		if s.NumSpinRemain6thLetter >= entity.MinNumSpinLetter6th {
+	for numLetterPerSpin < e.maxDropLetterSymbol {
+		if len(s.LetterSymbol) >= 5 && s.NumSpinRemain6thLetter <= entity.MinNumSpinLetter6th {
+			fmt.Printf("reject spin letter symbol cause by num s.LetterSymbol = %d and  s.NumSpinRemain6thLetter(%d) < s.NumSpinRemain6thLetter(%d) not meet \r\n",
+				len(s.LetterSymbol), s.NumSpinRemain6thLetter, entity.MinNumSpinLetter6th)
 			break
 		}
-		if len(s.LetterSymbol) < 5 {
-			break
-		}
-		containLetterSymbol := false
-		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-			if entity.TarzanLetterSymbol[symbol] {
-				containLetterSymbol = true
-			}
-		})
-		if containLetterSymbol && len(s.LetterSymbol) == 5 {
+		numLetterPerSpin++
+		rIdx := e.randomIntFn(0, 600)
+		if rIdx > 100 {
+			fmt.Printf("letter symbol not drop, ridx %d \r\n", rIdx)
 			continue
 		}
-		break
+		rIdx = e.randomIntFn(int(pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_J), int(pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_E)+1)
+		letterSymbol := pb.SiXiangSymbol(rIdx)
+		for {
+			rIdx = e.randomIntFn(0, matrix.Size)
+			sym := matrix.List[rIdx]
+			if entity.TarzanLowSymbol[sym] || entity.TarzanMidSymbol[sym] {
+				break
+			}
+		}
+		row, col := matrix.RowCol(rIdx)
+		fmt.Printf("letter symbol drop %s\r\n", letterSymbol.String())
+		s.SpinSymbols = append(s.SpinSymbols, &pb.SpinSymbol{
+			Index:  int32(rIdx),
+			Symbol: letterSymbol,
+			Row:    int32(row),
+			Col:    int32(col),
+		})
 	}
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
@@ -92,14 +109,23 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	}
 	// end set custom game
 	newLetterSymbolAppear := false
-	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	// matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	// 	if entity.TarzanLetterSymbol[symbol] {
+	// 		if s.LetterSymbol[symbol] {
+	// 			newLetterSymbolAppear = true
+	// 		}
+	// 		s.LetterSymbol[symbol] = true
+	// 	}
+	// })
+	for _, sym := range s.SpinSymbols {
+		symbol := sym.Symbol
 		if entity.TarzanLetterSymbol[symbol] {
 			if s.LetterSymbol[symbol] {
 				newLetterSymbolAppear = true
 			}
 			s.LetterSymbol[symbol] = true
 		}
-	})
+	}
 	// save if spin new letter symbol
 	if newLetterSymbolAppear {
 		s.SaveGameJson()
@@ -150,10 +176,12 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		NextSixiangGame:    s.NextSiXiangGame,
 		IsFinishGame:       true,
 		NumSpinLeft:        -1,
+		SpinSymbols:        s.SpinSymbols,
 	}
 	for k := range s.LetterSymbol {
 		slotDesk.LetterSymbols = append(slotDesk.LetterSymbols, k)
 	}
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 
@@ -172,15 +200,17 @@ func (e *normal) Info(matchState interface{}) (interface{}, error) {
 
 func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 	numTarzanSymbolSpin := 0
-	numLetterSymbolSpin := 0
+	// numLetterSymbolSpin := 0
 	numFreeSpinSymbolSpin := 0
 	matrix := entity.NewSlotMatrix(m.Rows, m.Cols)
 	matrix.List = make([]pb.SiXiangSymbol, m.Size)
+	listSymbol := entity.ShuffleSlice(entity.TarzanSymbols)
+	lenSymbols := len(listSymbol)
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 	loop:
 		for {
-			numRandom := e.Random(0, len(entity.TarzanSymbols)-1)
-			randSymbol := entity.TarzanSymbols[numRandom]
+			numRandom := e.Random(0, lenSymbols-1)
+			randSymbol := listSymbol[numRandom]
 			switch randSymbol {
 			// Tarzan symbol chỉ xuất hiện ở col 5 và chỉ xuất hiện 1 lần
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
@@ -200,13 +230,13 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 				}
 				numFreeSpinSymbolSpin++
 			}
-			// Letter symbol only one per spin
-			if entity.TarzanLetterSymbol[randSymbol] {
-				if numLetterSymbolSpin >= e.maxDropLetterSymbol {
-					continue loop
-				}
-				numLetterSymbolSpin++
-			}
+			// // Letter symbol only one per spin
+			// if entity.TarzanLetterSymbol[randSymbol] {
+			// 	if numLetterSymbolSpin >= e.maxDropLetterSymbol {
+			// 		continue loop
+			// 	}
+			// 	numLetterSymbolSpin++
+			// }
 			matrix.List[idx] = randSymbol
 			break
 		}

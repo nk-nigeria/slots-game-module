@@ -23,14 +23,16 @@ var TarzanSymbols = []pb.SiXiangSymbol{
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JANE_FATHER,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_CLAYTON,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_J,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_U,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_N,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_G,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_L,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_E,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_J,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_U,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_N,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_G,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_L,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_E,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN,
 }
 
 var TarzanLowSymbol = map[pb.SiXiangSymbol]bool{
@@ -314,7 +316,6 @@ func NewTarzanMatrix() SlotMatrix {
 		Rows: RowsTarzanMatrix,
 		Size: RowsTarzanMatrix * ColsTarzanMatrix,
 	}
-
 	return m
 }
 

@@ -37,7 +37,7 @@ func NewSlotMatrix(row, col int) SlotMatrix {
 
 func NewSiXiangMatrixNormal() SlotMatrix {
 	sm := SlotMatrix{
-		List:      make([]pb.SiXiangSymbol, RowsMatrix*ColsMatrix, RowsMatrix*ColsMatrix),
+		List:      make([]pb.SiXiangSymbol, RowsMatrix*ColsMatrix),
 		Cols:      ColsMatrix,
 		Rows:      RowsMatrix,
 		Size:      0,
