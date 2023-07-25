@@ -30,7 +30,7 @@ var TarzanSymbols = []pb.SiXiangSymbol{
 	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_L,
 	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_E,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN,
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN,
 }

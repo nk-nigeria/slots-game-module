@@ -66,7 +66,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 			break
 		}
 		numLetterPerSpin++
-		rIdx := e.randomIntFn(0, 600)
+		rIdx := e.randomIntFn(0, 300)
 		if rIdx > 100 {
 			fmt.Printf("letter symbol not drop, ridx %d \r\n", rIdx)
 			continue

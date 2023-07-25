@@ -91,6 +91,9 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.GameReward.LineWin = s.ChipStat.LineWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)
 	slotDesk.GameReward.TotalLineWin = s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)
+	if s.CountLineCrossFreeSpinSymbol < 1 {
+		s.CountLineCrossFreeSpinSymbol = 1
+	}
 	slotDesk.GameReward.RatioBonus = float32(s.CountLineCrossFreeSpinSymbol)
 	if slotDesk.GameReward.RatioBonus > 1 {
 		slotDesk.GameReward.TotalChipsWinByGame *= int64(slotDesk.GameReward.RatioBonus)
