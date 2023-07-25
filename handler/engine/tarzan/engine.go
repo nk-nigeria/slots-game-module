@@ -99,6 +99,7 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 		matrix = s.Matrix.ToPbSlotMatrix()
 		spreadMatrix = s.WildMatrix.ToPbSlotMatrix()
 	case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE:
+		matrix = s.MatrixSpecial.ToPbSlotMatrix()
 		for idx, symbol := range s.MatrixSpecial.List {
 			if s.MatrixSpecial.IsFlip(idx) {
 				matrix.Lists[idx] = symbol
