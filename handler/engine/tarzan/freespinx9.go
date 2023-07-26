@@ -1,8 +1,6 @@
 package tarzan
 
 import (
-	"math"
-
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -20,9 +18,9 @@ func NewFreeSpinX9(randomIntFn func(int, int) int) lib.Engine {
 	e := NewNormal(randomIntFn)
 	engine := e.(*normal)
 	engine.maxDropLetterSymbol = 0
-	engine.maxDropFreeSpin = math.MaxInt
+	engine.maxDropFreeSpin = 2
 	engine.maxDropTarzanSymbol = 1
-	engine.allowDropFreeSpinx9 = false
+	// engine.allowDropFreeSpinx9 = false
 	freespinx9Engine := &freespinx9{
 		normal: *engine,
 	}
@@ -44,7 +42,12 @@ func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return nil, entity.ErrorSpinReachMax
 	}
+	if len(s.LetterSymbol) > 0 {
+		s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
+		s.SaveGameJson()
+	}
 	e.normal.Process(matchState)
+	s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
 	s.NumSpinLeft--
 	return matchState, nil
 }
@@ -98,6 +101,7 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk.GameReward.RatioBonus > 1 {
 		slotDesk.GameReward.TotalChipsWinByGame *= int64(slotDesk.GameReward.RatioBonus)
 	}
+	slotDesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	return slotDesk, err
 }

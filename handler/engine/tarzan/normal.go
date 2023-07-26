@@ -14,7 +14,7 @@ var _ lib.Engine = &normal{}
 type normal struct {
 	maxDropTarzanSymbol int
 	maxDropFreeSpin     int
-	allowDropFreeSpinx9 bool
+	// allowDropFreeSpinx9 bool
 	maxDropLetterSymbol int
 	maxDiamondSymbol    int
 	randomIntFn         func(int, int) int
@@ -27,7 +27,7 @@ func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 		maxDropLetterSymbol: 1,
 		maxDropFreeSpin:     math.MaxInt,
 		maxDiamondSymbol:    3,
-		allowDropFreeSpinx9: true,
+		// allowDropFreeSpinx9: true,
 	}
 	if randomIntFn == nil {
 		e.randomIntFn = entity.RandomInt
@@ -214,6 +214,10 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 	listSymbol := entity.ShuffleSlice(entity.TarzanSymbols)
 	lenSymbols := len(listSymbol)
 	numDiamonSymbol := 0
+	maxDiamonSymbolInSpin := e.randomIntFn(0, e.maxDiamondSymbol*3)
+	if maxDiamonSymbolInSpin > e.maxDiamondSymbol {
+		maxDiamonSymbolInSpin = 0
+	}
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 	loop:
 		for {
@@ -230,20 +234,20 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 				numTarzanSymbolSpin++
 			// chỉ xuất hiện free spin ở col 3, 4, 5
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN:
-				if row < entity.Col_3 || numFreeSpinSymbolSpin >= e.maxDropLetterSymbol {
+				if col < entity.Col_3 || numFreeSpinSymbolSpin >= e.maxDropFreeSpin {
 					continue loop
 				}
 				// kiểm tra điều kiện cho phép ra freespin symbol
 				// nhưng không cho phép ra freespinx9 game
-				if !e.allowDropFreeSpinx9 && e.countFreeSpinSymbolByCol(matrix) >= 2 {
-					continue loop
-				}
+				// if !e.allowDropFreeSpinx9 && e.countFreeSpinSymbolByCol(matrix) >= 2 {
+				// 	continue loop
+				// }
 				numFreeSpinSymbolSpin++
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND:
-				numDiamonSymbol++
-				if numDiamonSymbol > e.maxDiamondSymbol {
+				if numDiamonSymbol >= maxDiamonSymbolInSpin {
 					continue loop
 				}
+				numDiamonSymbol++
 			}
 			matrix.List[idx] = randSymbol
 			break
