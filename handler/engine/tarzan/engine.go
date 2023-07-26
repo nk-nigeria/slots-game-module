@@ -131,7 +131,11 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 		GameReward: &pb.GameReward{
 			PerlGreenForest:      int32(s.PerlGreenForest),
 			PerlGreenForestChips: s.PerlGreenForestChips,
+			RatioBonus:           float32(s.CountLineCrossFreeSpinSymbol),
 		},
+	}
+	if slotdesk.GameReward.RatioBonus < 1 {
+		slotdesk.GameReward.RatioBonus = 1
 	}
 	// slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
 	slotdesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
