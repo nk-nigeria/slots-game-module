@@ -16,6 +16,7 @@ type normal struct {
 	maxDropFreeSpin     int
 	allowDropFreeSpinx9 bool
 	maxDropLetterSymbol int
+	maxDiamondSymbol    int
 	randomIntFn         func(int, int) int
 }
 
@@ -25,6 +26,7 @@ func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 		maxDropTarzanSymbol: 1,
 		maxDropLetterSymbol: 1,
 		maxDropFreeSpin:     math.MaxInt,
+		maxDiamondSymbol:    3,
 		allowDropFreeSpinx9: true,
 	}
 	if randomIntFn == nil {
@@ -130,8 +132,6 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	if newLetterSymbolAppear {
 		s.SaveGameJson()
 	}
-	s.PerlGreenForest++
-	s.PerlGreenForestChips += s.Bet().GetChips() / 2
 	return matchState, nil
 }
 
@@ -146,8 +146,15 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	lineWin := int64(len(paylines))
 	matrix := s.Matrix
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
+		// if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
+		// 	lineWin += 200
+		// }
+		switch symbol {
+		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
 			lineWin += 200
+		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND:
+			s.PerlGreenForest++
+			s.PerlGreenForestChips += s.Bet().GetChips() / 2
 		}
 	})
 	chipWin := int64(lineWin * s.Bet().Chips / 100)
@@ -206,11 +213,14 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 	matrix.List = make([]pb.SiXiangSymbol, m.Size)
 	listSymbol := entity.ShuffleSlice(entity.TarzanSymbols)
 	lenSymbols := len(listSymbol)
+	numDiamonSymbol := 0
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 	loop:
 		for {
+			listSymbol = entity.ShuffleSlice(listSymbol)
 			numRandom := e.Random(0, lenSymbols-1)
 			randSymbol := listSymbol[numRandom]
+
 			switch randSymbol {
 			// Tarzan symbol chỉ xuất hiện ở col 5 và chỉ xuất hiện 1 lần
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
@@ -229,14 +239,12 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 					continue loop
 				}
 				numFreeSpinSymbolSpin++
+			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND:
+				numDiamonSymbol++
+				if numDiamonSymbol > e.maxDiamondSymbol {
+					continue loop
+				}
 			}
-			// // Letter symbol only one per spin
-			// if entity.TarzanLetterSymbol[randSymbol] {
-			// 	if numLetterSymbolSpin >= e.maxDropLetterSymbol {
-			// 		continue loop
-			// 	}
-			// 	numLetterSymbolSpin++
-			// }
 			matrix.List[idx] = randSymbol
 			break
 		}
