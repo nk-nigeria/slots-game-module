@@ -56,7 +56,7 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk == nil {
 		return result, err
 	}
-	slotDesk.PerlGreenForest = int32(s.PerlGreenForest)
+	slotDesk.GameReward.PerlGreenForest = int32(s.PerlGreenForest)
 	slotDesk.GameReward.PerlGreenForestChips = s.PerlGreenForestChips
 	slotDesk.GameReward.UpdateChipsBonus = false
 	if s.PerlGreenForest >= 100 {
@@ -124,6 +124,10 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 		InfoBet:            s.Bet(),
 		WinJpHistory:       s.WinJPHistory(),
 		BetLevels:          entity.BetLevels[:],
+		GameReward: &pb.GameReward{
+			PerlGreenForest:      int32(s.PerlGreenForest),
+			PerlGreenForestChips: s.PerlGreenForestChips,
+		},
 	}
 	// slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
 	slotdesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
