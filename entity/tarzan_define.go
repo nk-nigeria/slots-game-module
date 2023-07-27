@@ -40,14 +40,14 @@ var TarzanSymbols = []pb.SiXiangSymbol{
 }
 
 var TarzanLowSymbol = map[pb.SiXiangSymbol]bool{
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_J:        true,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q:        true,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_K:        true,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_A:        true,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE:  true,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_ELEPHANT: true,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_JAGUAR:   true,
-	pb.SiXiangSymbol_SI_XIANG_SYMBOL_SNACK:    true,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_J: true,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q: true,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_K: true,
+	pb.SiXiangSymbol_SI_XIANG_SYMBOL_A: true,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE:  true,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_ELEPHANT: true,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_JAGUAR:   true,
+	// pb.SiXiangSymbol_SI_XIANG_SYMBOL_SNACK:    true,
 }
 
 var TarzanMidSymbol = map[pb.SiXiangSymbol]bool{
@@ -109,6 +109,7 @@ var TarzanJungleTreasureSymbol = map[pb.SiXiangSymbol]SymbolInfo{
 }
 
 var PaylineTarzanMapping = orderedmap.New[int, []int]()
+var ratioPaylineTarzan map[pb.SiXiangSymbol]map[int32]float64
 
 func init() {
 	idx := 1
@@ -311,6 +312,68 @@ func init() {
 	PaylineTarzanMapping.Set(idx, []int{5, 6, 7, 3, 14})
 	idx++
 	PaylineTarzanMapping.Set(idx, []int{5, 6, 7, 8, 4})
+
+	ratioPaylineTarzan = make(map[pb.SiXiangSymbol]map[int32]float64)
+	{
+		var m = map[int32]float64{3: 5, 4: 25, 5: 125}
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_J] = m
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q] = m
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_K] = m
+	}
+	{
+		var m = map[int32]float64{3: 10, 4: 50, 5: 250}
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_A] = m
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SNACK] = m
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_JAGUAR] = m
+
+	}
+	{
+		var m = map[int32]float64{3: 15, 4: 75, 5: 500}
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_ELEPHANT] = m
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE] = m
+	}
+	{
+		var m = map[int32]float64{2: 2, 3: 25, 4: 125, 5: 750}
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_CLAYTON] = m
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_JANE_FATHER] = m
+	}
+	{
+		var m = map[int32]float64{2: 2, 3: 50, 4: 250, 5: 1250}
+		ratioPaylineTarzan[pb.SiXiangSymbol_SI_XIANG_SYMBOL_JANE] = m
+	}
+}
+
+func BestPaylineTarzan(payline *pb.Payline, matrix []pb.SiXiangSymbol, wild []pb.SiXiangSymbol) *pb.Payline {
+	symbolNotWild := pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+	symAsWild := make([]pb.SiXiangSymbol, 0)
+	for _, idxSym := range payline.Indices {
+		sym := wild[idxSym]
+		if TarzanLowSymbol[sym] {
+			symbolNotWild = sym
+			break
+		}
+		if sym != pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
+			symAsWild = append(symAsWild, sym)
+		}
+	}
+	bestPayline := &pb.Payline{
+		NumOccur: payline.NumOccur,
+		Indices:  make([]int32, len(payline.Indices)),
+	}
+	copy(bestPayline.Indices, payline.Indices)
+	if symbolNotWild != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
+		bestPayline.Symbol = symbolNotWild
+		bestPayline.Rate = ratioPaylineTarzan[symbolNotWild][payline.NumOccur] / 100
+		return bestPayline
+	}
+	for _, sym := range symAsWild {
+		rate := ratioPaylineTarzan[sym][payline.NumOccur] / 100
+		if bestPayline.Rate < rate {
+			bestPayline.Rate = rate
+			bestPayline.Symbol = sym
+		}
+	}
+	return bestPayline
 }
 
 func NewTarzanMatrix() SlotMatrix {

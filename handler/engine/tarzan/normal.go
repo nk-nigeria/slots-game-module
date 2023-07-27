@@ -110,28 +110,13 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 		}
 	}
 	// end set custom game
-	newLetterSymbolAppear := false
-	// matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-	// 	if entity.TarzanLetterSymbol[symbol] {
-	// 		if s.LetterSymbol[symbol] {
-	// 			newLetterSymbolAppear = true
-	// 		}
-	// 		s.LetterSymbol[symbol] = true
-	// 	}
-	// })
 	for _, sym := range s.SpinSymbols {
 		symbol := sym.Symbol
 		if entity.TarzanLetterSymbol[symbol] {
-			if s.LetterSymbol[symbol] {
-				newLetterSymbolAppear = true
-			}
 			s.LetterSymbol[symbol] = true
 		}
 	}
-	// save if spin new letter symbol
-	if newLetterSymbolAppear {
-		s.SaveGameJson()
-	}
+
 	return matchState, nil
 }
 
@@ -142,22 +127,30 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		return s.LastResult, nil
 	}
 	s.IsSpinChange = false
-	paylines := e.Paylines(s.WildMatrix)
-	lineWin := int64(len(paylines))
+	// paylines := e.Paylines(s.WildMatrix)
 	matrix := s.Matrix
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		// if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
-		// 	lineWin += 200
-		// }
 		switch symbol {
-		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
-			lineWin += 200
 		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND:
 			s.PerlGreenForest++
 			s.PerlGreenForestChips += s.Bet().GetChips() / 2
 		}
 	})
-	chipWin := int64(lineWin * s.Bet().Chips / 100)
+	chipWin := int64(0)
+	lineWin := int64(0)
+	paylines := make([]*pb.Payline, 0)
+	for _, payline := range e.Paylines(s.WildMatrix) {
+		newPayline := entity.BestPaylineTarzan(payline, s.Matrix.List, s.WildMatrix.List)
+		line := newPayline.Rate * 100
+		if line <= 0 {
+			continue
+		}
+		lineWin += int64(line)
+		newPayline.Chips = int64(line) * s.Bet().Chips / 100
+		chipWin += newPayline.Chips
+		paylines = append(paylines, newPayline)
+	}
+	// chipWin := int64(lineWin * s.Bet().Chips / 100)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	// if next game is freex9, save index freespin symbol
 	if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
@@ -173,7 +166,8 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 			TotalChipsWinByGame: chipWin,
 			RatioWin:            float32(lineWin) / 100,
 			LineWin:             lineWin,
-			TotalRatioWin:       float32(lineWin),
+			TotalLineWin:        lineWin,
+			TotalRatioWin:       float32(lineWin) / 100,
 		},
 		ChipsMcb:           s.Bet().Chips,
 		Paylines:           paylines,
@@ -207,7 +201,6 @@ func (e *normal) Info(matchState interface{}) (interface{}, error) {
 
 func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 	numTarzanSymbolSpin := 0
-	// numLetterSymbolSpin := 0
 	numFreeSpinSymbolSpin := 0
 	matrix := entity.NewSlotMatrix(m.Rows, m.Cols)
 	matrix.List = make([]pb.SiXiangSymbol, m.Size)
@@ -316,7 +309,13 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 			Indices: make([]int32, 0),
 		}
 		payline.Id = int32(pair.Key)
-		payline.Symbol = matrix.List[paylineIndexs[0]]
+		for _, symIdx := range paylineIndexs {
+			symbol := matrix.List[symIdx]
+			if symbol != pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+				payline.Symbol = symbol
+				break
+			}
+		}
 		payline.NumOccur = int32(len(paylineIndexs))
 		for _, val := range paylineIndexs {
 			payline.Indices = append(payline.GetIndices(), int32(val))

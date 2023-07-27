@@ -68,7 +68,7 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		s.PerlGreenForestChips = int64(s.PerlGreenForest) * s.Bet().Chips / 2
 
 	}
-	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
+	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)))
 	return slotDesk, err
 }
 
@@ -132,6 +132,9 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 			PerlGreenForest:      int32(s.PerlGreenForest),
 			PerlGreenForestChips: s.PerlGreenForestChips,
 			RatioBonus:           float32(s.CountLineCrossFreeSpinSymbol),
+			UpdateWallet:         false,
+			TotalChipsWinByGame:  s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
+			TotalLineWin:         s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
 		},
 	}
 	if slotdesk.GameReward.RatioBonus < 1 {

@@ -181,3 +181,42 @@ func Test_normal_Process_Stress(t *testing.T) {
 		}
 	})
 }
+
+func Test_normal_Finish_Chip(t *testing.T) {
+	name := "Test_normal_Finish_Chip"
+	t.Run(name, func(t *testing.T) {
+		e := NewNormal(nil).(*normal)
+		assert.NotNil(t, e)
+		matchState := entity.NewSlotsMathState(nil)
+		matchState.Bet().Chips = 1000
+		e.Process(matchState)
+		matrix := entity.NewTarzanMatrix()
+		matrix.List[0] = api.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE
+		matrix.List[1] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JAGUAR
+		matrix.List[2] = api.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE
+		matrix.List[3] = api.SiXiangSymbol_SI_XIANG_SYMBOL_J
+		matrix.List[4] = api.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
+		matrix.List[5] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		matrix.List[6] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JANE
+		matrix.List[7] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JANE
+		matrix.List[8] = api.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE
+		matrix.List[9] = api.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN
+		matrix.List[10] = api.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE
+		matrix.List[11] = api.SiXiangSymbol_SI_XIANG_SYMBOL_CLAYTON
+		matrix.List[12] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JANE
+		matrix.List[13] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+		matrix.List[14] = api.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN
+		matchState.SetMatrix(matrix)
+		matchState.SetWildMatrix(e.TarzanSwing(matrix))
+		result, _ := e.Finish(matchState)
+		assert.NotNil(t, result)
+		slotdesk := result.(*api.SlotDesk)
+		assert.NotNil(t, slotdesk)
+		// t.Logf("%v", slotdesk.Paylines)
+		for _, payline := range slotdesk.Paylines {
+			t.Logf("symbol %s occur %d rate %v \r\n",
+				payline.Symbol.String(), payline.NumOccur, payline.Rate)
+		}
+		assert.Equal(t, 0, 1)
+	})
+}

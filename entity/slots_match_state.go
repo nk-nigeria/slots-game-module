@@ -39,7 +39,12 @@ type TarzanSaveGame struct {
 	LetterSymbol    []pb.SiXiangSymbol `json:"letter_symbol,omitempty"`
 	PerlGreenForest int                `json:"perl_green_forest,omitempty"`
 	// chip tich luy
-	PerlGreenForestChips int64 `json:"perl_green_forest_chips,omitempty"`
+	PerlGreenForestChips         int64          `json:"perl_green_forest_chips,omitempty"`
+	GamePlaying                  pb.SiXiangGame `json:"game_playing"`
+	NumSpinLeft                  int            `json:"num_spin_left"`
+	TotalChipWin                 int            `json:"total_chip_win"`
+	TotalLineWin                 int            `json:"total_line_win"`
+	CountLineCrossFreeSpinSymbol int            `json:"count_line_cross_free_spin_sym"`
 }
 
 type SlotsMatchState struct {
@@ -363,6 +368,20 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		}
 		s.PerlGreenForest = tarzanSg.PerlGreenForest
 		s.PerlGreenForestChips = tarzanSg.PerlGreenForestChips
+		if tarzanSg.GamePlaying == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
+			tarzanSg.GamePlaying = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+		}
+		s.NextSiXiangGame = tarzanSg.GamePlaying
+		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
+			s.NumSpinLeft = tarzanSg.NumSpinLeft
+			s.ChipStat.Reset(s.NextSiXiangGame)
+			s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(tarzanSg.TotalChipWin))
+			s.ChipStat.AddLineWin(s.NextSiXiangGame, int64(tarzanSg.TotalLineWin))
+			s.LastResult = nil
+			s.CountLineCrossFreeSpinSymbol = tarzanSg.CountLineCrossFreeSpinSymbol
+		} else {
+			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+		}
 		if len(s.LetterSymbol) == len(TarzanLetterSymbol) {
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 		}
@@ -385,10 +404,22 @@ func (s *SlotsMatchState) SaveGameJson() string {
 		return string(data)
 	case define.TarzanGameName:
 		tarzanSg := &TarzanSaveGame{
-			LetterSymbol:         make([]pb.SiXiangSymbol, 0),
-			PerlGreenForest:      s.PerlGreenForest,
-			PerlGreenForestChips: s.PerlGreenForestChips,
-			LastMcb:              s.bet.Chips,
+			LetterSymbol:                 make([]pb.SiXiangSymbol, 0),
+			PerlGreenForest:              s.PerlGreenForest,
+			PerlGreenForestChips:         s.PerlGreenForestChips,
+			LastMcb:                      s.bet.Chips,
+			GamePlaying:                  s.NextSiXiangGame,
+			NumSpinLeft:                  s.NumSpinLeft,
+			TotalChipWin:                 int(s.ChipStat.TotalChipWin(s.NextSiXiangGame)),
+			TotalLineWin:                 int(s.ChipStat.TotalLineWin(s.NextSiXiangGame)),
+			CountLineCrossFreeSpinSymbol: s.CountLineCrossFreeSpinSymbol,
+		}
+		if tarzanSg.GamePlaying != pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
+			tarzanSg.TotalChipWin = 0
+			tarzanSg.TotalLineWin = 0
+			tarzanSg.GamePlaying = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+			tarzanSg.NumSpinLeft = 0
+			tarzanSg.CountLineCrossFreeSpinSymbol = 0
 		}
 		for sym := range s.LetterSymbol {
 			tarzanSg.LetterSymbol = append(tarzanSg.LetterSymbol, sym)

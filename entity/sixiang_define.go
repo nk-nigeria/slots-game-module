@@ -243,7 +243,7 @@ type SymbolInfo struct {
 var MapPaylineIdx = orderedmap.New[int, []int]()
 var RowsAllowScatter = map[int]bool{0: true, 2: true, 4: true}
 
-var RatioPaylineMap map[pb.SiXiangSymbol]map[int32]float64
+var RatioPaylineSixiangMap map[pb.SiXiangSymbol]map[int32]float64
 var ListSymbolSpinInSixiangNormal []pb.SiXiangSymbol
 
 func init() {
@@ -306,30 +306,30 @@ func init() {
 	idx++
 	MapPaylineIdx.Set(idx, []int{10, 6, 7, 8, 4})
 
-	RatioPaylineMap = make(map[pb.SiXiangSymbol]map[int32]float64)
+	RatioPaylineSixiangMap = make(map[pb.SiXiangSymbol]map[int32]float64)
 	{
 		var m = map[int32]float64{3: 0.5, 4: 2.5, 5: 5}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_10] = m
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_J] = m
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q] = m
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_K] = m
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_A] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_10] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_J] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_Q] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_K] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_A] = m
 	}
 	{
 		var m = map[int32]float64{3: 2, 4: 10, 5: 20}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_BLUE_DRAGON] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_BLUE_DRAGON] = m
 	}
 	{
 		var m = map[int32]float64{3: 1.5, 4: 7.5, 5: 15}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_WHITE_TIGER] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_WHITE_TIGER] = m
 	}
 	{
 		var m = map[int32]float64{3: 1.2, 4: 6, 5: 12}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_WARRIOR] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_WARRIOR] = m
 	}
 	{
 		var m = map[int32]float64{3: 1, 4: 5, 5: 10}
-		RatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_VERMILION_BIRD] = m
+		RatioPaylineSixiangMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_VERMILION_BIRD] = m
 	}
 
 	{

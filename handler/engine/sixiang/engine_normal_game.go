@@ -282,7 +282,7 @@ func (e *normalEngine) FilterPayline(paylines []*pb.Payline, fn func(numOccur in
 }
 
 func (e *normalEngine) RatioPayline(payline *pb.Payline) float64 {
-	return entity.RatioPaylineMap[payline.Symbol][payline.NumOccur]
+	return entity.RatioPaylineSixiangMap[payline.Symbol][payline.NumOccur]
 }
 
 func (e *normalEngine) TotalRateToTypeBigWin(totalRate float64) pb.BigWin {

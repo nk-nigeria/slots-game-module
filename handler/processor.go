@@ -32,7 +32,8 @@ type processor struct {
 	delayTime time.Time
 }
 
-func NewMatchProcessor(marshaler *protojson.MarshalOptions,
+func NewMatchProcessor(
+	marshaler *protojson.MarshalOptions,
 	unmarshaler *protojson.UnmarshalOptions,
 	engine lib.Engine) lib.Processor {
 	p := processor{
@@ -41,6 +42,7 @@ func NewMatchProcessor(marshaler *protojson.MarshalOptions,
 		engine:      engine,
 		// turnBaseEngine: lib.NewTurnBaseEngine(),
 	}
+
 	return &p
 }
 func (p *processor) ProcessNewGame(ctx context.Context,
@@ -111,29 +113,6 @@ func (p *processor) ProcessGame(ctx context.Context,
 	s.Bet().EmitNewgameEvent = false
 	// auto run in some game
 	for _, message := range messages {
-		// if s.CurrentSiXiangGame != s.NextSiXiangGame {
-		// 	s.CurrentSiXiangGame = s.NextSiXiangGame
-		// 	if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-		// 		logger.
-		// 			WithField("game", s.CurrentSiXiangGame.String()).
-		// 			WithField("next game", s.NextSiXiangGame.String()).
-		// 			Info("InitSpecialGameDesk")
-		// 		p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
-		// 	} else {
-		// 		logger.
-		// 			WithField("game", s.CurrentSiXiangGame.String()).
-		// 			WithField("next game", s.NextSiXiangGame.String()).
-		// 			Info("Ignore InitSpecialGameDesk")
-		// 	}
-		// 	if s.Bet().EmitNewgameEvent {
-		// 		logger.Info("emit handlerRequestGetInfoTable by new game state")
-		// 		for _, player := range s.GetPlayingPresences() {
-		// 			p.getInfoTable(ctx,
-		// 				logger, nk, db,
-		// 				dispatcher, player.GetUserId(), s)
-		// 		}
-		// 	}
-		// }
 		p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
 
 		switch message.GetOpCode() {
@@ -148,6 +127,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 			p.doChangeBet(ctx, logger, nk, db, dispatcher, message, s)
 		}
 	}
+	// loop
 	{
 		res, err := p.engine.Loop(s)
 		if err != nil {
@@ -338,9 +318,7 @@ func (p *processor) doSpin(ctx context.Context,
 	logger.Debug("Recv request bet user %s , payload %s",
 		message.GetUserId(), message.GetData())
 	if err != nil {
-		logger.WithField("err", err.Error()).
-			WithField("msg", message.GetData()).
-			WithField("user id", message.GetUserId()).
+		logger.WithField("err", err.Error()).WithField("msg", message.GetData()).WithField("user id", message.GetUserId()).
 			Error("unmarshal bet info failed")
 		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR),
 			&pb.Error{
@@ -351,9 +329,7 @@ func (p *processor) doSpin(ctx context.Context,
 		return
 	}
 	if !p.checkValidBetInfo(s, bet) {
-		logger.WithField("user id", message.GetUserId()).
-			WithField("game", s.CurrentSiXiangGame.String()).
-			WithField("bet", bet).
+		logger.WithField("user id", message.GetUserId()).WithField("game", s.CurrentSiXiangGame.String()).WithField("bet", bet).
 			Error("invalid bet ")
 		return
 	}
@@ -381,9 +357,7 @@ func (p *processor) doSpin(ctx context.Context,
 	s.Bet().ReqSpecGame = bet.ReqSpecGame
 	_, err = p.engine.Process(s)
 	if err != nil {
-		logger.WithField("error", err.Error()).
-			WithField("bet info", s.Bet()).
-			WithField("game", s.Label.Code).WithField("state", s.CurrentSiXiangGame).
+		logger.WithField("error", err.Error()).WithField("bet info", s.Bet()).WithField("game", s.Label.Code).WithField("state", s.CurrentSiXiangGame).
 			Error("engine process failed")
 		return
 	}
@@ -395,10 +369,10 @@ func (p *processor) doSpin(ctx context.Context,
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	slotDesk.InfoBet = s.Bet()
-	// logger.WithField("###### @@@@@@ ", s.GameEyePlayed()).
-	// WithField("bet", s.Bet()).
-	// Info("########")
 	p.gameSummary(ctx, logger, nk, dispatcher, message.GetUserId(), s, slotDesk, chipBetFee)
+	if slotDesk.IsFinishGame {
+		p.checkAndSaveGame(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
+	}
 }
 
 func (p *processor) getInfoTable(
@@ -421,7 +395,7 @@ func (p *processor) getInfoTable(
 		return
 	}
 	logger.WithField("user", userID).Info("request info table")
-	if s.LastResult != nil {
+	if slotdesk.GameReward == nil && s.LastResult != nil {
 		slotdesk.GameReward = s.LastResult.GameReward
 	}
 	gameReward := slotdesk.GameReward
@@ -651,12 +625,13 @@ func (p *processor) InitSpecialGameDesk(ctx context.Context,
 	if s.CurrentSiXiangGame != s.NextSiXiangGame {
 		prevGame := s.CurrentSiXiangGame
 		s.CurrentSiXiangGame = s.NextSiXiangGame
-		p.engine.NewGame(s)
-		// if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		logger.
 			WithField("prev", prevGame.String()).
 			WithField("new game", s.NextSiXiangGame.String()).
-			Info("InitSpecialGameDesk success")
+			Info("InitSpecialGameDesk")
+		p.engine.NewGame(s)
+		// if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+
 		// p.engine.NewGame(s)
 		// } else {
 		// 	logger.
@@ -735,6 +710,7 @@ func (p *processor) checkEnoughChipFromWallet(ctx context.Context, logger runtim
 	}
 	return nil
 }
+
 func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
 	dispatcher runtime.MatchDispatcher, userId string, s *entity.SlotsMatchState,
 	slotDesk *pb.SlotDesk, chipBetFee int64,
@@ -815,6 +791,7 @@ func (p *processor) saveGame(ctx context.Context, logger runtime.Logger, nk runt
 	if err != nil {
 		logger.WithField("err", err.Error()).Error("masharl save game sixiang failed")
 	} else {
+		logger.WithField("user", userId).WithField("gamecode", gameCode).Info("save game to db")
 		cgbdb.UpdateUsersSaveGame(ctx, logger, db, userId, gameCode,
 			string(data))
 	}
@@ -928,4 +905,13 @@ func (p *processor) doChangeBet(
 	}
 	s.SetBetInfo(bet)
 	p.getInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
+}
+
+func (p *processor) checkAndSaveGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule,
+	db *sql.DB, dispatcher runtime.MatchDispatcher, userId string, s *entity.SlotsMatchState,
+) {
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9:
+		p.saveGame(ctx, logger, nk, db, dispatcher, userId, s.SaveGameJson(), s.Label.Code)
+	}
 }

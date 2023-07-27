@@ -325,7 +325,7 @@ func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {
 		break
 
 	}
-	if len(validPaylineIndex) >= sm.Cols {
+	if len(validPaylineIndex) >= 2 {
 		return validPaylineIndex, true
 	}
 	return nil, false

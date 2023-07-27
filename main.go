@@ -13,7 +13,7 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 
-func InitModule(_ context.Context, logger runtime.Logger, _ *sql.DB, _ runtime.NakamaModule, initializer runtime.Initializer) error {
+func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	initStart := time.Now()
 
 	marshaler := &protojson.MarshalOptions{

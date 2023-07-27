@@ -10,7 +10,7 @@ require (
 require (
 	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230726142202-c4f0a196765f
 	github.com/qmuntal/stateless v1.5.3
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.8.0
 	github.com/wk8/go-ordered-map/v2 v2.1.3
 	google.golang.org/grpc v1.42.0
 	google.golang.org/protobuf v1.27.1
@@ -24,12 +24,13 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
 	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
