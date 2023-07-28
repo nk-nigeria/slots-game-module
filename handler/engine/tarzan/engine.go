@@ -62,11 +62,10 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 	if s.PerlGreenForest >= 100 {
 		slotDesk.GameReward.UpdateChipsBonus = true
 		perlGreenForestRemain := s.PerlGreenForest - 100
-		slotDesk.GameReward.PerlGreenForest = 100
+		slotDesk.GameReward.PerlGreenForest = 0
 		slotDesk.GameReward.PerlGreenForestChips = s.PerlGreenForestChips - int64(perlGreenForestRemain)*s.Bet().Chips/2
 		s.PerlGreenForest = perlGreenForestRemain
 		s.PerlGreenForestChips = int64(s.PerlGreenForest) * s.Bet().Chips / 2
-
 	}
 	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)))
 	return slotDesk, err

@@ -140,7 +140,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	lineWin := int64(0)
 	paylines := make([]*pb.Payline, 0)
 	for _, payline := range e.Paylines(s.WildMatrix) {
-		newPayline := entity.BestPaylineTarzan(payline, s.Matrix.List, s.WildMatrix.List)
+		newPayline := entity.RatioPaylineTarzan(payline, s.Matrix.List)
 		line := newPayline.Rate * 100
 		if line <= 0 {
 			continue
@@ -211,13 +211,17 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 	if maxDiamonSymbolInSpin > e.maxDiamondSymbol {
 		maxDiamonSymbolInSpin = 0
 	}
+	lastRandNum := -1
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 	loop:
 		for {
 			listSymbol = entity.ShuffleSlice(listSymbol)
 			numRandom := e.Random(0, lenSymbols-1)
+			if numRandom == lastRandNum {
+				continue
+			}
+			lastRandNum = numRandom
 			randSymbol := listSymbol[numRandom]
-
 			switch randSymbol {
 			// Tarzan symbol chỉ xuất hiện ở col 5 và chỉ xuất hiện 1 lần
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:

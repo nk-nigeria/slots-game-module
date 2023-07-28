@@ -427,23 +427,6 @@ func (p *processor) buySixiangGem(
 	message runtime.MatchData,
 	s *entity.SlotsMatchState,
 ) {
-	// if s.Label.Code != define.SixiangGameName {
-	// 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
-	// 		Code:  int64(codes.Aborted),
-	// 		Error: entity.ErrorInvalidRequestGame.Error(),
-	// 	}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
-	// 	return
-	// }
-	// numGemCollect := s.NumGameEyePlayed()
-	// if numGemCollect < 0 || numGemCollect > 4 {
-	// 	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
-	// 		Code:  int64(codes.Aborted),
-	// 		Error: entity.ErrorInternal.Error(),
-	// 	}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
-	// 	return
-	// }
-	// ratio := entity.PriceBuySixiangGem[numGemCollect]
-	// chips := ratio * int(s.Bet().Chips)
 	if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		logger.WithField("payload", message.GetData()).Error("buy gem failed, only allow buy in normal game")
 		return
