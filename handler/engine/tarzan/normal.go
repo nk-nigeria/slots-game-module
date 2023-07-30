@@ -54,7 +54,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.IsSpinChange = true
-	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
+	// s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 	matrix := e.SpinMatrix(s.Matrix)
 	s.NumSpinRemain6thLetter++
 	// spin letter symbol
@@ -232,6 +232,20 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 			// chỉ xuất hiện free spin ở col 3, 4, 5
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN:
 				if col < entity.Col_3 || numFreeSpinSymbolSpin >= e.maxDropFreeSpin {
+					continue loop
+				}
+				numFreeSymInCol := 0
+				matrix.ForEachCol(func(c int, symbols []pb.SiXiangSymbol) {
+					if c != col {
+						return
+					}
+					for _, sym := range symbols {
+						if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
+							numFreeSymInCol++
+						}
+					}
+				})
+				if numFreeSymInCol > 0 {
 					continue loop
 				}
 				// kiểm tra điều kiện cho phép ra freespin symbol

@@ -61,8 +61,8 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	// check if payline pass freespin symbol
 	for _, payline := range s.Paylines() {
 		num := 0
-		for _, val := range payline.GetIndices() {
-			if s.TrackIndexFreeSpinSymbol[int(val)] {
+		for _, symIdx := range payline.GetIndices() {
+			if s.TrackIndexFreeSpinSymbol[int(symIdx)] {
 				num++
 			}
 		}
@@ -106,6 +106,7 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk.IsFinishGame {
 		s.ChipStat.Reset(s.CurrentSiXiangGame)
 	}
+	s.LastResult = slotDesk
 	return slotDesk, err
 }
 
