@@ -44,12 +44,7 @@ func (e *freespinx9) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return nil, entity.ErrorSpinReachMax
 	}
-	if len(s.LetterSymbol) > 0 {
-		s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
-		s.SaveGameJson()
-	}
 	e.normal.Process(matchState)
-	s.LetterSymbol = make(map[pb.SiXiangSymbol]bool)
 	s.NumSpinLeft--
 	return matchState, nil
 }
@@ -66,8 +61,8 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	// check if payline pass freespin symbol
 	for _, payline := range s.Paylines() {
 		num := 0
-		for _, val := range payline.GetIndices() {
-			if s.TrackIndexFreeSpinSymbol[int(val)] {
+		for _, symIdx := range payline.GetIndices() {
+			if s.TrackIndexFreeSpinSymbol[int(symIdx)] {
 				num++
 			}
 		}
@@ -105,9 +100,13 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	}
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
+	for k := range s.LetterSymbol {
+		slotDesk.LetterSymbols = append(slotDesk.LetterSymbols, k)
+	}
 	if slotDesk.IsFinishGame {
 		s.ChipStat.Reset(s.CurrentSiXiangGame)
 	}
+	s.LastResult = slotDesk
 	return slotDesk, err
 }
 

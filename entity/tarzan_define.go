@@ -343,36 +343,22 @@ func init() {
 	}
 }
 
-func BestPaylineTarzan(payline *pb.Payline, matrix []pb.SiXiangSymbol, wild []pb.SiXiangSymbol) *pb.Payline {
-	symbolNotWild := pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
-	symAsWild := make([]pb.SiXiangSymbol, 0)
-	for _, idxSym := range payline.Indices {
-		sym := wild[idxSym]
-		if TarzanLowSymbol[sym] {
-			symbolNotWild = sym
-			break
-		}
-		if sym != pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
-			symAsWild = append(symAsWild, sym)
-		}
-	}
+func RatioPaylineTarzan(payline *pb.Payline, matrix []pb.SiXiangSymbol) *pb.Payline {
 	bestPayline := &pb.Payline{
+		Id:       payline.Id,
 		NumOccur: payline.NumOccur,
 		Indices:  make([]int32, len(payline.Indices)),
 	}
-	copy(bestPayline.Indices, payline.Indices)
-	if symbolNotWild != pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
-		bestPayline.Symbol = symbolNotWild
-		bestPayline.Rate = ratioPaylineTarzan[symbolNotWild][payline.NumOccur] / 100
-		return bestPayline
-	}
-	for _, sym := range symAsWild {
-		rate := ratioPaylineTarzan[sym][payline.NumOccur] / 100
-		if bestPayline.Rate < rate {
-			bestPayline.Rate = rate
-			bestPayline.Symbol = sym
+	for _, idxSym := range payline.Indices {
+		sym := matrix[idxSym]
+		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {
+			continue
 		}
+		bestPayline.Symbol = sym
+		bestPayline.Rate = ratioPaylineTarzan[sym][bestPayline.NumOccur] / 100
+		break
 	}
+
 	return bestPayline
 }
 

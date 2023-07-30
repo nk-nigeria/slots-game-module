@@ -57,17 +57,17 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		return result, err
 	}
 	slotDesk.GameReward.PerlGreenForest = int32(s.PerlGreenForest)
-	slotDesk.GameReward.PerlGreenForestChips = s.PerlGreenForestChips
+	slotDesk.GameReward.PerlGreenForestChips = 0
 	slotDesk.GameReward.UpdateChipsBonus = false
 	if s.PerlGreenForest >= 100 {
 		slotDesk.GameReward.UpdateChipsBonus = true
 		perlGreenForestRemain := s.PerlGreenForest - 100
-		slotDesk.GameReward.PerlGreenForest = 100
-		slotDesk.GameReward.PerlGreenForestChips = s.PerlGreenForestChips - int64(perlGreenForestRemain)*s.Bet().Chips/2
+		slotDesk.GameReward.PerlGreenForest = 0
+		slotDesk.GameReward.PerlGreenForestChips = s.PerlGreenForestChipsCollect - int64(perlGreenForestRemain)*s.Bet().Chips/2
 		s.PerlGreenForest = perlGreenForestRemain
-		s.PerlGreenForestChips = int64(s.PerlGreenForest) * s.Bet().Chips / 2
-
+		s.PerlGreenForestChipsCollect = int64(s.PerlGreenForest) * s.Bet().Chips / 2
 	}
+	slotDesk.GameReward.PerlGreenForestChipsCollect = s.PerlGreenForestChipsCollect
 	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)))
 	return slotDesk, err
 }
@@ -129,12 +129,12 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 		WinJpHistory:       s.WinJPHistory(),
 		BetLevels:          entity.BetLevels[:],
 		GameReward: &pb.GameReward{
-			PerlGreenForest:      int32(s.PerlGreenForest),
-			PerlGreenForestChips: s.PerlGreenForestChips,
-			RatioBonus:           float32(s.CountLineCrossFreeSpinSymbol),
-			UpdateWallet:         false,
-			TotalChipsWinByGame:  s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
-			TotalLineWin:         s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
+			PerlGreenForest:             int32(s.PerlGreenForest),
+			PerlGreenForestChipsCollect: s.PerlGreenForestChipsCollect,
+			RatioBonus:                  float32(s.CountLineCrossFreeSpinSymbol),
+			UpdateWallet:                false,
+			TotalChipsWinByGame:         s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
+			TotalLineWin:                s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
 		},
 	}
 	if slotdesk.GameReward.RatioBonus < 1 {

@@ -39,12 +39,12 @@ type TarzanSaveGame struct {
 	LetterSymbol    []pb.SiXiangSymbol `json:"letter_symbol,omitempty"`
 	PerlGreenForest int                `json:"perl_green_forest,omitempty"`
 	// chip tich luy
-	PerlGreenForestChips         int64          `json:"perl_green_forest_chips,omitempty"`
-	GamePlaying                  pb.SiXiangGame `json:"game_playing"`
-	NumSpinLeft                  int            `json:"num_spin_left"`
-	TotalChipWin                 int            `json:"total_chip_win"`
-	TotalLineWin                 int            `json:"total_line_win"`
-	CountLineCrossFreeSpinSymbol int            `json:"count_line_cross_free_spin_sym"`
+	PerlGreenForestChipsCollect  int64          `json:"perl_green_forest_chips_collect,omitempty"`
+	GamePlaying                  pb.SiXiangGame `json:"game_playing,omitempty"`
+	NumSpinLeft                  int            `json:"num_spin_left,omitempty"`
+	TotalChipWin                 int            `json:"total_chip_win,omitempty"`
+	TotalLineWin                 int            `json:"total_line_win,omitempty"`
+	CountLineCrossFreeSpinSymbol int            `json:"count_line_cross_free_spin_sym,omitempty"`
 }
 
 type SlotsMatchState struct {
@@ -90,10 +90,10 @@ type SlotsMatchState struct {
 	// ngoc rung xanh
 	PerlGreenForest int
 	// chip tich luy
-	PerlGreenForestChips int64
-	NumScatterSeq        int
-	NumFruitBasket       int
-	RatioFruitBasket     int
+	PerlGreenForestChipsCollect int64
+	NumScatterSeq               int
+	NumFruitBasket              int
+	RatioFruitBasket            int
 
 	LastSpinTime            time.Time
 	DurationTriggerAutoSpin time.Duration
@@ -367,7 +367,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 			s.LetterSymbol[sym] = true
 		}
 		s.PerlGreenForest = tarzanSg.PerlGreenForest
-		s.PerlGreenForestChips = tarzanSg.PerlGreenForestChips
+		s.PerlGreenForestChipsCollect = tarzanSg.PerlGreenForestChipsCollect
 		if tarzanSg.GamePlaying == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
 			tarzanSg.GamePlaying = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 		}
@@ -406,7 +406,7 @@ func (s *SlotsMatchState) SaveGameJson() string {
 		tarzanSg := &TarzanSaveGame{
 			LetterSymbol:                 make([]pb.SiXiangSymbol, 0),
 			PerlGreenForest:              s.PerlGreenForest,
-			PerlGreenForestChips:         s.PerlGreenForestChips,
+			PerlGreenForestChipsCollect:  s.PerlGreenForestChipsCollect,
 			LastMcb:                      s.bet.Chips,
 			GamePlaying:                  s.NextSiXiangGame,
 			NumSpinLeft:                  s.NumSpinLeft,

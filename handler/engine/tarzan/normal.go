@@ -54,7 +54,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.IsSpinChange = true
-	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
+	// s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 	matrix := e.SpinMatrix(s.Matrix)
 	s.NumSpinRemain6thLetter++
 	// spin letter symbol
@@ -133,14 +133,14 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		switch symbol {
 		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND:
 			s.PerlGreenForest++
-			s.PerlGreenForestChips += s.Bet().GetChips() / 2
+			s.PerlGreenForestChipsCollect += s.Bet().GetChips() / 2
 		}
 	})
 	chipWin := int64(0)
 	lineWin := int64(0)
 	paylines := make([]*pb.Payline, 0)
 	for _, payline := range e.Paylines(s.WildMatrix) {
-		newPayline := entity.BestPaylineTarzan(payline, s.Matrix.List, s.WildMatrix.List)
+		newPayline := entity.RatioPaylineTarzan(payline, s.Matrix.List)
 		line := newPayline.Rate * 100
 		if line <= 0 {
 			continue
@@ -211,13 +211,17 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 	if maxDiamonSymbolInSpin > e.maxDiamondSymbol {
 		maxDiamonSymbolInSpin = 0
 	}
+	lastRandNum := -1
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 	loop:
 		for {
 			listSymbol = entity.ShuffleSlice(listSymbol)
 			numRandom := e.Random(0, lenSymbols-1)
+			if numRandom == lastRandNum {
+				continue
+			}
+			lastRandNum = numRandom
 			randSymbol := listSymbol[numRandom]
-
 			switch randSymbol {
 			// Tarzan symbol chỉ xuất hiện ở col 5 và chỉ xuất hiện 1 lần
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN:
@@ -228,6 +232,20 @@ func (e *normal) SpinMatrix(m entity.SlotMatrix) entity.SlotMatrix {
 			// chỉ xuất hiện free spin ở col 3, 4, 5
 			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN:
 				if col < entity.Col_3 || numFreeSpinSymbolSpin >= e.maxDropFreeSpin {
+					continue loop
+				}
+				numFreeSymInCol := 0
+				matrix.ForEachCol(func(c int, symbols []pb.SiXiangSymbol) {
+					if c != col {
+						return
+					}
+					for _, sym := range symbols {
+						if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
+							numFreeSymInCol++
+						}
+					}
+				})
+				if numFreeSymInCol > 0 {
 					continue loop
 				}
 				// kiểm tra điều kiện cho phép ra freespin symbol
