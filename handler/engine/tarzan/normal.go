@@ -133,7 +133,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		switch symbol {
 		case pb.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND:
 			s.PerlGreenForest++
-			s.PerlGreenForestChips += s.Bet().GetChips() / 2
+			s.PerlGreenForestChipsCollect += s.Bet().GetChips() / 2
 		}
 	})
 	chipWin := int64(0)

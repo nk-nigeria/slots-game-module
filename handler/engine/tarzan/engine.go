@@ -129,12 +129,12 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 		WinJpHistory:       s.WinJPHistory(),
 		BetLevels:          entity.BetLevels[:],
 		GameReward: &pb.GameReward{
-			PerlGreenForest:      int32(s.PerlGreenForest),
-			PerlGreenForestChips: s.PerlGreenForestChips,
-			RatioBonus:           float32(s.CountLineCrossFreeSpinSymbol),
-			UpdateWallet:         false,
-			TotalChipsWinByGame:  s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
-			TotalLineWin:         s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
+			PerlGreenForest:             int32(s.PerlGreenForest),
+			PerlGreenForestChipsCollect: s.PerlGreenForestChipsCollect,
+			RatioBonus:                  float32(s.CountLineCrossFreeSpinSymbol),
+			UpdateWallet:                false,
+			TotalChipsWinByGame:         s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
+			TotalLineWin:                s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
 		},
 	}
 	if slotdesk.GameReward.RatioBonus < 1 {
