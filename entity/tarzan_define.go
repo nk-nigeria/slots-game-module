@@ -75,11 +75,11 @@ var TarzanLetterSymbol = map[pb.SiXiangSymbol]bool{
 var TarzanJungleTreasureSymbol = map[pb.SiXiangSymbol]SymbolInfo{
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX2: {
 		NumOccur: 2,
-		Value:    Range{Min: 2, Max: 2},
+		Value:    Range{Min: 0, Max: 0},
 	},
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_MORE_TURNX3: {
 		NumOccur: 2,
-		Value:    Range{Min: 3, Max: 3},
+		Value:    Range{Min: 0, Max: 0},
 	},
 	// 10 - 30 line
 	pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN_RANDOM_1: {
@@ -349,6 +349,7 @@ func RatioPaylineTarzan(payline *pb.Payline, matrix []pb.SiXiangSymbol) *pb.Payl
 		NumOccur: payline.NumOccur,
 		Indices:  make([]int32, len(payline.Indices)),
 	}
+	copy(bestPayline.Indices, payline.Indices)
 	for _, idxSym := range payline.Indices {
 		sym := matrix[idxSym]
 		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_TARZAN {

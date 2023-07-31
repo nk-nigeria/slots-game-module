@@ -19,7 +19,7 @@ func NewSixiangBonusEngine() lib.Engine {
 func (e *sixiangBonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixSiXiangBonus()
-	s.MatrixSpecial = matrix
+	s.MatrixSpecial = &matrix
 	s.SpinSymbols = nil
 	s.NumSpinLeft = 1
 	return s, nil

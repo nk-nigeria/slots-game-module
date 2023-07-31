@@ -104,7 +104,8 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 		}
 		matchState := entity.NewSlotsMathState(nil)
 		matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-		matchState.MatrixSpecial = entity.NewMatrixLuckyDraw()
+		matrixSpecial := entity.NewMatrixLuckyDraw()
+		matchState.MatrixSpecial = &matrixSpecial
 		matchState.SetBetInfo(bet)
 		engine := NewRapidPayEngine(1,
 			func(min, max int) int { return min },
@@ -140,7 +141,8 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			}
 			matchState := entity.NewSlotsMathState(nil)
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-			matchState.MatrixSpecial = entity.NewMatrixLuckyDraw()
+			matrixSpecial := entity.NewMatrixLuckyDraw()
+			matchState.MatrixSpecial = &matrixSpecial
 			engine := NewRapidPayEngine(1,
 				func(min, max int) int { return min },
 				func(min, max float64) float64 { return min },
@@ -183,7 +185,8 @@ func Test_luckyDrawEngine_Finish(t *testing.T) {
 			}
 			matchState := entity.NewSlotsMathState(nil)
 			matchState.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_LUCKDRAW
-			matchState.MatrixSpecial = entity.NewMatrixLuckyDraw()
+			matrixSpecial := entity.NewMatrixLuckyDraw()
+			matchState.MatrixSpecial = &matrixSpecial
 			matchState.SetBetInfo(bet)
 			engine := NewRapidPayEngine(1,
 				func(min, max int) int { return min },

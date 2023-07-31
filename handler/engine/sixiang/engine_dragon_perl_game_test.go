@@ -28,7 +28,8 @@ func Test_dragonPearlEngine_NewGame(t *testing.T) {
 		}
 		// matchStateExpect.EyeSymbolRemains = entity.ShuffleSlice(list)
 	}
-	matchStateExpect.MatrixSpecial = entity.NewMatrixDragonPearl()
+	matrixSpecial := entity.NewMatrixDragonPearl()
+	matchStateExpect.MatrixSpecial = &matrixSpecial
 	tests := []struct {
 		name string
 		args args

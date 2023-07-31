@@ -28,7 +28,8 @@ func NewFruitRain(randomIntFn func(min, max int) int) lib.Engine {
 // NewGame implements lib.Engine
 func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	s.MatrixSpecial = entity.NewJuicyMatrix()
+	matrixSpecial := entity.NewJuicyMatrix()
+	s.MatrixSpecial = &matrixSpecial
 	s.NumSpinLeft = 3
 	e.autoRefillGemSpin = true
 	m := entity.NewJuicyFruitRainMaxtrix()
@@ -55,7 +56,7 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 		return s, entity.ErrorSpinReachMax
 	}
 	// matrix := s.MatrixSpecial
-	matrix := e.SpinMatrix(s.MatrixSpecial)
+	matrix := e.SpinMatrix(*s.MatrixSpecial)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		// keep symbol if fruitbasket
 		if entity.IsFruitBasketSymbol(symbol) {

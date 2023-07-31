@@ -74,7 +74,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		GameReward: &pb.GameReward{},
 	}
 	s := matchState.(*entity.SlotsMatchState)
-	s.NumScatterSeq = e.countScattersSequent(s.Matrix)
+	s.NumScatterSeq = e.countScattersSequent(&s.Matrix)
 	lineWin := 0
 	for _, payline := range s.Paylines() {
 		lineWin += int(payline.GetRate())
@@ -105,7 +105,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
 	slotDesk.Paylines = s.Paylines()
 
-	s.NumFruitBasket = e.countFruitBasket(s.Matrix)
+	s.NumFruitBasket = e.countFruitBasket(&s.Matrix)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
 	slotDesk.NextSixiangGame = s.NextSiXiangGame
@@ -215,7 +215,7 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 	return paylines
 }
 
-func (e *normal) countScattersSequent(matrix entity.SlotMatrix) int {
+func (e *normal) countScattersSequent(matrix *entity.SlotMatrix) int {
 	numScaterSeq := 0
 	matrix.ForEachCol(func(col int, symbols []pb.SiXiangSymbol) {
 		for _, symbol := range symbols {
@@ -228,7 +228,7 @@ func (e *normal) countScattersSequent(matrix entity.SlotMatrix) int {
 	return numScaterSeq
 }
 
-func (e *normal) countFruitBasket(matrix entity.SlotMatrix) int {
+func (e *normal) countFruitBasket(matrix *entity.SlotMatrix) int {
 	numFruitBasket := 0
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.IsFruitBasketSymbol(symbol) {

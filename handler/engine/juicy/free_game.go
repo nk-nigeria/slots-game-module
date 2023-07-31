@@ -44,9 +44,9 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 		s.NumSpinLeft = 3
 		e.ratioWild = ratioWild1_0
 	}
-	s.MatrixSpecial = entity.NewJuicyMatrix()
-	matrix := e.SpinMatrix(s.MatrixSpecial, e.ratioWild)
-	s.MatrixSpecial = matrix
+	matrixSpecial := entity.NewJuicyMatrix()
+	matrix := e.SpinMatrix(matrixSpecial, e.ratioWild)
+	s.MatrixSpecial = &matrix
 	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return matchState, nil
@@ -60,13 +60,13 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	}
 	var matrix entity.SlotMatrix
 	for {
-		matrix = e.SpinMatrix(s.MatrixSpecial, ratioWild1_0)
+		matrix = e.SpinMatrix(*s.MatrixSpecial, ratioWild1_0)
 		// không cho phép xuất hiện các loại bonus khác (Free tiếp, 6 giỏ, Scatter 345, hoặc JP)
-		numScatterSeq := e.countScattersSequent(matrix)
+		numScatterSeq := e.countScattersSequent(&matrix)
 		if numScatterSeq >= 3 {
 			continue
 		}
-		numFruitBasket := e.countFruitBasket(matrix)
+		numFruitBasket := e.countFruitBasket(&matrix)
 		if numFruitBasket >= 6 {
 			continue
 		}
@@ -82,7 +82,7 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 		break
 	}
 
-	s.MatrixSpecial = (matrix)
+	s.MatrixSpecial = &matrix
 	s.SetWildMatrix(e.WildMatrix(matrix))
 	s.SetPaylines(e.Paylines(matrix))
 	s.NumSpinLeft--

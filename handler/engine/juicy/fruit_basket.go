@@ -19,10 +19,11 @@ func NewFruitBaseket() lib.Engine {
 // NewGame implements lib.Engine
 func (*fruitBasket) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	s.MatrixSpecial = entity.NewSlotMatrix(1, 2)
-	s.MatrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FREE_GAME)
-	s.MatrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FRUIT_RAIN)
-	s.MatrixSpecial = entity.ShuffleMatrix(s.MatrixSpecial)
+	matrixSpecial := entity.NewSlotMatrix(1, 2)
+	matrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FREE_GAME)
+	matrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FRUIT_RAIN)
+	matrixSpecial = entity.ShuffleMatrix(matrixSpecial)
+	s.MatrixSpecial = &matrixSpecial
 	s.NumSpinLeft = 1
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return matchState, nil

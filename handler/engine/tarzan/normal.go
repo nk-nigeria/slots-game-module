@@ -46,7 +46,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s.SetWildMatrix(s.Matrix)
 	s.TrackIndexFreeSpinSymbol = make(map[int]bool)
 	s.NumSpinLeft = -1
-	s.SpinList = make([]*pb.SpinSymbol, 0)
+	// s.SpinList = make([]*pb.SpinSymbol, 0)
 	return s, nil
 }
 
@@ -62,11 +62,11 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
 	// make sure num spin for 6th reach before appear 6th letter in matrix
 	for numLetterPerSpin < e.maxDropLetterSymbol {
-		if len(s.LetterSymbol) >= 5 && s.NumSpinRemain6thLetter <= entity.MinNumSpinLetter6th {
-			fmt.Printf("reject spin letter symbol cause by num s.LetterSymbol = %d and  s.NumSpinRemain6thLetter(%d) < s.NumSpinRemain6thLetter(%d) not meet \r\n",
-				len(s.LetterSymbol), s.NumSpinRemain6thLetter, entity.MinNumSpinLetter6th)
-			break
-		}
+		// if len(s.LetterSymbol) >= 5 && s.NumSpinRemain6thLetter <= entity.MinNumSpinLetter6th {
+		// 	fmt.Printf("reject spin letter symbol cause by num s.LetterSymbol = %d and  s.NumSpinRemain6thLetter(%d) < s.NumSpinRemain6thLetter(%d) not meet \r\n",
+		// 		len(s.LetterSymbol), s.NumSpinRemain6thLetter, entity.MinNumSpinLetter6th)
+		// 	break
+		// }
 		numLetterPerSpin++
 		rIdx := e.randomIntFn(0, 300)
 		if rIdx > 100 {
@@ -94,7 +94,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.TarzanSwing(matrix))
 	// cheat custom game
-	{
+	if e.maxDropLetterSymbol > 0 {
 		switch s.Bet().ReqSpecGame {
 		case int32(pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9):
 			s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -179,9 +179,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		NumSpinLeft:        -1,
 		SpinSymbols:        s.SpinSymbols,
 	}
-	for k := range s.LetterSymbol {
-		slotDesk.LetterSymbols = append(slotDesk.LetterSymbols, k)
-	}
+
 	s.LastResult = slotDesk
 	return slotDesk, nil
 }

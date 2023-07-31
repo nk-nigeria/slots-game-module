@@ -1,6 +1,8 @@
 package tarzan
 
 import (
+	"fmt"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -95,9 +97,13 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 		s.CountLineCrossFreeSpinSymbol = 1
 	}
 	slotDesk.GameReward.RatioBonus = float32(s.CountLineCrossFreeSpinSymbol)
+	v := slotDesk.GameReward.TotalChipsWinByGame
 	if slotDesk.GameReward.RatioBonus > 1 {
 		slotDesk.GameReward.TotalChipsWinByGame *= int64(slotDesk.GameReward.RatioBonus)
 	}
+	fmt.Printf("CountLineCrossFreeSpinSymbol %d TotalChipsWinByGame before %d after %d \r\n",
+		s.CountLineCrossFreeSpinSymbol, v, slotDesk.GameReward.TotalChipsWinByGame)
+
 	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
 	slotDesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
 	for k := range s.LetterSymbol {
@@ -105,8 +111,10 @@ func (e *freespinx9) Finish(matchState interface{}) (interface{}, error) {
 	}
 	if slotDesk.IsFinishGame {
 		s.ChipStat.Reset(s.CurrentSiXiangGame)
+		s.CountLineCrossFreeSpinSymbol = 0
 	}
 	s.LastResult = slotDesk
+
 	return slotDesk, err
 }
 
