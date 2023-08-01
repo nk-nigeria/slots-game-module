@@ -39,12 +39,15 @@ type TarzanSaveGame struct {
 	LetterSymbol    []pb.SiXiangSymbol `json:"letter_symbol,omitempty"`
 	PerlGreenForest int                `json:"perl_green_forest,omitempty"`
 	// chip tich luy
-	PerlGreenForestChipsCollect  int64          `json:"perl_green_forest_chips_collect,omitempty"`
-	GamePlaying                  pb.SiXiangGame `json:"game_playing,omitempty"`
-	NumSpinLeft                  int            `json:"num_spin_left,omitempty"`
-	TotalChipWin                 int            `json:"total_chip_win,omitempty"`
-	TotalLineWin                 int            `json:"total_line_win,omitempty"`
-	CountLineCrossFreeSpinSymbol int            `json:"count_line_cross_free_spin_sym,omitempty"`
+	PerlGreenForestChipsCollect  int64            `json:"perl_green_forest_chips_collect,omitempty"`
+	GamePlaying                  pb.SiXiangGame   `json:"game_playing,omitempty"`
+	NumSpinLeft                  int              `json:"num_spin_left,omitempty"`
+	TotalChipWin                 int              `json:"total_chip_win,omitempty"`
+	TotalLineWin                 int              `json:"total_line_win,omitempty"`
+	CountLineCrossFreeSpinSymbol int              `json:"count_line_cross_free_spin_sym,omitempty"`
+	SpinList                     []*pb.SpinSymbol `json:"spin_list,omitempty"`
+	MatrixSpecial                *SlotMatrix      `json:"matrix_special,omitempty"`
+	TurnSureSpinSpecial          int              `json:"turn_sure_spin_special,omitempty"`
 }
 
 type SlotsMatchState struct {
@@ -66,12 +69,12 @@ type SlotsMatchState struct {
 	bet             *pb.InfoBet
 	WinJp           pb.WinJackpot
 
-	MatrixSpecial SlotMatrix
+	MatrixSpecial *SlotMatrix
 	// ChipsWinInSpecialGame int64
 	SpinSymbols []*pb.SpinSymbol
 	NumSpinLeft int // gem using for spin in dragon perl
 	// lần quay chắc chắn ra ngọc
-	TurnSureSpinEye int
+	TurnSureSpinSpecial int
 	// EyeSymbolRemains []pb.SiXiangSymbol
 	// [mcb]gamebonus
 	gameEyePlayed map[int]map[pb.SiXiangGame]int
@@ -114,17 +117,13 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		bet: &pb.InfoBet{
 			Chips: 0,
 		},
-		CurrentSiXiangGame: pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
-		NextSiXiangGame:    pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
-		// CollectionSymbol:   make(map[pb.SiXiangGame]map[int]map[pb.SiXiangSymbol]int, 0),
-		// ChipWinByGame:      make(map[pb.SiXiangGame]int64, 0),
-		// LineWinByGame:    make(map[pb.SiXiangGame]int, 0),
+		CurrentSiXiangGame:     pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+		NextSiXiangGame:        pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		ChipStat:               NewChipStat(),
 		RatioFruitBasket:       1,
 		gameEyePlayed:          make(map[int]map[pb.SiXiangGame]int),
 		NumSpinRemain6thLetter: MinNumSpinLetter6th,
 		LetterSymbol:           make(map[pb.SiXiangSymbol]bool),
-		// winJPHistory:           make(map[int]*pb.JackpotHistory),
 		Rtp: lib.Rtp{
 			Id:            0,
 			PercentExpect: 120,
@@ -206,55 +205,6 @@ func (s *SlotsMatchState) SetBalanceResult(u *pb.BalanceResult) {
 	s.balanceResult = u
 }
 
-//	func (s *SlotsMatchState) ResetTrackingPlayBonusGame() {
-//		s.trackingPlaySiXiangGame = make(map[pb.SiXiangGame]int)
-//	}
-// func (s *SlotsMatchState) AddCollectionSymbol(game pb.SiXiangGame, chipMcb int, sym pb.SiXiangSymbol) {
-// 	if _, ok := s.CollectionSymbol[game]; !ok {
-// 		s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
-// 	}
-// 	collection, exist := s.CollectionSymbol[game][chipMcb]
-// 	if !exist {
-// 		s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
-// 		collection = s.CollectionSymbol[game][chipMcb]
-// 	}
-// 	num := collection[sym]
-// 	num++
-// 	collection[sym] = num
-// 	s.CollectionSymbol[game][chipMcb] = collection
-// }
-
-// func (s *SlotsMatchState) ResetCollection(game pb.SiXiangGame, chipMcb int) {
-// 	s.CollectionSymbol[game] = make(map[int]map[pb.SiXiangSymbol]int)
-// 	s.CollectionSymbol[game][chipMcb] = make(map[pb.SiXiangSymbol]int)
-// }
-
-// func (s *SlotsMatchState) CollectionSymbolToSlice(game pb.SiXiangGame, chipMcb int) []*pb.CollectSymbol {
-// 	ml := make([]*pb.CollectSymbol, 0, len(s.CollectionSymbol))
-// 	if _, ok := s.CollectionSymbol[game]; !ok {
-// 		return ml
-// 	}
-// 	collection, exist := s.CollectionSymbol[game][chipMcb]
-// 	if !exist {
-// 		return ml
-// 	}
-// 	for symbol, qty := range collection {
-// 		v := &pb.CollectSymbol{
-// 			Symbol: symbol,
-// 			Qty:    int64(qty),
-// 		}
-// 		ml = append(ml, v)
-// 	}
-// 	return ml
-// }
-
-// func (s *SlotsMatchState) SizeCollectionSymbol(game pb.SiXiangGame, chipMcb int) int {
-// 	if _, ok := s.CollectionSymbol[game]; !ok {
-// 		return 0
-// 	}
-// 	return len(s.CollectionSymbol[game][chipMcb])
-// }
-
 func (s *SlotsMatchState) AddGameEyePlayed(game pb.SiXiangGame) int {
 	if _, ok := s.gameEyePlayed[int(s.bet.Chips)]; !ok {
 		s.gameEyePlayed[int(s.bet.Chips)] = make(map[pb.SiXiangGame]int)
@@ -281,19 +231,11 @@ func (s *SlotsMatchState) GameEyePlayed() map[pb.SiXiangGame]int {
 
 func (s *SlotsMatchState) PriceBuySixiangGem() (int64, error) {
 	if s.Label.Code != define.SixiangGameName {
-		// p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
-		// 	Code:  int64(codes.Aborted),
-		// 	Error: entity.ErrorInvalidRequestGame.Error(),
-		// }, []runtime.Presence{s.GetPresence(userID)}, nil, false)
 		return 0, ErrorInvalidRequestGame
 	}
 
 	numGemCollect := s.NumGameEyePlayed()
 	if numGemCollect < 0 || numGemCollect > 4 {
-		// p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
-		// 	Code:  int64(codes.Aborted),
-		// 	Error: entity.ErrorInternal.Error(),
-		// }, []runtime.Presence{s.GetPresence(userID)}, nil, false)
 		return 0, nil
 	}
 	ratio := PriceBuySixiangGem[numGemCollect]
@@ -372,14 +314,22 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 			tarzanSg.GamePlaying = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 		}
 		s.NextSiXiangGame = tarzanSg.GamePlaying
-		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
-			s.NumSpinLeft = tarzanSg.NumSpinLeft
-			s.ChipStat.Reset(s.NextSiXiangGame)
-			s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(tarzanSg.TotalChipWin))
-			s.ChipStat.AddLineWin(s.NextSiXiangGame, int64(tarzanSg.TotalLineWin))
+		s.NumSpinLeft = tarzanSg.NumSpinLeft
+		s.ChipStat.Reset(s.NextSiXiangGame)
+		s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(tarzanSg.TotalChipWin))
+		s.ChipStat.AddLineWin(s.NextSiXiangGame, int64(tarzanSg.TotalLineWin))
+		s.CountLineCrossFreeSpinSymbol = tarzanSg.CountLineCrossFreeSpinSymbol
+		s.TurnSureSpinSpecial = 0
+		s.SpinList = tarzanSg.SpinList
+		switch s.NextSiXiangGame {
+		case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9:
+			s.MatrixSpecial = nil
 			s.LastResult = nil
-			s.CountLineCrossFreeSpinSymbol = tarzanSg.CountLineCrossFreeSpinSymbol
-		} else {
+		case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE:
+			s.NumSpinLeft = tarzanSg.NumSpinLeft
+			s.MatrixSpecial = tarzanSg.MatrixSpecial
+			s.LastResult = nil
+		default:
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 		}
 		if len(s.LetterSymbol) == len(TarzanLetterSymbol) {
@@ -392,10 +342,6 @@ func (s *SlotsMatchState) SaveGameJson() string {
 	// return "test"
 	switch s.Label.Code {
 	case define.SixiangGameName:
-		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL)
-		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW)
-		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK)
-		// s.AddGameEyePlayed(pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY)
 		sixiangSaveGame := &SixiangSaveGame{
 			GameEyePlayed: s.gameEyePlayed,
 			LastMcb:       s.bet.Chips,
@@ -413,13 +359,20 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			TotalChipWin:                 int(s.ChipStat.TotalChipWin(s.NextSiXiangGame)),
 			TotalLineWin:                 int(s.ChipStat.TotalLineWin(s.NextSiXiangGame)),
 			CountLineCrossFreeSpinSymbol: s.CountLineCrossFreeSpinSymbol,
+			SpinList:                     s.SpinList,
+			TurnSureSpinSpecial:          s.TurnSureSpinSpecial,
+			MatrixSpecial:                s.MatrixSpecial,
 		}
-		if tarzanSg.GamePlaying != pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9 {
+		if len(tarzanSg.SpinList) == 0 {
+			tarzanSg.SpinList = nil
+		}
+		if tarzanSg.GamePlaying == pb.SiXiangGame_SI_XIANG_GAME_NORMAL || tarzanSg.NumSpinLeft <= 0 {
 			tarzanSg.TotalChipWin = 0
 			tarzanSg.TotalLineWin = 0
 			tarzanSg.GamePlaying = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 			tarzanSg.NumSpinLeft = 0
 			tarzanSg.CountLineCrossFreeSpinSymbol = 0
+			tarzanSg.TurnSureSpinSpecial = 0
 		}
 		for sym := range s.LetterSymbol {
 			tarzanSg.LetterSymbol = append(tarzanSg.LetterSymbol, sym)

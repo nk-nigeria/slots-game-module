@@ -36,7 +36,8 @@ func NewLuckyDrawEngine(ratioInSixiangBonus int, randomIntFn func(min, max int) 
 func (e *luckyDrawEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixLuckyDraw()
-	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
+	matrixSpecial := entity.ShuffleMatrix(matrix)
+	s.MatrixSpecial = &matrixSpecial
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = -1
 	// s.ChipsWinInSpecialGame = 0

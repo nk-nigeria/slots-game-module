@@ -25,7 +25,8 @@ func NewBonusEngine(randomIntFn func(min, max int) int) lib.Engine {
 func (e *bonusEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixBonusGame()
-	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
+	matrixSpecial := entity.ShuffleMatrix(matrix)
+	s.MatrixSpecial = &matrixSpecial
 	// s.ChipsWinInSpecialGame = 0
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = 1

@@ -47,7 +47,7 @@ func NewRapidPayEngine(ratioInSixiangBonus int, randomIntFn func(min, max int) i
 func (e *rapidPayEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixRapidPay()
-	s.MatrixSpecial = matrix
+	s.MatrixSpecial = &matrix
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = defaultRapidPayGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED

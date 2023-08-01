@@ -67,6 +67,10 @@ func (e *tarzanEngine) Finish(matchState interface{}) (interface{}, error) {
 		s.PerlGreenForest = perlGreenForestRemain
 		s.PerlGreenForestChipsCollect = int64(s.PerlGreenForest) * s.Bet().Chips / 2
 	}
+	slotDesk.LetterSymbols = make([]pb.SiXiangSymbol, 0, len(s.LetterSymbol))
+	for k := range s.LetterSymbol {
+		slotDesk.LetterSymbols = append(slotDesk.LetterSymbols, k)
+	}
 	slotDesk.GameReward.PerlGreenForestChipsCollect = s.PerlGreenForestChipsCollect
 	slotDesk.BigWin = e.transformLineWinToBigWin(int(s.ChipStat.TotalLineWin(s.CurrentSiXiangGame)))
 	return slotDesk, err
@@ -139,6 +143,8 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 	}
 	if slotdesk.GameReward.RatioBonus < 1 {
 		slotdesk.GameReward.RatioBonus = 1
+	} else {
+		slotdesk.GameReward.TotalChipsWinByGame *= int64(slotdesk.GameReward.RatioBonus)
 	}
 	// slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
 	slotdesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)

@@ -38,7 +38,8 @@ func NewGoldPickEngine(ratioInSixiangBonus int, randomIntFn func(min, max int) i
 func (e *goldPickEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixGoldPick()
-	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
+	matrixSpecial := entity.ShuffleMatrix(matrix)
+	s.MatrixSpecial = &matrixSpecial
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	s.NumSpinLeft = defaultGoldPickGemSpin
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED

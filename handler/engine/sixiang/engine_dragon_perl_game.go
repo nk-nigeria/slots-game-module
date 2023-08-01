@@ -48,7 +48,8 @@ func NewDragonPearlEngine(ratioInSixiangBonus int, randomIntFn func(min, max int
 func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewMatrixDragonPearl()
-	s.MatrixSpecial = entity.ShuffleMatrix(matrix)
+	matrixSpecial := entity.ShuffleMatrix(matrix)
+	s.MatrixSpecial = &matrixSpecial
 	// s.ChipsWinInSpecialGame = 0
 	s.SpinSymbols = []*pb.SpinSymbol{}
 	// init spin list
@@ -100,7 +101,7 @@ func (e *dragonPearlEngine) NewGame(matchState interface{}) (interface{}, error)
 	s.LastResult = res.(*pb.SlotDesk)
 	s.NotDropEyeSymbol = false
 	s.NumSpinLeft = 3
-	s.TurnSureSpinEye = e.randomIntFn(1, 3)
+	s.TurnSureSpinSpecial = e.randomIntFn(1, 3)
 	// s.TurnSureSpinEye = 3
 	return s, nil
 }
@@ -122,7 +123,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 	// nên đầu game random ra lân quay chắc chắn sẽ ra eye nếu tới lượt đó
 	// nhưng chưa quay ra eye
 	var spinSymbol *pb.SpinSymbol
-	if s.NumSpinLeft == s.TurnSureSpinEye && !s.NotDropEyeSymbol {
+	if s.NumSpinLeft == s.TurnSureSpinSpecial && !s.NotDropEyeSymbol {
 		s.MatrixSpecial.ForEeachNotFlip(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 			if entity.IsSixiangEyeSymbol(symbol) && spinSymbol == nil {
 				// eyeSymbolSpin = symbol
@@ -134,7 +135,7 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				}
 			}
 		})
-		s.TurnSureSpinEye = -1
+		s.TurnSureSpinSpecial = -1
 	} else {
 		// normal spin
 		for {
@@ -143,12 +144,12 @@ func (e *dragonPearlEngine) Process(matchState interface{}) (interface{}, error)
 				if s.NotDropEyeSymbol {
 					continue
 				}
-				s.TurnSureSpinEye = 0
+				s.TurnSureSpinSpecial = 0
 				// pay in turn 100% spin eye
-				if s.TurnSureSpinEye < 0 {
+				if s.TurnSureSpinSpecial < 0 {
 					continue
 				}
-				s.TurnSureSpinEye = 0
+				s.TurnSureSpinSpecial = 0
 			}
 			// check condition when spin eye warrior
 			// Mắt huyền vũ: làm rơi thêm random 3 viên ngọc tiền lên bảng (không nhả ngọc JP)
