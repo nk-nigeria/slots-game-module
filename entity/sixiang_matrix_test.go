@@ -16,7 +16,7 @@ func TestSlotMatrix_IsPayline(t *testing.T) {
 		for _, val := range indexs {
 			matrix.List[val] = api.SiXiangSymbol_SI_XIANG_SYMBOL_GORILLE + api.SiXiangSymbol(val)
 		}
-		list, isPayline := matrix.IsPayline(indexs)
+		list, isPayline := matrix.IsPayline(matrix, indexs)
 		assert.Equal(t, false, isPayline)
 		assert.Equal(t, 0, len(list))
 
@@ -32,19 +32,19 @@ func TestSlotMatrix_IsPayline(t *testing.T) {
 		lastIdx := indexs[len(indexs)-1]
 		for _, sym := range arr {
 			matrix.List[lastIdx] = sym
-			list, isPayline = matrix.IsPayline(indexs)
+			list, isPayline = matrix.IsPayline(matrix, indexs)
 			assert.Equal(t, true, isPayline)
 			assert.Equal(t, indexs, list)
 		}
 		// test not payline
 		matrix.List[lastIdx] = api.SiXiangSymbol_SI_XIANG_SYMBOL_LETTER_J
-		_, isPayline = matrix.IsPayline(indexs)
+		_, isPayline = matrix.IsPayline(matrix, indexs)
 		assert.Equal(t, false, isPayline)
 		// test wild at begin
 		matrix.List[5] = api.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
 		for _, sym := range arr {
 			matrix.List[lastIdx] = sym
-			list, isPayline = matrix.IsPayline(indexs)
+			list, isPayline = matrix.IsPayline(matrix, indexs)
 			assert.Equal(t, true, isPayline)
 			assert.Equal(t, indexs, list)
 		}

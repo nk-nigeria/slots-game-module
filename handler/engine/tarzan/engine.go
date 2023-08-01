@@ -146,14 +146,9 @@ func (e *tarzanEngine) Info(matchState interface{}) (interface{}, error) {
 	} else {
 		slotdesk.GameReward.TotalChipsWinByGame *= int64(slotdesk.GameReward.RatioBonus)
 	}
-	// slotdesk.ChipsBuyGem, _ = s.PriceBuySixiangGem()
 	slotdesk.LetterSymbols = make([]pb.SiXiangSymbol, 0)
 	for k := range s.LetterSymbol {
 		slotdesk.LetterSymbols = append(slotdesk.LetterSymbols, k)
 	}
-	// slotdesk.SixiangGems = make([]pb.SiXiangGame, 0)
-	// for gem := range s.GameEyePlayed() {
-	// 	slotdesk.SixiangGems = append(slotdesk.SixiangGems, gem)
-	// }
 	return slotdesk, nil
 }
