@@ -135,7 +135,7 @@ func Test_normal_Paylines(t *testing.T) {
 		}
 		e := NewNormal(func(i1, i2 int) int { return i1 })
 		engine := e.(*normal)
-		paylines := engine.Paylines(matrix)
+		paylines := engine.Paylines(matrix, matrix)
 		assert.NotNil(t, paylines)
 		assert.Equal(t, 1, len(paylines))
 		assert.Equal(t, int32(12), paylines[0].Id)

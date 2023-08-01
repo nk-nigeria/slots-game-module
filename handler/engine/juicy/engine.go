@@ -1,6 +1,8 @@
 package juicy
 
 import (
+	"time"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 
@@ -29,8 +31,45 @@ func (e *engine) Finish(matchState interface{}) (interface{}, error) {
 	return e.engines[s.CurrentSiXiangGame].Finish(matchState)
 }
 
-func (e *engine) Info(s interface{}) (interface{}, error) {
-	return s, nil
+func (e *engine) Info(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	var matrix *pb.SlotMatrix
+	var spreadMatrix *pb.SlotMatrix
+	switch s.CurrentSiXiangGame {
+	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
+		spreadMatrix = s.WildMatrix.ToPbSlotMatrix()
+		matrix = spreadMatrix
+	default:
+		matrix = s.MatrixSpecial.ToPbSlotMatrix()
+		for idx, symbol := range s.MatrixSpecial.List {
+			if s.MatrixSpecial.IsFlip(idx) {
+				matrix.Lists[idx] = symbol
+			} else {
+				matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
+			}
+		}
+		spreadMatrix = matrix
+	}
+	matrix.SpinLists = s.SpinList
+	slotdesk := &pb.SlotDesk{
+		Matrix:             matrix,
+		SpreadMatrix:       spreadMatrix,
+		ChipsMcb:           s.Bet().Chips,
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		TsUnix:             time.Now().Unix(),
+		SpinSymbols:        s.SpinSymbols,
+		NumSpinLeft:        int64(s.NumSpinLeft),
+		InfoBet:            s.Bet(),
+		WinJpHistory:       s.WinJPHistory(),
+		BetLevels:          entity.BetLevels[:],
+		GameReward: &pb.GameReward{
+			UpdateWallet:        false,
+			TotalChipsWinByGame: s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
+			TotalLineWin:        s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
+		},
+	}
+	return slotdesk, nil
 }
 
 // NewGame implements lib.Engine

@@ -139,7 +139,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	chipWin := int64(0)
 	lineWin := int64(0)
 	paylines := make([]*pb.Payline, 0)
-	for _, payline := range e.Paylines(s.WildMatrix) {
+	for _, payline := range e.Paylines(s.Matrix, s.WildMatrix) {
 		newPayline := entity.RatioPaylineTarzan(payline, s.Matrix.List)
 		line := newPayline.Rate * 100
 		if line <= 0 {
@@ -314,10 +314,10 @@ func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }
 
-func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
+func (e *normal) Paylines(matrix entity.SlotMatrix, wild entity.SlotMatrix) []*pb.Payline {
 	paylines := make([]*pb.Payline, 0)
 	for pair := entity.PaylineTarzanMapping.Oldest(); pair != nil; pair = pair.Next() {
-		paylineIndexs, isPayline := matrix.IsPayline(pair.Value)
+		paylineIndexs, isPayline := wild.IsPayline(matrix, pair.Value)
 		if !isPayline {
 			continue
 		}

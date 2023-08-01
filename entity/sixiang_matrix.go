@@ -1,6 +1,8 @@
 package entity
 
-import pb "github.com/ciaolink-game-platform/cgp-common/proto"
+import (
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+)
 
 const (
 	Row_1 = 0
@@ -298,11 +300,11 @@ func (sm *SlotMatrix) IsFlip(idx int) bool {
 	return sm.TrackFlip[idx]
 }
 
-func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {
+func (sm *SlotMatrix) IsPayline(matrix SlotMatrix, paylineIndex []int) ([]int, bool) {
 	if len(paylineIndex) == 0 || len(sm.List) == 0 {
 		return nil, false
 	}
-	firstSymbol := sm.List[paylineIndex[0]]
+	firstSymbol := matrix.List[paylineIndex[0]]
 	for _, idx := range paylineIndex {
 		if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 			return nil, false
@@ -313,9 +315,9 @@ func (sm *SlotMatrix) IsPayline(paylineIndex []int) ([]int, bool) {
 		if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_FREE_SPIN {
 			break
 		}
-		firstSymbol = sm.List[idx]
+		firstSymbol = matrix.List[idx]
 	}
-	validPaylineIndex := make([]int, 0)
+	validPaylineIndex := make([]int, 0, 2)
 	if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND {
 		return validPaylineIndex, false
 	}
