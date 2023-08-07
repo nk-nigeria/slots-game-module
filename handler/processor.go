@@ -368,6 +368,11 @@ func (p *processor) doSpin(ctx context.Context,
 		return
 	}
 	slotDesk := result.(*pb.SlotDesk)
+	if slotDesk == nil {
+		logger.WithField("error", "slotDesk is null").WithField("bet info", s.Bet()).WithField("game", s.Label.Code).WithField("state", s.CurrentSiXiangGame).
+			Error("engine process failed")
+		return
+	}
 	slotDesk.InfoBet = s.Bet()
 	p.gameSummary(ctx, logger, nk, dispatcher, message.GetUserId(), s, slotDesk, chipBetFee)
 	if slotDesk.IsFinishGame {

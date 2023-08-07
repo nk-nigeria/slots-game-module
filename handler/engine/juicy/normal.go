@@ -1,6 +1,8 @@
 package juicy
 
 import (
+	"fmt"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -37,7 +39,8 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	matrix := entity.NewSlotMatrix(entity.RowsJuicynMatrix, entity.ColsJuicyMatrix)
 	matrix = e.SpinMatrix(matrix, ratioWild1_0)
 	s.SetMatrix(matrix)
-	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.SetWildMatrix(matrix)
+	// s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.NumSpinLeft = -1
 	return matchState, nil
 }
@@ -45,9 +48,10 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	s.ChipStat.ResetChipWin(0)
-	s.ChipStat.ResetLineWin(0)
+	s.IsSpinChange = true
+	// s.ChipStat.Reset(s.CurrentSiXiangGame)
 	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
+	// cheat game
 	if s.Bet().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET) {
 		for i := 0; i < 3; i++ {
 			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
@@ -57,6 +61,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI
 		}
 	}
+	// end cheat game
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.WildMatrix(matrix))
 	s.SetPaylines(e.Paylines(s.WildMatrix))
@@ -70,48 +75,52 @@ func (e *normal) Random(min int, max int) int {
 
 // Finish implements lib.Engine
 func (e *normal) Finish(matchState interface{}) (interface{}, error) {
-	slotDesk := &pb.SlotDesk{
-		GameReward: &pb.GameReward{},
-	}
 	s := matchState.(*entity.SlotsMatchState)
+	if !s.IsSpinChange {
+		return s.LastResult, nil
+	}
+	s.IsSpinChange = false
 	s.NumScatterSeq = e.countScattersSequent(&s.Matrix)
 	lineWin := 0
 	for _, payline := range s.Paylines() {
 		lineWin += int(payline.GetRate())
+		payline.Chips = int64(payline.GetRate()) * s.Bet().Chips / 100
 	}
+
+	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
+	// s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	// 	if entity.IsFruitBasketSymbol(symbol) {
+	// 		val := entity.JuicyBasketSymbol[symbol]
+	// 		lineWin += int(val.Value.Min) * s.RatioFruitBasket
+	// 	}
+	// })
+	s.NumFruitBasket = e.countFruitBasket(&s.Matrix)
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
 	if s.NumScatterSeq >= 3 {
 		lineWin *= s.NumScatterSeq
 	}
-	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
-	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		if entity.IsFruitBasketSymbol(symbol) {
-			val := entity.JuicyBasketSymbol[symbol]
-			lineWin += int(val.Value.Min) * s.RatioFruitBasket
-		}
-	})
-	// s.ChipWinByGame[s.CurrentSiXiangGame] = int64(lineWin) * s.Bet().Chips / 100
-	chipWin := int64(lineWin) * s.Bet().Chips / 100
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipWin)
-	// s.LineWinByGame[s.CurrentSiXiangGame] = lineWin
-	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
-	slotDesk.ChipsMcb = s.Bet().Chips
-	// slotDesk.ChipsWin = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.GameReward.ChipsWin = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
-	slotDesk.GameReward.TotalChipsWinByGame = slotDesk.GameReward.ChipsWin
-	slotDesk.GameReward.LineWin = int64(lineWin)
-	slotDesk.GameReward.TotalLineWin = slotDesk.GameReward.LineWin
-	slotDesk.GameReward.RatioBonus = float32(s.NumScatterSeq)
-	slotDesk.Matrix = s.Matrix.ToPbSlotMatrix()
-	slotDesk.Paylines = s.Paylines()
-
-	s.NumFruitBasket = e.countFruitBasket(&s.Matrix)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
-	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.RatioFruitBasket = int64(s.RatioFruitBasket)
-	slotDesk.IsFinishGame = true
-	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	chipWin := int64(lineWin) * s.Bet().Chips / 100
+
+	slotDesk := &pb.SlotDesk{
+		ChipsMcb: s.Bet().Chips,
+		GameReward: &pb.GameReward{
+			ChipsWin:            chipWin,
+			TotalChipsWinByGame: chipWin,
+			LineWin:             int64(lineWin),
+			TotalLineWin:        int64(lineWin),
+			RatioWin:            float32(lineWin / 100.0),
+			TotalRatioWin:       float32(lineWin / 100.0),
+			RatioBonus:          float32(s.NumScatterSeq),
+		},
+		Matrix:             s.Matrix.ToPbSlotMatrix(),
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		Paylines:           s.Paylines(),
+		RatioFruitBasket:   int64(s.RatioFruitBasket),
+		IsFinishGame:       true,
+		NumSpinLeft:        int64(s.NumSpinLeft),
+	}
 	return slotDesk, nil
 }
 
@@ -141,14 +150,14 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	for i := 0; i < spinMatrix.Size; i++ {
-		randSymbol := entity.JuicySpintSymbol(list)
+		randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
 		spinMatrix.List[i] = randSymbol
 	}
 	//  Wild (reel 2 3 4 5)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD && col == entity.Col_1 {
 			for {
-				randSymbol := entity.JuicySpintSymbol(list)
+				randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
 				if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
 					continue
 				}
@@ -177,42 +186,84 @@ func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 	paylines := make([]*pb.Payline, 0)
 	for pair := entity.MapJuicyPaylineIdx.Oldest(); pair != nil; pair = pair.Next() {
-		payline := &pb.Payline{
-			// Id: int32(idx),
-		}
-		payline.Id = int32(pair.Key)
-		// idx++
 		symbols := matrix.ListFromIndexs(pair.Value)
 		if len(symbols) == 0 {
 			continue
 		}
-		firstSymbol := symbols[0]
-		if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
-			continue
-		}
-		if entity.IsFruitBasketSymbol(firstSymbol) {
-			continue
-		}
-		numSameSymbol := 0
-		for _, symbol := range symbols {
-			if symbol == firstSymbol || symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
-				numSameSymbol++
+		payline := &pb.Payline{}
+		// get payline win largest chips
+		for idx, symbol := range symbols {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD ||
+				symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER ||
+				symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED {
 				continue
 			}
-			break
-		}
-		if numSameSymbol >= 2 {
-			rate := entity.RatioJuicyPaylineMap[firstSymbol][int32(numSameSymbol)]
-			if rate == 0 {
+			if entity.IsFruitBasketSymbol(symbol) {
 				continue
 			}
-			payline.Symbol = firstSymbol
-			payline.NumOccur = int32(numSameSymbol)
-			payline.Rate = rate
+			if pair.Key == 8 {
+				fmt.Println("")
+			}
+			symbolCompare, indecies := e.countSymbolSeq(matrix, idx, pair.Value)
+			newPayline := e.buildPaylineFromSymbol(symbolCompare, len(indecies))
+			newPayline.Indices = make([]int32, 0, len(indecies))
+			for _, ii := range indecies {
+				newPayline.Indices = append(newPayline.Indices, int32(ii))
+			}
+			if newPayline.Rate > payline.Rate {
+				payline = newPayline
+			}
+		}
+		if payline.Rate > 0 {
+			payline.Id = int32(pair.Key)
 			paylines = append(paylines, payline)
 		}
 	}
 	return paylines
+}
+
+func (e *normal) countSymbolSeq(matrix entity.SlotMatrix, startIndex int, indexs []int) (pb.SiXiangSymbol, []int) {
+	numSameSymbol := 0
+	startCount := false
+	/*
+	 find wild symbol before start index
+	 0  1	2		3			4  5
+	 x wild wild start_index wild  x
+	 -> start_index wild set = 1
+	*/
+	symbolCount := matrix.List[indexs[startIndex]]
+	for i := startIndex - 1; i >= 0; i-- {
+		sym := matrix.List[indexs[i]]
+		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+			startIndex = indexs[i]
+			continue
+		}
+		break
+	}
+	newIndexs := indexs[startIndex:]
+	paylineIndexs := make([]int, 0, len(newIndexs))
+	for idx, symbol := range matrix.ListFromIndexs(newIndexs) {
+		if symbol == symbolCount || symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+			numSameSymbol++
+			startCount = true
+			paylineIndexs = append(paylineIndexs, newIndexs[idx])
+			continue
+		}
+		if startCount {
+			break
+		}
+	}
+	return symbolCount, paylineIndexs
+}
+
+func (e *normal) buildPaylineFromSymbol(symbol pb.SiXiangSymbol, occur int) *pb.Payline {
+	rate := entity.RatioJuicyPaylineMap[symbol][int32(occur)]
+	payline := &pb.Payline{
+		Symbol:   symbol,
+		NumOccur: int32(occur),
+		Rate:     rate,
+	}
+	return payline
 }
 
 func (e *normal) countScattersSequent(matrix *entity.SlotMatrix) int {
