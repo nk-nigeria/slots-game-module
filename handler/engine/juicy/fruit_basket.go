@@ -32,8 +32,23 @@ func (*fruitBasket) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *fruitBasket) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	randIdx := e.Random(0, s.MatrixSpecial.Size)
-	s.MatrixSpecial.Flip(randIdx)
+	// randIdx := e.Random(0, s.MatrixSpecial.Size)
+	if s.Bet().Id < 0 {
+		return nil, entity.ErrorInfoBetInvalid
+	}
+	if s.NumSpinLeft <= 0 {
+		return nil, entity.ErrorSpinReachMax
+	}
+	s.IsSpinChange = true
+	idx := s.Bet().GetId()
+	symbol := s.MatrixSpecial.Flip(int(idx))
+	row, col := s.MatrixSpecial.RowCol(int(idx))
+	s.SpinSymbols = append(s.SpinSymbols, &pb.SpinSymbol{
+		Symbol: symbol,
+		Index:  idx,
+		Row:    int32(row),
+		Col:    int32(col),
+	})
 	s.NumSpinLeft--
 	return matchState, nil
 }
@@ -45,9 +60,11 @@ func (*fruitBasket) Random(min int, max int) int {
 
 // Finish implements lib.Engine
 func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
-	slotDesk := &pb.SlotDesk{}
 	s := matchState.(*entity.SlotsMatchState)
-	slotDesk.ChipsMcb = s.Bet().Chips
+	if !s.IsSpinChange {
+		return s.LastResult, nil
+	}
+	s.IsSpinChange = false
 	for idx := range s.MatrixSpecial.TrackFlip {
 		sym := s.MatrixSpecial.List[idx]
 		switch sym {
@@ -57,11 +74,15 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
 		}
 	}
-	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
-	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.IsFinishGame = true
-	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotDesk := &pb.SlotDesk{
+		ChipsMcb:           s.Bet().Chips,
+		Matrix:             s.Matrix.ToPbSlotMatrix(),
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		IsFinishGame:       true,
+		NumSpinLeft:        int64(s.NumSpinLeft),
+		SpinSymbols:        s.SpinSymbols,
+	}
 	return slotDesk, nil
 }
 

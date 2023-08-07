@@ -154,7 +154,7 @@ func (e *fruitRain) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		randomSymbol := entity.JuicySpintSymbol(entity.JuiceAllSymbols)
+		randomSymbol := entity.JuicySpinSymbol(e.randomIntFn, entity.JuiceAllSymbols)
 		spinMatrix.Flip(idx)
 		spinMatrix.List[idx] = randomSymbol
 	})

@@ -7,7 +7,7 @@ import (
 
 const (
 	ColsJuicyMatrix  = 5
-	RowsJuicynMatrix = 4
+	RowsJuicynMatrix = 3
 )
 
 var JuicyLowSymbols = []pb.SiXiangSymbol{
@@ -139,15 +139,7 @@ func init() {
 	}
 	JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
 	list := make([]pb.SiXiangSymbol, 0, len(JuiceAllSymbols)*10)
-	// for i := 0; i < 10; i++ {
-	// 	JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
-	// }
-	// for i := 0; i < 15; i++ {
-	// 	JuiceAllSymbolsWildRatio1_5 = append(JuiceAllSymbolsWildRatio1_5, JuiceAllSymbols...)
-	// }
-	// for i := 0; i < 20; i++ {
-	// 	JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio2_0, JuiceAllSymbols...)
-	// }
+
 	for i := 0; i < 10; i++ {
 		list = append(list, JuiceAllSymbols...)
 	}
@@ -267,12 +259,12 @@ func NewJuicyFruitRainMaxtrix() SlotMatrix {
 	return m
 }
 
-func JuicySpintSymbol(list []pb.SiXiangSymbol) pb.SiXiangSymbol {
+func JuicySpinSymbol(randFn func(min, max int) int, list []pb.SiXiangSymbol) pb.SiXiangSymbol {
 	lenList := len(list)
 	if lenList == 0 {
 		return pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 	}
-	idx := RandomInt(0, lenList)
+	idx := randFn(0, lenList)
 	randSymbol := list[idx]
 
 	if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
@@ -281,7 +273,7 @@ func JuicySpintSymbol(list []pb.SiXiangSymbol) pb.SiXiangSymbol {
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
 		}
-		randSymbol = ShuffleSlice(arr)[RandomInt(0, len(arr))]
+		randSymbol = ShuffleSlice(arr)[randFn(0, len(arr))]
 	}
 	return randSymbol
 }
