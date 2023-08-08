@@ -37,6 +37,7 @@ func (e *engine) Finish(matchState interface{}) (interface{}, error) {
 	if slotDesk == nil {
 		return result, err
 	}
+	slotDesk.WinJpHistory = s.WinJPHistoryJuice()
 	return slotDesk, nil
 }
 
