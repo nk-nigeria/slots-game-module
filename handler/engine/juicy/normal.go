@@ -80,6 +80,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		return s.LastResult, nil
 	}
 	s.IsSpinChange = false
+	s.AddChipAccum(s.Bet().Chips)
 	s.NumScatterSeq = e.countScattersSequent(&s.Matrix)
 	lineWin := 0
 	for _, payline := range s.Paylines() {
@@ -88,12 +89,6 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	}
 
 	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
-	// s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-	// 	if entity.IsFruitBasketSymbol(symbol) {
-	// 		val := entity.JuicyBasketSymbol[symbol]
-	// 		lineWin += int(val.Value.Min) * s.RatioFruitBasket
-	// 	}
-	// })
 	s.NumFruitBasket = e.countFruitBasket(&s.Matrix)
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
 	if s.NumScatterSeq >= 3 {
@@ -101,7 +96,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	chipWin := int64(lineWin) * s.Bet().Chips / 100
-
+	s.PerlGreenForestChipsCollect += s.Bet().Chips
 	slotDesk := &pb.SlotDesk{
 		ChipsMcb: s.Bet().Chips,
 		GameReward: &pb.GameReward{
@@ -150,8 +145,14 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	for i := 0; i < spinMatrix.Size; i++ {
-		randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
-		spinMatrix.List[i] = randSymbol
+		for {
+			randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
+			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
+				continue
+			}
+			spinMatrix.List[i] = randSymbol
+			break
+		}
 	}
 	//  Wild (reel 2 3 4 5)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
