@@ -253,7 +253,7 @@ func NewJuicyFruitRainMaxtrix() SlotMatrix {
 				pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
 				pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
 			}
-			m.List[idx] = ShuffleSlice(arr)[0]
+			m.List[idx] = ShuffleSlice(arr)[RandomInt(0, len(arr))]
 		}
 	})
 	return m
@@ -266,14 +266,27 @@ func JuicySpinSymbol(randFn func(min, max int) int, list []pb.SiXiangSymbol) pb.
 	}
 	idx := randFn(0, lenList)
 	randSymbol := list[idx]
-
-	if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
-		arr := []pb.SiXiangSymbol{
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI,
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
-			pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
-		}
-		randSymbol = ShuffleSlice(arr)[randFn(0, len(arr))]
-	}
 	return randSymbol
+}
+
+func JuicySpinSymbolToJp(sym pb.SiXiangSymbol) pb.WinJackpot {
+	switch sym {
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI:
+		return pb.WinJackpot_WIN_JACKPOT_MINI
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR:
+		return pb.WinJackpot_WIN_JACKPOT_MINOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR:
+		return pb.WinJackpot_WIN_JACKPOT_MAJOR
+	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_GRAND:
+		return pb.WinJackpot_WIN_JACKPOT_GRAND
+	default:
+		return pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
+	}
+}
+
+var JuiceJpRatio = map[pb.WinJackpot]int{
+	pb.WinJackpot_WIN_JACKPOT_MINI:  1000,
+	pb.WinJackpot_WIN_JACKPOT_MINOR: 2000,
+	pb.WinJackpot_WIN_JACKPOT_MAJOR: 10 * 1000,
+	pb.WinJackpot_WIN_JACKPOT_GRAND: 100 * 1000,
 }

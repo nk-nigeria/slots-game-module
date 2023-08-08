@@ -10,9 +10,9 @@ import (
 var _ lib.Engine = &fruitRain{}
 
 type fruitRain struct {
-	randomIntFn           func(min, max int) int
-	autoRefillGemSpin     bool
-	matrixFruitRainBasket []pb.SiXiangSymbol
+	randomIntFn       func(min, max int) int
+	autoRefillGemSpin bool
+	// matrixFruitRainBasket []pb.SiXiangSymbol
 }
 
 func NewFruitRain(randomIntFn func(min, max int) int) lib.Engine {
@@ -33,7 +33,8 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	s.NumSpinLeft = 3
 	e.autoRefillGemSpin = true
 	m := entity.NewJuicyFruitRainMaxtrix()
-	e.matrixFruitRainBasket = m.List
+	s.WildMatrix = m
+	// e.matrixFruitRainBasket = m.List
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	switch s.NumScatterSeq {
 	case 3:
@@ -45,6 +46,17 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	default:
 		s.RatioFruitBasket = 1
 	}
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
+			Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+			Row:       int32(row),
+			Col:       int32(col),
+			Index:     int32(idx),
+			Ratio:     0,
+			WinJp:     pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
+			WinAmount: 0,
+		})
+	})
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
 }
@@ -55,6 +67,7 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return s, entity.ErrorSpinReachMax
 	}
+	s.IsSpinChange = true
 	// matrix := s.MatrixSpecial
 	matrix := e.SpinMatrix(*s.MatrixSpecial)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -64,16 +77,26 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 		}
 		newSymbol := matrix.List[idx]
 		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
-			newSymbol = e.matrixFruitRainBasket[idx]
+			newSymbol = s.WildMatrix.List[idx]
 		}
 		s.MatrixSpecial.List[idx] = newSymbol
 		s.MatrixSpecial.Flip(idx)
+
 		if entity.IsFruitBasketSymbol(newSymbol) {
 			s.NumSpinLeft = 3
 			e.autoRefillGemSpin = false
+			spinSymbol := s.SpinList[idx]
+			spinSymbol.Symbol = newSymbol
+			val := entity.JuicyBasketSymbol[spinSymbol.Symbol]
+			spinSymbol.Ratio = float32(e.randomIntFn(int(val.Value.Min), int(val.Value.Max)))
+			spinSymbol.WinJp = entity.JuicySpinSymbolToJp(spinSymbol.Symbol)
+			s.SpinList = append(s.SpinList, spinSymbol)
 		}
+
 	})
 	s.NumSpinLeft--
+	// Nếu trong 3 lượt đầu tiên mà không có Giỏ trái cây nào được thêm mới vào màn hình,
+	//  user được tặng 3 lượt freespin nữa. việc tặng chỉ xuất hiện 1 lần duy nhất.
 	if s.NumSpinLeft == 0 && e.autoRefillGemSpin {
 		s.NumSpinLeft = 3
 		e.autoRefillGemSpin = false
@@ -89,56 +112,69 @@ func (e *fruitRain) Random(min int, max int) int {
 // Finish implements lib.Engine
 func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	slotDesk := &pb.SlotDesk{
-		ChipsMcb:   s.Bet().Chips,
-		Matrix:     s.MatrixSpecial.ToPbSlotMatrix(),
-		GameReward: &pb.GameReward{},
+	if !s.IsSpinChange {
+		return s.LastResult, nil
 	}
+	s.IsSpinChange = false
+
 	isFinish := s.NumSpinLeft == 0
-	if !isFinish {
-		numFruitBasket := 0
-		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-			if entity.IsFruitBasketSymbol(symbol) {
-				numFruitBasket++
-			}
-			if entity.IsFruitJPSymbol(symbol) {
-				switch symbol {
-				case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI:
-					s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
-				case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR:
-					s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
-				case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR:
-					s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
-				}
-			}
-		})
-		if numFruitBasket == len(s.MatrixSpecial.List) {
-			isFinish = true
-			s.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
+	numFruitBasket := 0
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		if entity.IsFruitBasketSymbol(symbol) {
+			numFruitBasket++
 		}
+		if entity.IsFruitJPSymbol(symbol) {
+			switch symbol {
+			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI:
+				s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR:
+				s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR:
+				s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+			}
+		}
+	})
+	lineWin := int64(0)
+	for _, spin := range s.SpinList {
+		lineWin += int64(spin.Ratio)
+		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 100
+		s.SpinList[spin.Index].WinAmount = spin.WinAmount
+	}
+	chipWin := lineWin * s.Bet().Chips / 100
+	totalChipWin := int64(0)
+	totalLineWin := int64(0)
+	for _, spin := range s.SpinList {
+		totalChipWin += spin.WinAmount
+		totalLineWin += int64(spin.Ratio)
+	}
+	if numFruitBasket == len(s.MatrixSpecial.List) {
+		isFinish = true
+		s.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
 	}
 	if s.WinJp != pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED {
 		isFinish = true
 	}
+	s.NextSiXiangGame = s.CurrentSiXiangGame
 	if isFinish {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-		lineWin := 0
-		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-			val := entity.JuicyBasketSymbol[symbol]
-			lineWin += e.randomIntFn(int(val.Value.Min), int(val.Value.Max))
-
-		})
-		// TODO:  add calc chip win jackpot
-		chipWin := int64(lineWin) * s.Bet().Chips / 100
-		slotDesk.GameReward.ChipsWin = chipWin
-		slotDesk.GameReward.TotalChipsWinByGame = chipWin
-		slotDesk.GameReward.LineWin = int64(lineWin)
-		slotDesk.GameReward.TotalLineWin = int64(lineWin)
-		s.NumFruitBasket = 0
+		s.WildMatrix = entity.SlotMatrix{}
 	}
-	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotDesk := &pb.SlotDesk{
+		ChipsMcb: s.Bet().Chips,
+		Matrix:   s.MatrixSpecial.ToPbSlotMatrix(),
+		GameReward: &pb.GameReward{
+			ChipsWin:            chipWin,
+			LineWin:             lineWin,
+			RatioWin:            float32(lineWin) / 100.0,
+			TotalLineWin:        totalLineWin,
+			TotalChipsWinByGame: totalChipWin,
+			TotalRatioWin:       float32(totalLineWin) / 100,
+		},
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		NumSpinLeft:        int64(s.NumSpinLeft),
+	}
+	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 

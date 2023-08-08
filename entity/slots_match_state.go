@@ -34,6 +34,11 @@ type SixiangSaveGame struct {
 	LastMcb       int64                          `json:"last_mcb,omitempty"`
 }
 
+type JuiceSaveGame struct {
+	LastMcb   int64           `json:"last_mcb,omitempty"`
+	ChipAccum map[int64]int64 `json:"chip_accum,omitempty"`
+}
+
 type TarzanSaveGame struct {
 	LastMcb         int64              `json:"last_mcb,omitempty"`
 	LetterSymbol    []pb.SiXiangSymbol `json:"letter_symbol,omitempty"`
@@ -106,6 +111,8 @@ type SlotsMatchState struct {
 	LastResult              *pb.SlotDesk
 	Rtp                     lib.Rtp
 	NotDropEyeSymbol        bool
+	// chip accum by bet
+	chipsAccum map[int64]int64
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -130,6 +137,10 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		},
 	}
 	m.winJPHistory = &pb.JackpotHistory{
+		Mini: &pb.JackpotReward{
+			WinJackpot: pb.WinJackpot_WIN_JACKPOT_MINI,
+			Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MINOR),
+		},
 		Minor: &pb.JackpotReward{
 			WinJackpot: pb.WinJackpot_WIN_JACKPOT_MINOR,
 			Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_MINOR),
@@ -256,8 +267,45 @@ func (s *SlotsMatchState) WinJPHistory() *pb.JackpotHistory {
 	s.winJPHistory.Major.Chips = s.winJPHistory.Major.Ratio * s.bet.Chips * ratio
 	s.winJPHistory.Mega.Chips = s.winJPHistory.Mega.Ratio * s.bet.Chips * ratio
 	s.winJPHistory.Grand.Chips = s.winJPHistory.Grand.Ratio * s.bet.Chips * ratio
-
 	return s.winJPHistory
+}
+
+func (s *SlotsMatchState) WinJPHistoryJuice() *pb.JackpotHistory {
+	{
+		s.winJPHistory.Mini.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_MINI])
+		s.winJPHistory.Mini.Chips = s.Bet().Chips * s.winJPHistory.Mini.Ratio
+		s.winJPHistory.Mini.ChipsAccum = 0
+	}
+	{
+		s.winJPHistory.Minor.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_MINOR])
+		s.winJPHistory.Minor.Chips = s.Bet().Chips * s.winJPHistory.Minor.Ratio
+		s.winJPHistory.Minor.ChipsAccum = 0
+	}
+	{
+		s.winJPHistory.Major.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_MAJOR])
+		s.winJPHistory.Major.Chips = s.Bet().Chips * s.winJPHistory.Major.Ratio
+		s.winJPHistory.Major.ChipsAccum = s.ChipAccum() / 1000
+	}
+	{
+		s.winJPHistory.Grand.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_GRAND])
+		s.winJPHistory.Grand.Chips = s.Bet().Chips * s.winJPHistory.Grand.Ratio
+		s.winJPHistory.Grand.ChipsAccum = s.ChipAccum() / 200
+	}
+	return s.winJPHistory
+}
+
+func (s *SlotsMatchState) AddChipAccum(chips int64) {
+	if s.chipsAccum == nil {
+		s.chipsAccum = make(map[int64]int64)
+	}
+	v := s.chipsAccum[s.bet.Chips]
+	v += chips
+	s.chipsAccum[s.bet.Chips] = v
+}
+
+func (s *SlotsMatchState) ChipAccum() int64 {
+	v := s.chipsAccum[s.bet.Chips]
+	return v
 }
 
 func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mcbInSaveGame int64) int64) {
@@ -335,19 +383,32 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if len(s.LetterSymbol) == len(TarzanLetterSymbol) {
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 		}
+	case define.JuicyGardenName:
+		juiceSg := &JuiceSaveGame{}
+		err := json.Unmarshal([]byte(saveGame.Data), &juiceSg)
+		if err != nil {
+			return
+		}
+		s.bet = &pb.InfoBet{
+			Chips: juiceSg.LastMcb,
+		}
+		if suggestMcb != nil {
+			s.bet.Chips = suggestMcb(juiceSg.LastMcb)
+		}
+		s.chipsAccum = juiceSg.ChipAccum
 	}
 }
 
 func (s *SlotsMatchState) SaveGameJson() string {
 	// return "test"
+	var saveGameInf interface{}
 	switch s.Label.Code {
 	case define.SixiangGameName:
 		sixiangSaveGame := &SixiangSaveGame{
 			GameEyePlayed: s.gameEyePlayed,
 			LastMcb:       s.bet.Chips,
 		}
-		data, _ := json.Marshal(sixiangSaveGame)
-		return string(data)
+		saveGameInf = sixiangSaveGame
 	case define.TarzanGameName:
 		tarzanSg := &TarzanSaveGame{
 			LetterSymbol:                 make([]pb.SiXiangSymbol, 0),
@@ -377,8 +438,14 @@ func (s *SlotsMatchState) SaveGameJson() string {
 		for sym := range s.LetterSymbol {
 			tarzanSg.LetterSymbol = append(tarzanSg.LetterSymbol, sym)
 		}
-		data, _ := json.Marshal(tarzanSg)
-		return string(data)
+		saveGameInf = tarzanSg
+	case define.JuicyGardenName:
+		saveGame := JuiceSaveGame{
+			LastMcb:   s.bet.Chips,
+			ChipAccum: s.chipsAccum,
+		}
+		saveGameInf = saveGame
 	}
-	return ""
+	data, _ := json.Marshal(saveGameInf)
+	return string(data)
 }

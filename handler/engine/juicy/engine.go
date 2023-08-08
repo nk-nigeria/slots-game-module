@@ -28,7 +28,16 @@ func NewEngine() lib.Engine {
 // Finish implements lib.Engine
 func (e *engine) Finish(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	return e.engines[s.CurrentSiXiangGame].Finish(matchState)
+	engine := e.engines[s.CurrentSiXiangGame]
+	result, err := engine.Finish(matchState)
+	if err != nil {
+		return result, err
+	}
+	slotDesk := result.(*pb.SlotDesk)
+	if slotDesk == nil {
+		return result, err
+	}
+	return slotDesk, nil
 }
 
 func (e *engine) Info(matchState interface{}) (interface{}, error) {
@@ -61,13 +70,14 @@ func (e *engine) Info(matchState interface{}) (interface{}, error) {
 		SpinSymbols:        s.SpinSymbols,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		InfoBet:            s.Bet(),
-		WinJpHistory:       s.WinJPHistory(),
+		WinJpHistory:       s.WinJPHistoryJuice(),
 		BetLevels:          entity.BetLevels[:],
 		GameReward: &pb.GameReward{
 			UpdateWallet:        false,
 			TotalChipsWinByGame: s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
 			TotalLineWin:        s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
 		},
+		WinJp: s.WinJp,
 	}
 	return slotdesk, nil
 }
