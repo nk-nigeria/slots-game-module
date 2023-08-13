@@ -83,9 +83,10 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s.AddChipAccum(s.Bet().Chips)
 	s.NumScatterSeq = e.countScattersSequent(&s.Matrix)
 	lineWin := 0
-	for _, payline := range s.Paylines() {
+	paylines := s.Paylines()
+	for _, payline := range paylines {
 		lineWin += int(payline.GetRate())
-		payline.Chips = int64(payline.GetRate()) * s.Bet().Chips / 100
+		payline.Chips = int64(payline.GetRate()) * s.Bet().Chips / 20
 	}
 
 	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
@@ -95,7 +96,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		lineWin *= s.NumScatterSeq
 	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
-	chipWin := int64(lineWin) * s.Bet().Chips / 100
+	chipWin := int64(lineWin) * s.Bet().Chips / 20
 	s.PerlGreenForestChipsCollect += s.Bet().Chips
 	slotDesk := &pb.SlotDesk{
 		ChipsMcb: s.Bet().Chips,
@@ -111,7 +112,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		Matrix:             s.Matrix.ToPbSlotMatrix(),
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
-		Paylines:           s.Paylines(),
+		Paylines:           paylines,
 		RatioFruitBasket:   int64(s.RatioFruitBasket),
 		IsFinishGame:       true,
 		NumSpinLeft:        int64(s.NumSpinLeft),
@@ -224,6 +225,16 @@ func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
 }
 
 func (e *normal) countSymbolSeq(matrix entity.SlotMatrix, startIndex int, indexs []int) (pb.SiXiangSymbol, []int) {
+	defer func() {
+		if r := recover(); r != nil {
+			matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+				fmt.Printf("%d, ", symbol.Number())
+			})
+			fmt.Println("")
+			fmt.Printf("%v \r\n %v", startIndex, indexs)
+			panic("fiss")
+		}
+	}()
 	numSameSymbol := 0
 	startCount := false
 	/*
@@ -236,7 +247,7 @@ func (e *normal) countSymbolSeq(matrix entity.SlotMatrix, startIndex int, indexs
 	for i := startIndex - 1; i >= 0; i-- {
 		sym := matrix.List[indexs[i]]
 		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
-			startIndex = indexs[i]
+			startIndex = i
 			continue
 		}
 		break

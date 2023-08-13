@@ -137,10 +137,10 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 	lineWin := int64(0)
 	for _, spin := range s.SpinList {
 		lineWin += int64(spin.Ratio)
-		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 100
+		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
 		s.SpinList[spin.Index].WinAmount = spin.WinAmount
 	}
-	chipWin := lineWin * s.Bet().Chips / 100
+	chipWin := lineWin * s.Bet().Chips / 20
 	totalChipWin := int64(0)
 	totalLineWin := int64(0)
 	for _, spin := range s.SpinList {

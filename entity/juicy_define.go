@@ -285,8 +285,8 @@ func JuicySpinSymbolToJp(sym pb.SiXiangSymbol) pb.WinJackpot {
 }
 
 var JuiceJpRatio = map[pb.WinJackpot]int{
-	pb.WinJackpot_WIN_JACKPOT_MINI:  500,
-	pb.WinJackpot_WIN_JACKPOT_MINOR: 500,
-	pb.WinJackpot_WIN_JACKPOT_MAJOR: 100,
-	pb.WinJackpot_WIN_JACKPOT_GRAND: 50,
+	pb.WinJackpot_WIN_JACKPOT_MINI:  50,
+	pb.WinJackpot_WIN_JACKPOT_MINOR: 100,
+	pb.WinJackpot_WIN_JACKPOT_MAJOR: 500,
+	pb.WinJackpot_WIN_JACKPOT_GRAND: 5000,
 }
