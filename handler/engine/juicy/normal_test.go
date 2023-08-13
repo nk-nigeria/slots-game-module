@@ -297,6 +297,114 @@ func Test_normal_Paylines_2(t *testing.T) {
 	})
 }
 
+func Test_normal_Paylines_điều_kiện_ăn_1_line_bị_sai(t *testing.T) {
+	name := "Test_normal_Paylines_điều_kiện_ăn_1_line_bị_sai"
+	e := NewNormal(nil)
+	engine := e.(*normal)
+	s := entity.NewSlotsMathState(nil)
+	matrixSpecial := entity.NewJuicyMatrix()
+	s.MatrixSpecial = &matrixSpecial
+	s.MatrixSpecial.List[0] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+	s.MatrixSpecial.List[1] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_WATERMELON
+	s.MatrixSpecial.List[2] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_WATERMELON
+	s.MatrixSpecial.List[3] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_VIOLET
+	s.MatrixSpecial.List[4] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_DIAMOND
+
+	s.MatrixSpecial.List[5] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STRAWBERRY
+	s.MatrixSpecial.List[6] = api.SiXiangSymbol_SI_XIANG_SYMBOL_A
+	s.MatrixSpecial.List[7] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_DIAMOND
+	s.MatrixSpecial.List[8] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+	s.MatrixSpecial.List[9] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_MANGOSTEEN
+
+	s.MatrixSpecial.List[10] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_WATERMELON
+	s.MatrixSpecial.List[11] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_WATERMELON
+	s.MatrixSpecial.List[12] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_GREEN
+	s.MatrixSpecial.List[13] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_WATERMELON
+	s.MatrixSpecial.List[14] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_DIAMOND
+
+	t.Run(name, func(t *testing.T) {
+		paylines := engine.Paylines(*s.MatrixSpecial)
+		assert.NotNil(t, paylines)
+		assert.Equal(t, 0, len(paylines))
+
+	})
+}
+
+func Test_normal_Paylines_tính_sai_tiền_ăn_line(t *testing.T) {
+	name := "Test_normal_Paylines_tính_sai_tiền_ăn_line"
+	e := NewNormal(nil)
+	engine := e.(*normal)
+	s := entity.NewSlotsMathState(nil)
+	s.Bet().Chips = 100
+	matrixSpecial := entity.NewJuicyMatrix()
+	s.MatrixSpecial = &matrixSpecial
+	e.Process(s)
+	s.MatrixSpecial.List[0] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+	s.MatrixSpecial.List[1] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_WATERMELON
+	s.MatrixSpecial.List[2] = api.SiXiangSymbol_SI_XIANG_SYMBOL_J
+	s.MatrixSpecial.List[3] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_VIOLET
+	s.MatrixSpecial.List[4] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+
+	s.MatrixSpecial.List[5] = api.SiXiangSymbol_SI_XIANG_SYMBOL_DIAMOND
+	s.MatrixSpecial.List[6] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+	s.MatrixSpecial.List[7] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+	s.MatrixSpecial.List[8] = api.SiXiangSymbol_SI_XIANG_SYMBOL_J
+	s.MatrixSpecial.List[9] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+
+	s.MatrixSpecial.List[10] = api.SiXiangSymbol_SI_XIANG_SYMBOL_J
+	s.MatrixSpecial.List[11] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_MANGOSTEEN
+	s.MatrixSpecial.List[12] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+	s.MatrixSpecial.List[13] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+	s.MatrixSpecial.List[14] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_MANGOSTEEN
+
+	s.SetMatrix(*s.MatrixSpecial)
+	s.SetWildMatrix(engine.WildMatrix(s.Matrix))
+	s.SetPaylines(engine.Paylines(s.WildMatrix))
+
+	t.Run(name, func(t *testing.T) {
+		result, err := e.Finish(s)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		slotDesk := result.(*api.SlotDesk)
+		assert.Equal(t, int64(125), slotDesk.GameReward.TotalChipsWinByGame)
+
+	})
+}
+
+func Test_normal_Paylines_Panic(t *testing.T) {
+	name := "Test_normal_Paylines_Panic"
+	e := NewNormal(nil)
+	engine := e.(*normal)
+	s := entity.NewSlotsMathState(nil)
+	s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_NORMAL
+	engine.NewGame(s)
+	t.Run(name, func(t *testing.T) {
+		for i := 0; i < 10000; i++ {
+			s.NumSpinLeft = 2
+			engine.Process(s)
+			engine.Finish(s)
+		}
+	})
+}
+
+func Test_normal_Paylines_Panic_2(t *testing.T) {
+	name := "Test_normal_Paylines_Panicc"
+	e := NewNormal(nil)
+	engine := e.(*normal)
+	s := entity.NewSlotsMathState(nil)
+	s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_NORMAL
+	engine.NewGame(s)
+
+	arr := []int{4356, 4354, 4353, 2, 4357, 4353, 2, 65535, 4357, 4358, 4357, 4359, 2, 4357, 4356}
+	for idx, val := range arr {
+		s.Matrix.List[idx] = api.SiXiangSymbol(val)
+	}
+	t.Run(name, func(t *testing.T) {
+		e.Process(s)
+		e.Finish(s)
+	})
+}
+
 func Test_normal_GetNextSiXiangGame(t *testing.T) {
 	name := "Test_normal_GetNextSiXiangGame"
 	e := NewNormal(nil)

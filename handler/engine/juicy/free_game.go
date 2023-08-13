@@ -117,7 +117,7 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 		}
 	})
 
-	slotDesk.GameReward.ChipsWin = int64(lineWin) * s.Bet().Chips / 100
+	slotDesk.GameReward.ChipsWin = int64(lineWin) * s.Bet().Chips / 20
 	slotDesk.ChipsMcb = s.Bet().Chips
 	// ts.ChipWinByGame[s.CurrentSiXiangGame] += slotDesk.ChipsWin
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
