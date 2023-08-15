@@ -20,8 +20,8 @@ func NewFruitBaseket() lib.Engine {
 func (*fruitBasket) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrixSpecial := entity.NewSlotMatrix(1, 2)
-	matrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FREE_GAME)
-	matrixSpecial.List = append(s.MatrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FRUIT_RAIN)
+	matrixSpecial.List = append(matrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FREE_GAME)
+	matrixSpecial.List = append(matrixSpecial.List, pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FRUIT_RAIN)
 	matrixSpecial = entity.ShuffleMatrix(matrixSpecial)
 	s.MatrixSpecial = &matrixSpecial
 	s.NumSpinLeft = 1
@@ -39,6 +39,12 @@ func (e *fruitBasket) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return nil, entity.ErrorSpinReachMax
 	}
+	// cheat
+	if s.Bet().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME) {
+		s.MatrixSpecial.List[s.Bet().Id] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FREE_GAME
+		s.MatrixSpecial.List[(s.Bet().Id+1)%2] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FUIT_SELECT_FRUIT_RAIN
+	}
+	// end cheat
 	s.IsSpinChange = true
 	idx := s.Bet().GetId()
 	symbol := s.MatrixSpecial.Flip(int(idx))
@@ -76,7 +82,7 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 	}
 	slotDesk := &pb.SlotDesk{
 		ChipsMcb:           s.Bet().Chips,
-		Matrix:             s.Matrix.ToPbSlotMatrix(),
+		Matrix:             s.MatrixSpecial.ToPbSlotMatrix(),
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 		IsFinishGame:       true,

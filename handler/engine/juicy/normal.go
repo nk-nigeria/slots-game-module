@@ -52,11 +52,13 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	// s.ChipStat.Reset(s.CurrentSiXiangGame)
 	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
 	// cheat game
-	if s.Bet().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET) {
+	switch s.Bet().ReqSpecGame {
+	case int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET),
+		int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME):
 		for i := 0; i < 3; i++ {
 			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 		}
-	} else if s.Bet().ReqSpecGame == int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN) {
+	case int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN):
 		for i := 0; i < 6; i++ {
 			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI
 		}
@@ -80,7 +82,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		return s.LastResult, nil
 	}
 	s.IsSpinChange = false
-	s.AddChipAccum(s.Bet().Chips)
+	s.ChipsAccum += s.Bet().GetChips()
 	s.NumScatterSeq = e.countScattersSequent(&s.Matrix)
 	lineWin := 0
 	paylines := s.Paylines()

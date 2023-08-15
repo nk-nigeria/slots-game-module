@@ -1,6 +1,8 @@
 package juicy
 
 import (
+	"fmt"
+
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -56,6 +58,15 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 			WinJp:     pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
 			WinAmount: 0,
 		})
+		for {
+			randomSymbol := entity.JuicySpinSymbol(e.randomIntFn, entity.JuiceAllSymbols)
+			if entity.IsFruitBasketSymbol(randomSymbol) {
+				continue
+			}
+			s.MatrixSpecial.List[idx] = randomSymbol
+			s.MatrixSpecial.Flip(idx)
+			break
+		}
 	})
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	return s, nil
@@ -70,13 +81,19 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 	s.IsSpinChange = true
 	// matrix := s.MatrixSpecial
 	matrix := e.SpinMatrix(*s.MatrixSpecial)
+	s.SpinSymbols = make([]*pb.SpinSymbol, 0)
+	s.NumSpinLeft--
+
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		// keep symbol if fruitbasket
 		if entity.IsFruitBasketSymbol(symbol) {
 			return
 		}
 		newSymbol := matrix.List[idx]
-		if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
+		if entity.IsFruitBasketSymbol(newSymbol) {
+			fmt.Println("")
+		}
+		if newSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
 			newSymbol = s.WildMatrix.List[idx]
 		}
 		s.MatrixSpecial.List[idx] = newSymbol
@@ -90,11 +107,11 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 			val := entity.JuicyBasketSymbol[spinSymbol.Symbol]
 			spinSymbol.Ratio = float32(e.randomIntFn(int(val.Value.Min), int(val.Value.Max)))
 			spinSymbol.WinJp = entity.JuicySpinSymbolToJp(spinSymbol.Symbol)
-			s.SpinList = append(s.SpinList, spinSymbol)
+			// s.SpinList = append(s.SpinList, spinSymbol)
+			s.SpinSymbols = append(s.SpinSymbols, spinSymbol)
 		}
 
 	})
-	s.NumSpinLeft--
 	// Nếu trong 3 lượt đầu tiên mà không có Giỏ trái cây nào được thêm mới vào màn hình,
 	//  user được tặng 3 lượt freespin nữa. việc tặng chỉ xuất hiện 1 lần duy nhất.
 	if s.NumSpinLeft == 0 && e.autoRefillGemSpin {
@@ -135,7 +152,7 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		}
 	})
 	lineWin := int64(0)
-	for _, spin := range s.SpinList {
+	for _, spin := range s.SpinSymbols {
 		lineWin += int64(spin.Ratio)
 		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
 		s.SpinList[spin.Index].WinAmount = spin.WinAmount
@@ -174,6 +191,7 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		NextSixiangGame:    s.NextSiXiangGame,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 	}
+	slotDesk.Matrix.SpinLists = s.SpinList
 	s.LastResult = slotDesk
 	return slotDesk, nil
 }
