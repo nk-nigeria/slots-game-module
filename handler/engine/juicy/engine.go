@@ -59,8 +59,10 @@ func (e *engine) Info(matchState interface{}) (interface{}, error) {
 			}
 		}
 		spreadMatrix = matrix
+
 	}
 	matrix.SpinLists = s.SpinList
+	spreadMatrix.SpinLists = s.SpinList
 	slotdesk := &pb.SlotDesk{
 		Matrix:             matrix,
 		SpreadMatrix:       spreadMatrix,
