@@ -36,6 +36,7 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	e.autoRefillGemSpin = true
 	m := entity.NewJuicyFruitRainMaxtrix()
 	s.WildMatrix = m
+	s.SpinList = make([]*pb.SpinSymbol, 0)
 	// e.matrixFruitRainBasket = m.List
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
 	switch s.NumScatterSeq {
