@@ -35,8 +35,9 @@ type SixiangSaveGame struct {
 }
 
 type JuiceSaveGame struct {
-	LastMcb   int64           `json:"last_mcb,omitempty"`
-	ChipAccum map[int64]int64 `json:"chip_accum,omitempty"`
+	LastMcb int64 `json:"last_mcb,omitempty"`
+	// ChipAccum map[int64]int64 `json:"chip_accum,omitempty"`
+	ChipsAccum int64 `json:"chips_accum,omitempty"`
 }
 
 type TarzanSaveGame struct {
@@ -112,7 +113,7 @@ type SlotsMatchState struct {
 	Rtp                     lib.Rtp
 	NotDropEyeSymbol        bool
 	// chip accum by bet
-	chipsAccum map[int64]int64
+	ChipsAccum int64
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -284,29 +285,29 @@ func (s *SlotsMatchState) WinJPHistoryJuice() *pb.JackpotHistory {
 	{
 		s.winJPHistory.Major.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_MAJOR])
 		s.winJPHistory.Major.Chips = s.Bet().Chips * s.winJPHistory.Major.Ratio
-		s.winJPHistory.Major.ChipsAccum = s.ChipAccum() / 1000
+		s.winJPHistory.Major.ChipsAccum = s.ChipsAccum / 1000
 	}
 	{
 		s.winJPHistory.Grand.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_GRAND])
 		s.winJPHistory.Grand.Chips = s.Bet().Chips * s.winJPHistory.Grand.Ratio
-		s.winJPHistory.Grand.ChipsAccum = s.ChipAccum() / 200
+		s.winJPHistory.Grand.ChipsAccum = s.ChipsAccum / 200
 	}
 	return s.winJPHistory
 }
 
-func (s *SlotsMatchState) AddChipAccum(chips int64) {
-	if s.chipsAccum == nil {
-		s.chipsAccum = make(map[int64]int64)
-	}
-	v := s.chipsAccum[s.bet.Chips]
-	v += chips
-	s.chipsAccum[s.bet.Chips] = v
-}
+// func (s *SlotsMatchState) AddChipAccum(chips int64) {
+// 	if s.chipsAccum == nil {
+// 		s.chipsAccum = make(map[int64]int64)
+// 	}
+// 	v := s.chipsAccum[s.bet.Chips]
+// 	v += chips
+// 	s.chipsAccum[s.bet.Chips] = v
+// }
 
-func (s *SlotsMatchState) ChipAccum() int64 {
-	v := s.chipsAccum[s.bet.Chips]
-	return v
-}
+// func (s *SlotsMatchState) ChipAccum() int64 {
+// 	v := s.chipsAccum[s.bet.Chips]
+// 	return v
+// }
 
 func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mcbInSaveGame int64) int64) {
 	defer func() {
@@ -395,7 +396,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if suggestMcb != nil {
 			s.bet.Chips = suggestMcb(juiceSg.LastMcb)
 		}
-		s.chipsAccum = juiceSg.ChipAccum
+		s.ChipsAccum = juiceSg.ChipsAccum
 	}
 }
 
@@ -441,8 +442,8 @@ func (s *SlotsMatchState) SaveGameJson() string {
 		saveGameInf = tarzanSg
 	case define.JuicyGardenName:
 		saveGame := JuiceSaveGame{
-			LastMcb:   s.bet.Chips,
-			ChipAccum: s.chipsAccum,
+			LastMcb:    s.bet.Chips,
+			ChipsAccum: s.ChipsAccum,
 		}
 		saveGameInf = saveGame
 	}

@@ -130,30 +130,43 @@ var MapJuicyPaylineIdx = orderedmap.New[int, []int]()
 
 var RatioJuicyPaylineMap map[pb.SiXiangSymbol]map[int32]float64
 
-func init() {
-	for i := 0; i < 5; i++ {
+const JuiceRatioForQCTest = true
 
+func init() {
+	if !JuiceRatioForQCTest {
+		for i := 0; i < 5; i++ {
+
+			JuiceAllSymbols = append(JuiceAllSymbols, JuicyLowSymbols...)
+			JuiceAllSymbols = append(JuiceAllSymbols, JuicyMidSymbol...)
+			JuiceAllSymbols = append(JuiceAllSymbols, JuicyHighSymbol...)
+		}
+		JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
+		list := make([]pb.SiXiangSymbol, 0, len(JuiceAllSymbols)*10)
+
+		for i := 0; i < 10; i++ {
+			list = append(list, JuiceAllSymbols...)
+		}
+		// JuiceAllSymbols = list
+
+		JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, list...)
+		JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, SliceRepeat(2, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)
+
+		JuiceAllSymbolsWildRatio1_5 = append(JuiceAllSymbolsWildRatio1_5, list...)
+		JuiceAllSymbolsWildRatio1_5 = append(JuiceAllSymbolsWildRatio1_5, SliceRepeat(5, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)
+
+		JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio2_0, list...)
+		JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio2_0, SliceRepeat(10, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)
+	} else {
 		JuiceAllSymbols = append(JuiceAllSymbols, JuicyLowSymbols...)
 		JuiceAllSymbols = append(JuiceAllSymbols, JuicyMidSymbol...)
 		JuiceAllSymbols = append(JuiceAllSymbols, JuicyHighSymbol...)
+		JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
+
+		JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
+		JuiceAllSymbolsWildRatio1_5 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
+		JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
+
 	}
-	JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
-	list := make([]pb.SiXiangSymbol, 0, len(JuiceAllSymbols)*10)
-
-	for i := 0; i < 10; i++ {
-		list = append(list, JuiceAllSymbols...)
-	}
-	// JuiceAllSymbols = list
-
-	JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, list...)
-	JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, SliceRepeat(2, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)
-
-	JuiceAllSymbolsWildRatio1_5 = append(JuiceAllSymbolsWildRatio1_5, list...)
-	JuiceAllSymbolsWildRatio1_5 = append(JuiceAllSymbolsWildRatio1_5, SliceRepeat(5, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)
-
-	JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio2_0, list...)
-	JuiceAllSymbolsWildRatio2_0 = append(JuiceAllSymbolsWildRatio2_0, SliceRepeat(10, pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD)...)
-
 	idx := 1
 	MapJuicyPaylineIdx.Set(idx, []int{5, 6, 7, 8, 9})
 	idx++
