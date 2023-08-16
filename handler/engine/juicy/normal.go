@@ -148,14 +148,8 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	for i := 0; i < spinMatrix.Size; i++ {
-		for {
-			randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
-			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
-				continue
-			}
-			spinMatrix.List[i] = randSymbol
-			break
-		}
+		randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
+		spinMatrix.List[i] = randSymbol
 	}
 	//  Wild (reel 2 3 4 5)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -282,10 +276,15 @@ func (e *normal) buildPaylineFromSymbol(symbol pb.SiXiangSymbol, occur int) *pb.
 
 func (e *normal) countScattersSequent(matrix *entity.SlotMatrix) int {
 	numScaterSeq := 0
+	prevCol := -1
 	matrix.ForEachCol(func(col int, symbols []pb.SiXiangSymbol) {
 		for _, symbol := range symbols {
 			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+				if col-1 != prevCol {
+					numScaterSeq = 0
+				}
 				numScaterSeq++
+				prevCol = col
 				return
 			}
 		}
