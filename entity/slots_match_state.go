@@ -35,9 +35,8 @@ type SixiangSaveGame struct {
 }
 
 type JuiceSaveGame struct {
-	LastMcb int64 `json:"last_mcb,omitempty"`
-	// ChipAccum map[int64]int64 `json:"chip_accum,omitempty"`
-	ChipsAccum int64 `json:"chips_accum,omitempty"`
+	LastMcb        int64                   `json:"last_mcb,omitempty"`
+	ChipsAccumByJp map[pb.WinJackpot]int64 `json:"chips_accum_by_jp,omitempty"`
 }
 
 type TarzanSaveGame struct {
@@ -113,7 +112,7 @@ type SlotsMatchState struct {
 	Rtp                     lib.Rtp
 	NotDropEyeSymbol        bool
 	// chip accum by bet
-	ChipsAccum int64
+	ChipsAccumByJp map[pb.WinJackpot]int64
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -136,6 +135,7 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 			Id:            0,
 			PercentExpect: 120,
 		},
+		ChipsAccumByJp: make(map[pb.WinJackpot]int64),
 	}
 	m.winJPHistory = &pb.JackpotHistory{
 		Mini: &pb.JackpotReward{
@@ -285,24 +285,29 @@ func (s *SlotsMatchState) WinJPHistoryJuice() *pb.JackpotHistory {
 	{
 		s.winJPHistory.Major.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_MAJOR])
 		s.winJPHistory.Major.Chips = s.Bet().Chips * s.winJPHistory.Major.Ratio
-		s.winJPHistory.Major.ChipsAccum = s.ChipsAccum / 1000
+		s.winJPHistory.Major.ChipsAccum = s.ChipsAccumByJp[pb.WinJackpot_WIN_JACKPOT_MAJOR] / 1000
 	}
 	{
 		s.winJPHistory.Grand.Ratio = int64(JuiceJpRatio[pb.WinJackpot_WIN_JACKPOT_GRAND])
 		s.winJPHistory.Grand.Chips = s.Bet().Chips * s.winJPHistory.Grand.Ratio
-		s.winJPHistory.Grand.ChipsAccum = s.ChipsAccum / 200
+		s.winJPHistory.Grand.ChipsAccum = s.ChipsAccumByJp[pb.WinJackpot_WIN_JACKPOT_GRAND] / 200
 	}
 	return s.winJPHistory
 }
 
-// func (s *SlotsMatchState) AddChipAccum(chips int64) {
-// 	if s.chipsAccum == nil {
-// 		s.chipsAccum = make(map[int64]int64)
-// 	}
-// 	v := s.chipsAccum[s.bet.Chips]
-// 	v += chips
-// 	s.chipsAccum[s.bet.Chips] = v
-// }
+func (s *SlotsMatchState) AddChipAccum(chips int64) {
+	for _, jp := range []pb.WinJackpot{pb.WinJackpot_WIN_JACKPOT_MAJOR, pb.WinJackpot_WIN_JACKPOT_GRAND} {
+		val := s.ChipsAccumByJp[jp]
+		val += chips
+		s.ChipsAccumByJp[jp] = val
+	}
+}
+
+func (s *SlotsMatchState) GetAndResetChipAccumt(jp pb.WinJackpot) int64 {
+	val := s.ChipsAccumByJp[jp]
+	s.ChipsAccumByJp[jp] = 0
+	return val
+}
 
 // func (s *SlotsMatchState) ChipAccum() int64 {
 // 	v := s.chipsAccum[s.bet.Chips]
@@ -396,7 +401,10 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if suggestMcb != nil {
 			s.bet.Chips = suggestMcb(juiceSg.LastMcb)
 		}
-		s.ChipsAccum = juiceSg.ChipsAccum
+		s.ChipsAccumByJp = juiceSg.ChipsAccumByJp
+		if s.ChipsAccumByJp == nil {
+			s.ChipsAccumByJp = make(map[pb.WinJackpot]int64)
+		}
 	}
 }
 
@@ -442,8 +450,8 @@ func (s *SlotsMatchState) SaveGameJson() string {
 		saveGameInf = tarzanSg
 	case define.JuicyGardenName:
 		saveGame := JuiceSaveGame{
-			LastMcb:    s.bet.Chips,
-			ChipsAccum: s.ChipsAccum,
+			LastMcb:        s.bet.Chips,
+			ChipsAccumByJp: s.ChipsAccumByJp,
 		}
 		saveGameInf = saveGame
 	}

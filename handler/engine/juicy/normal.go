@@ -82,7 +82,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		return s.LastResult, nil
 	}
 	s.IsSpinChange = false
-	s.ChipsAccum += s.Bet().GetChips()
+	s.AddChipAccum(s.Bet().GetChips())
 	s.NumScatterSeq = e.countScattersSequent(&s.Matrix)
 	lineWin := 0
 	paylines := s.Paylines()
@@ -119,6 +119,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		IsFinishGame:       true,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 	}
+	slotDesk.SpreadMatrix = slotDesk.Matrix
 	return slotDesk, nil
 }
 
