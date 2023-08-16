@@ -141,21 +141,35 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		if entity.IsFruitBasketSymbol(symbol) {
 			numFruitBasket++
 		}
-		if entity.IsFruitJPSymbol(symbol) {
-			switch symbol {
-			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI:
-				s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
-			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR:
-				s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
-			case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR:
-				s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
-			}
-		}
+		// if entity.IsFruitJPSymbol(symbol) {
+		// 	switch symbol {
+		// 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI:
+		// 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
+		// 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR:
+		// 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
+		// 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR:
+		// 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
+		// 	}
+		// }
 	})
 	lineWin := int64(0)
 	for _, spin := range s.SpinSymbols {
 		lineWin += int64(spin.Ratio)
-		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
+		if entity.IsFruitJPSymbol(spin.Symbol) {
+			spin.WinAmount = 0
+			jpHistory := s.WinJPHistoryJuice()
+			switch spin.WinJp {
+			case pb.WinJackpot_WIN_JACKPOT_MINI:
+				spin.WinAmount = jpHistory.Minor.Chips
+			case pb.WinJackpot_WIN_JACKPOT_MINOR:
+				spin.WinAmount = jpHistory.Minor.Chips
+			case pb.WinJackpot_WIN_JACKPOT_MAJOR:
+				spin.WinAmount = jpHistory.Major.Chips
+				s.GetAndResetChipAccumt(pb.WinJackpot_WIN_JACKPOT_MAJOR)
+			}
+		} else {
+			spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
+		}
 		s.SpinList[spin.Index].WinAmount = spin.WinAmount
 	}
 	chipWin := lineWin * s.Bet().Chips / 20
@@ -168,6 +182,8 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 	if numFruitBasket == len(s.MatrixSpecial.List) {
 		isFinish = true
 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_GRAND
+		totalChipWin += s.WinJPHistory().Grand.Chips
+		s.GetAndResetChipAccumt(pb.WinJackpot_WIN_JACKPOT_GRAND)
 	}
 	if s.WinJp != pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED {
 		isFinish = true

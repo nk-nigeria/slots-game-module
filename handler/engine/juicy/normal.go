@@ -119,6 +119,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		IsFinishGame:       true,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 	}
+	slotDesk.SpreadMatrix = slotDesk.Matrix
 	return slotDesk, nil
 }
 
@@ -148,14 +149,14 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix, ratioWild ratioWild) entit
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	for i := 0; i < spinMatrix.Size; i++ {
-		for {
-			randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
-			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
-				continue
-			}
-			spinMatrix.List[i] = randSymbol
-			break
-		}
+		// for {
+		randSymbol := entity.JuicySpinSymbol(e.randomFn, list)
+		// if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
+		// 	continue
+		// }
+		spinMatrix.List[i] = randSymbol
+		// break
+		// }
 	}
 	//  Wild (reel 2 3 4 5)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {

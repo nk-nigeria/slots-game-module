@@ -135,6 +135,7 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 			Id:            0,
 			PercentExpect: 120,
 		},
+		ChipsAccumByJp: make(map[pb.WinJackpot]int64),
 	}
 	m.winJPHistory = &pb.JackpotHistory{
 		Mini: &pb.JackpotReward{
@@ -295,11 +296,17 @@ func (s *SlotsMatchState) WinJPHistoryJuice() *pb.JackpotHistory {
 }
 
 func (s *SlotsMatchState) AddChipAccum(chips int64) {
-	for _, v := range []pb.WinJackpot{pb.WinJackpot_WIN_JACKPOT_MAJOR, pb.WinJackpot_WIN_JACKPOT_GRAND} {
-		val := s.ChipsAccumByJp[v]
+	for _, jp := range []pb.WinJackpot{pb.WinJackpot_WIN_JACKPOT_MAJOR, pb.WinJackpot_WIN_JACKPOT_GRAND} {
+		val := s.ChipsAccumByJp[jp]
 		val += chips
-		s.ChipsAccumByJp[v] = val
+		s.ChipsAccumByJp[jp] = val
 	}
+}
+
+func (s *SlotsMatchState) GetAndResetChipAccumt(jp pb.WinJackpot) int64 {
+	val := s.ChipsAccumByJp[jp]
+	s.ChipsAccumByJp[jp] = 0
+	return val
 }
 
 // func (s *SlotsMatchState) ChipAccum() int64 {
@@ -395,6 +402,9 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 			s.bet.Chips = suggestMcb(juiceSg.LastMcb)
 		}
 		s.ChipsAccumByJp = juiceSg.ChipsAccumByJp
+		if s.ChipsAccumByJp == nil {
+			s.ChipsAccumByJp = make(map[pb.WinJackpot]int64)
+		}
 	}
 }
 
