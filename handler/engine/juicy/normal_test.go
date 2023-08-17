@@ -405,6 +405,40 @@ func Test_normal_3_scatter_seq(t *testing.T) {
 	})
 }
 
+func Test_normal_3_scatter_seq_2(t *testing.T) {
+	name := "Test_normal_3_scatter_seq"
+	e := NewNormal(nil)
+	// engine := e.(*normal)
+	s := entity.NewSlotsMathState(nil)
+	s.Bet().Chips = 100
+	e.NewGame(s)
+	e.Process(s)
+	t.Run(name, func(t *testing.T) {
+		s.Matrix.List[0] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		s.Matrix.List[1] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		s.Matrix.List[2] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		s.Matrix.List[3] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		s.Matrix.List[4] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+
+		s.Matrix.List[5] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		s.Matrix.List[6] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_GREEN
+		s.Matrix.List[7] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_MANGOSTEEN
+		s.Matrix.List[8] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		s.Matrix.List[9] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_MANGOSTEEN
+
+		s.Matrix.List[10] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+		s.Matrix.List[11] = api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STRAWBERRY
+		s.Matrix.List[12] = api.SiXiangSymbol_SI_XIANG_SYMBOL_Q
+		s.Matrix.List[13] = api.SiXiangSymbol_SI_XIANG_SYMBOL_J
+		s.Matrix.List[14] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		result, err := e.Finish(s)
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		slotDesk := result.(*api.SlotDesk)
+		assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET, slotDesk.NextSixiangGame)
+	})
+}
+
 func Test_normal_3_scatter_not_seq(t *testing.T) {
 	name := "Test_normal_3_scatter_not_seq"
 	e := NewNormal(nil)
