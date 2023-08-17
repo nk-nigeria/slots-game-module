@@ -311,6 +311,9 @@ func (e *normal) countScattersSequent(matrix *entity.SlotMatrix) int {
 		for _, symbol := range symbols {
 			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
 				if col-1 != prevCol {
+					if numScaterSeq >= 3 {
+						break
+					}
 					numScaterSeq = 0
 				}
 				numScaterSeq++
