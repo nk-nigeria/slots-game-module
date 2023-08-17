@@ -39,16 +39,16 @@ func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	s.SpinList = make([]*pb.SpinSymbol, 0)
 	// e.matrixFruitRainBasket = m.List
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
-	switch s.NumScatterSeq {
-	case 3:
-		s.RatioFruitBasket = 1
-	case 4:
-		s.RatioFruitBasket = 2
-	case 5:
-		s.RatioFruitBasket = 4
-	default:
-		s.RatioFruitBasket = 1
-	}
+	// switch s.NumScatterSeq {
+	// case 3:
+	// 	s.RatioFruitBasket = 1
+	// case 4:
+	// 	s.RatioFruitBasket = 2
+	// case 5:
+	// 	s.RatioFruitBasket = 4
+	// default:
+	// 	s.RatioFruitBasket = 1
+	// }
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
 			Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,

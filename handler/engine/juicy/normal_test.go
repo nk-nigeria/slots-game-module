@@ -470,7 +470,7 @@ func Test_normal_Only_Payline_Finish(t *testing.T) {
 			assert.NotNil(t, slotDesk)
 			assert.Equal(t, int(100), int(slotDesk.ChipsMcb))
 			if numScatterSeq < 3 {
-				assert.Equal(t, int(1), int(s.RatioFruitBasket))
+				assert.Equal(t, float32(1), float32(s.GameConfig.RatioBasket))
 				// assert.Equal(t, int(lineWin), int(s.LineWinByGame[s.CurrentSiXiangGame]))
 				assert.Equal(t, int(lineWin), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, slotDesk.NextSixiangGame)
@@ -478,13 +478,13 @@ func Test_normal_Only_Payline_Finish(t *testing.T) {
 				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100), int(slotDesk.GameReward.ChipsWin))
 
 			} else {
-				assert.Equal(t, int(numScatterSeq), int(s.RatioFruitBasket))
+				assert.Equal(t, float32(numScatterSeq), float32(s.GameConfig.RatioBasket))
 				// assert.Equal(t, int(lineWin*numScatterSeq), int(s.LineWinByGame[s.CurrentSiXiangGame]))
 				assert.Equal(t, int(lineWin*numScatterSeq), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
 				assert.Equal(t, int(lineWin*numScatterSeq), int(slotDesk.GameReward.ChipsWin))
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET, slotDesk.NextSixiangGame)
 				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET, s.NextSiXiangGame)
-				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100*s.RatioFruitBasket), int(slotDesk.GameReward.ChipsWin))
+				assert.Equal(t, int(lineWin*int(float64(slotDesk.ChipsMcb)/100.0*float64(s.GameConfig.RatioBasket))), int(slotDesk.GameReward.ChipsWin))
 			}
 			assert.Equal(t, 0, s.NumFruitBasket)
 		}
@@ -519,7 +519,8 @@ func Test_normal_Only_fruitbasket_Finish(t *testing.T) {
 				for i := 0; i < numScatterSeq; i++ {
 					s.Matrix.List[i+2*entity.ColsJuicyMatrix] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 				}
-
+				// t.Logf("num numScatterSeq %d num fruitBasket %d ratioFruitBasket %d",
+				// 	s.NumScatterSeq, float32(s.NumFruitBasket), float32(s.GameConfig.RatioBasket))
 				listFruitbasket := []pb.SiXiangSymbol{
 					api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
 					api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
@@ -537,7 +538,7 @@ func Test_normal_Only_fruitbasket_Finish(t *testing.T) {
 
 				s.SetPaylines([]*pb.Payline{})
 				result, err := e.Finish(s)
-				assert.Equal(t, rationFruitBasket, int(s.RatioFruitBasket))
+				assert.Equal(t, float32(rationFruitBasket), float32(s.GameConfig.RatioBasket))
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
 				slotDesk := result.(*api.SlotDesk)
@@ -560,8 +561,8 @@ func Test_normal_Only_fruitbasket_Finish(t *testing.T) {
 					assert.Equal(t, chipWin, int(s.ChipStat.ChipWin(s.CurrentSiXiangGame)))
 					nextGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
 				}
-				t.Logf("num numScatterSeq %d num fruitBasket %d ratioFruitBasket %d",
-					s.NumScatterSeq, s.NumFruitBasket, s.RatioFruitBasket)
+				// t.Logf("num numScatterSeq %d num fruitBasket %d ratioFruitBasket %d",
+				// 	s.NumScatterSeq, float32(s.NumFruitBasket), float32(s.GameConfig.RatioBasket))
 				assert.Equal(t, nextGame, slotDesk.NextSixiangGame)
 				assert.Equal(t, nextGame, s.NextSiXiangGame)
 				assert.Equal(t, numFruitbasket, s.NumFruitBasket)

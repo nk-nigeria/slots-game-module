@@ -80,6 +80,9 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
 		}
 	}
+	if s.NextSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		s.GameConfig = entity.GameConfigFreeGame(s.NumScatterSeq)
+	}
 	slotDesk := &pb.SlotDesk{
 		ChipsMcb:           s.Bet().Chips,
 		Matrix:             s.MatrixSpecial.ToPbSlotMatrix(),
@@ -88,7 +91,9 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 		IsFinishGame:       true,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		SpinSymbols:        s.SpinSymbols,
+		GameConfig:         s.GameConfig,
 	}
+
 	return slotDesk, nil
 }
 

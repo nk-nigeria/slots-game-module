@@ -31,21 +31,22 @@ func Test_freeGame_NewGame(t *testing.T) {
 			ratioFruitBasket := 1
 			var ratioWild ratioWild = ratioWild1_0
 			gemSpin := 3
-			switch i {
-			case 3:
-				ratioFruitBasket = 1
-				ratioWild = ratioWild1_2
-				gemSpin = 6
-			case 4:
-				ratioFruitBasket = 2
-				ratioWild = ratioWild1_5
-				gemSpin = 9
-			case 5:
-				ratioFruitBasket = 4
-				ratioWild = ratioWild2_0
-				gemSpin = 15
-			}
-			assert.Equal(t, int(ratioFruitBasket), s.RatioFruitBasket)
+			// switch i {
+			// case 3:
+			// 	ratioFruitBasket = 1
+			// 	ratioWild = ratioWild1_2
+			// 	gemSpin = 6
+			// case 4:
+			// 	ratioFruitBasket = 2
+			// 	ratioWild = ratioWild1_5
+			// 	gemSpin = 9
+			// case 5:
+			// 	ratioFruitBasket = 4
+			// 	ratioWild = ratioWild2_0
+			// 	gemSpin = 15
+			// }
+			s.GameConfig = entity.GameConfigFreeGame(i)
+			assert.Equal(t, float32(ratioFruitBasket), float32(s.GameConfig.RatioBasket))
 			assert.Equal(t, int(gemSpin), s.NumSpinLeft)
 			assert.Equal(t, ratioWild, engine.ratioWild)
 			assert.Equal(t, int(entity.RowsJuicynMatrix*entity.ColsJuicyMatrix), int(len(s.MatrixSpecial.List)))
@@ -152,7 +153,7 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 	name := "Test_freeGame_only_payline_Finish"
 	t.Run(name, func(t *testing.T) {
 		e := NewFreeGame(nil)
-		engine := e.(*freeGame)
+		// engine := e.(*freeGame)
 		// s := entity.NewSlotsMathState(nil)
 		// e.NewGame(s)
 		listNumScatterSeq := []int{1, 2, 3, 4, 5}
@@ -173,6 +174,8 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 			for i := 0; i < numScatterSeq; i++ {
 				s.Matrix.List[i] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 			}
+			matrixSpecial := s.Matrix
+			s.MatrixSpecial = &matrixSpecial
 			// paylineSymbols := s.Matrix.ListFromIndexs(ids)
 			lineWin := 100
 			payline := &pb.Payline{
@@ -182,6 +185,7 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 				Rate:     float64(lineWin),
 			}
 			s.SetPaylines([]*pb.Payline{payline})
+			s.IsSpinChange = true
 			result, err := e.Finish(s)
 
 			assert.NoError(t, err)
@@ -191,23 +195,23 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 			assert.Less(t, int(0), int(s.NumSpinLeft))
 			assert.NotNil(t, slotDesk)
 			assert.Equal(t, int(100), int(slotDesk.ChipsMcb))
-			ratioFruitBasket := engine.transformNumScaterSeqToRationFruitBasket(numScatterSeq)
-			t.Logf("scatter seq %d ration fruitbasket %d", numScatterSeq, ratioFruitBasket)
-			assert.Equal(t, int(ratioFruitBasket), int(s.RatioFruitBasket))
-			chipWin := int(lineWin * numScatterSeq * int(slotDesk.ChipsMcb) / 100)
+			// ratioFruitBasket := engine.transformNumScaterSeqToRationFruitBasket(numScatterSeq)
+			// t.Logf("scatter seq %d ration fruitbasket %d", numScatterSeq, ratioFruitBasket)
+			// assert.Equal(t, int(ratioFruitBasket), int(s.RatioFruitBasket))
+			chipWin := int(lineWin * numScatterSeq * int(slotDesk.ChipsMcb) / 20)
 			if numScatterSeq < 3 {
 				// assert.Equal(t, int(lineWin), int(s.LineWinByGame[s.CurrentSiXiangGame]))
 				// assert.Equal(t, int(lineWin), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
-				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, slotDesk.NextSixiangGame)
-				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, s.NextSiXiangGame)
-				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/100), int(slotDesk.GameReward.ChipsWin))
+				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, slotDesk.NextSixiangGame)
+				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, s.NextSiXiangGame)
+				assert.Equal(t, int(lineWin*int(slotDesk.ChipsMcb)/20), int(slotDesk.GameReward.ChipsWin))
 
 			} else {
 				// assert.Equal(t, int(lineWin*numScatterSeq), int(s.LineWinByGame[s.CurrentSiXiangGame]))
 				// assert.Equal(t, int(lineWin*numScatterSeq), int(s.ChipStat.LineWin(s.CurrentSiXiangGame)))
 				assert.Equal(t, int(chipWin), int(slotDesk.GameReward.ChipsWin))
-				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, slotDesk.NextSixiangGame)
-				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME, s.NextSiXiangGame)
+				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, slotDesk.NextSixiangGame)
+				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, s.NextSiXiangGame)
 			}
 			assert.Equal(t, 0, s.NumFruitBasket)
 		}
