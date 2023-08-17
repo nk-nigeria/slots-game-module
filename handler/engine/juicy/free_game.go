@@ -26,29 +26,31 @@ func NewFreeGame(randomIntFn func(int, int) int) lib.Engine {
 // NewGame implements lib.Engine
 func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	switch s.NumScatterSeq {
-	case 3:
-		s.RatioFruitBasket = 1
-		e.ratioWild = ratioWild1_2
-		s.NumSpinLeft = 6
-	case 4:
-		s.RatioFruitBasket = 2
-		e.ratioWild = ratioWild1_5
-		s.NumSpinLeft = 9
-	case 5:
-		s.RatioFruitBasket = 4
-		e.ratioWild = ratioWild2_0
-		s.NumSpinLeft = 15
-	default:
-		s.RatioFruitBasket = 1
-		s.NumSpinLeft = 3
-		e.ratioWild = ratioWild1_0
-	}
+	// switch s.NumScatterSeq {
+	// case 3:
+	// 	s.RatioFruitBasket = 1
+	// 	e.ratioWild = ratioWild1_2
+	// 	// s.NumSpinLeft = 6
+	// case 4:
+	// 	s.RatioFruitBasket = 2
+	// 	e.ratioWild = ratioWild1_5
+	// 	// s.NumSpinLeft = 9
+	// case 5:
+	// 	s.RatioFruitBasket = 4
+	// 	e.ratioWild = ratioWild2_0
+	// 	// s.NumSpinLeft = 15
+	// default:
+	// 	s.RatioFruitBasket = 1
+	// 	// s.NumSpinLeft = 3
+	// 	e.ratioWild = ratioWild1_0
+	// }
+	s.NumSpinLeft = entity.NumSpinByScatterSeq(s.NumScatterSeq)
 	matrixSpecial := entity.NewJuicyMatrix()
 	matrix := e.SpinMatrix(matrixSpecial, e.ratioWild)
 	s.MatrixSpecial = &matrix
 	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
 	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.IsSpinChange = false
 	return matchState, nil
 }
 
@@ -58,6 +60,8 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	if s.NumSpinLeft <= 0 {
 		return matchState, entity.ErrorSpinReachMax
 	}
+	s.IsSpinChange = true
+	s.NumSpinLeft--
 	var matrix entity.SlotMatrix
 	for {
 		matrix = e.SpinMatrix(*s.MatrixSpecial, ratioWild1_0)
@@ -81,11 +85,31 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 		}
 		break
 	}
-
 	s.MatrixSpecial = &matrix
 	s.SetWildMatrix(e.WildMatrix(matrix))
 	s.SetPaylines(e.Paylines(matrix))
-	s.NumSpinLeft--
+	s.SpinList = make([]*pb.SpinSymbol, 0)
+	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		spinSymbol := &pb.SpinSymbol{
+			Symbol: symbol,
+			Index:  int32(idx),
+			Row:    int32(row),
+			Col:    int32(col),
+		}
+		if entity.IsFruitBasketSymbol(symbol) {
+			for {
+				randSym := entity.ShuffleSlice(entity.JuicyFruitRainSybol)[0]
+				if randSym != pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
+					spinSymbol.Symbol = randSym
+					break
+				}
+			}
+			val := entity.JuicyBasketSymbol[spinSymbol.Symbol]
+			spinSymbol.Ratio = float32(e.Random(int(val.Value.Min), int(val.Value.Max)))
+			spinSymbol.WinJp = entity.JuicySpinSymbolToJp(spinSymbol.Symbol)
+		}
+		s.SpinList = append(s.SpinList, spinSymbol)
+	})
 	return matchState, nil
 }
 
@@ -96,46 +120,47 @@ func (e *freeGame) Random(min int, max int) int {
 
 // Finish implements lib.Engine
 func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
-	slotDesk := &pb.SlotDesk{}
-	slotDesk.GameReward = &pb.GameReward{}
-
 	s := matchState.(*entity.SlotsMatchState)
+	if !s.IsSpinChange {
+		return s.LastResult, nil
+	}
+	s.IsSpinChange = false
 	lineWin := 0
 	for _, payline := range s.Paylines() {
 		lineWin += int(payline.GetRate())
 	}
-	s.RatioFruitBasket = 1
+	// s.RatioFruitBasket = 1
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
 	if s.NumScatterSeq >= 3 {
 		lineWin *= s.NumScatterSeq
 	}
-	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
+	for _, spin := range s.SpinList {
+		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
+	}
+	// s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.IsFruitBasketSymbol(symbol) {
 			val := entity.JuicyBasketSymbol[symbol]
-			lineWin += int(val.Value.Min) * s.RatioFruitBasket
+			lineWin += int(float64(val.Value.Min) * float64(s.GameConfig.GetRatioBasket()))
 		}
 	})
-
-	slotDesk.GameReward.ChipsWin = int64(lineWin) * s.Bet().Chips / 20
-	slotDesk.ChipsMcb = s.Bet().Chips
-	// ts.ChipWinByGame[s.CurrentSiXiangGame] += slotDesk.ChipsWin
-	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.ChipsWin)
-	// s.LineWinByGame[s.CurrentSiXiangGame] += lineWin
+	chipWin := int64(lineWin) * s.Bet().Chips / 20
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipWin)
 	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
-	// slotDesk.TotalChipsWinByGame = s.ChipWinByGame[s.CurrentSiXiangGame]
-	slotDesk.GameReward.TotalChipsWinByGame = s.ChipStat.ChipWin(s.CurrentSiXiangGame)
-	slotDesk.Matrix = s.MatrixSpecial.ToPbSlotMatrix()
-	slotDesk.Paylines = s.Paylines()
-
-	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
-	slotDesk.CurrentSixiangGame = s.CurrentSiXiangGame
-	slotDesk.NextSixiangGame = s.NextSiXiangGame
-	slotDesk.IsFinishGame = s.NumSpinLeft <= 0
-	if slotDesk.IsFinishGame {
-		s.RatioFruitBasket = 1
+	slotDesk := &pb.SlotDesk{
+		GameReward: &pb.GameReward{
+			ChipsWin:            chipWin,
+			TotalChipsWinByGame: s.ChipStat.ChipWin(s.CurrentSiXiangGame),
+		},
+		ChipsMcb:           s.Bet().Chips,
+		Matrix:             s.MatrixSpecial.ToPbSlotMatrix(),
+		Paylines:           s.Paylines(),
+		CurrentSixiangGame: s.CurrentSiXiangGame,
+		NextSixiangGame:    s.NextSiXiangGame,
+		IsFinishGame:       s.NumSpinLeft < 0,
+		NumSpinLeft:        int64(s.NumSpinLeft),
 	}
-	slotDesk.NumSpinLeft = int64(s.NumSpinLeft)
+	slotDesk.Matrix.SpinLists = s.SpinList
 	return slotDesk, nil
 }
 

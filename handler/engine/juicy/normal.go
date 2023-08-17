@@ -67,6 +67,28 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(e.WildMatrix(matrix))
 	s.SetPaylines(e.Paylines(s.WildMatrix))
+	s.SpinList = make([]*pb.SpinSymbol, 0)
+	s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		spinSymbol := &pb.SpinSymbol{
+			Symbol: symbol,
+			Index:  int32(idx),
+			Row:    int32(row),
+			Col:    int32(col),
+		}
+		if entity.IsFruitBasketSymbol(symbol) {
+			for {
+				randSym := entity.ShuffleSlice(entity.JuicyFruitRainSybol)[0]
+				if randSym != pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
+					spinSymbol.Symbol = randSym
+					break
+				}
+			}
+			val := entity.JuicyBasketSymbol[spinSymbol.Symbol]
+			spinSymbol.Ratio = float32(e.Random(int(val.Value.Min), int(val.Value.Max)))
+			spinSymbol.WinJp = entity.JuicySpinSymbolToJp(spinSymbol.Symbol)
+		}
+		s.SpinList = append(s.SpinList, spinSymbol)
+	})
 	return matchState, nil
 }
 
@@ -90,14 +112,18 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		lineWin += int(payline.GetRate())
 		payline.Chips = int64(payline.GetRate()) * s.Bet().Chips / 20
 	}
+	for _, spin := range s.SpinList {
+		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
+	}
 
-	s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
+	// s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
 	s.NumFruitBasket = e.countFruitBasket(&s.Matrix)
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
 	if s.NumScatterSeq >= 3 {
 		lineWin *= s.NumScatterSeq
 	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
+
 	chipWin := int64(lineWin) * s.Bet().Chips / 20
 	s.PerlGreenForestChipsCollect += s.Bet().Chips
 	slotDesk := &pb.SlotDesk{
@@ -115,11 +141,14 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 		Paylines:           paylines,
-		RatioFruitBasket:   int64(s.RatioFruitBasket),
-		IsFinishGame:       true,
-		NumSpinLeft:        int64(s.NumSpinLeft),
+		// RatioFruitBasket:   int64(s.RatioFruitBasket),
+		IsFinishGame: true,
+		NumSpinLeft:  int64(s.NumSpinLeft),
+		GameConfig:   s.GameConfig,
 	}
+	slotDesk.Matrix.SpinLists = s.SpinList
 	slotDesk.SpreadMatrix = slotDesk.Matrix
+
 	return slotDesk, nil
 }
 

@@ -8,6 +8,11 @@ import (
 const (
 	ColsJuicyMatrix  = 5
 	RowsJuicynMatrix = 3
+
+	RatioWild1_0 = 1.0
+	RatioWild1_2 = 1.2
+	RatioWild1_5 = 1.5
+	RatioWild2_0 = 2.0
 )
 
 var JuicyLowSymbols = []pb.SiXiangSymbol{
@@ -302,4 +307,45 @@ var JuiceJpRatio = map[pb.WinJackpot]int{
 	pb.WinJackpot_WIN_JACKPOT_MINOR: 100,
 	pb.WinJackpot_WIN_JACKPOT_MAJOR: 500,
 	pb.WinJackpot_WIN_JACKPOT_GRAND: 5000,
+}
+
+func NumSpinByScatterSeq(numScatterSeq int) int {
+	numSpinLeft := 0
+	switch numScatterSeq {
+	case 3:
+		numSpinLeft = 6
+	case 4:
+		numSpinLeft = 9
+	case 5:
+		numSpinLeft = 15
+	default:
+		numSpinLeft = 3
+	}
+	return numSpinLeft
+}
+
+func GameConfigFreeGame(numScatterSeq int) *pb.GameConfig {
+	gameCf := &pb.GameConfig{
+		NumScatterSeq: int64(numScatterSeq),
+		NumFreeSpin:   int64(NumSpinByScatterSeq(numScatterSeq)),
+	}
+	switch numScatterSeq {
+	case 3:
+		gameCf.NumWild = 50
+		gameCf.RatioBasket = 1
+		gameCf.RatioWild = RatioWild1_2
+	case 4:
+		gameCf.NumWild = 100
+		gameCf.RatioBasket = 2
+		gameCf.RatioWild = RatioWild1_5
+	case 5:
+		gameCf.NumWild = 200
+		gameCf.RatioBasket = 4
+		gameCf.RatioWild = RatioWild2_0
+	default:
+		gameCf.NumWild = 0
+		gameCf.RatioBasket = 1
+		gameCf.RatioWild = RatioWild1_0
+	}
+	return gameCf
 }

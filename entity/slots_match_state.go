@@ -101,7 +101,6 @@ type SlotsMatchState struct {
 	PerlGreenForestChipsCollect int64
 	NumScatterSeq               int
 	NumFruitBasket              int
-	RatioFruitBasket            int
 
 	LastSpinTime            time.Time
 	DurationTriggerAutoSpin time.Duration
@@ -113,6 +112,7 @@ type SlotsMatchState struct {
 	NotDropEyeSymbol        bool
 	// chip accum by bet
 	ChipsAccumByJp map[pb.WinJackpot]int64
+	GameConfig     *pb.GameConfig
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -127,7 +127,6 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 		CurrentSiXiangGame:     pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		NextSiXiangGame:        pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
 		ChipStat:               NewChipStat(),
-		RatioFruitBasket:       1,
 		gameEyePlayed:          make(map[int]map[pb.SiXiangGame]int),
 		NumSpinRemain6thLetter: MinNumSpinLetter6th,
 		LetterSymbol:           make(map[pb.SiXiangSymbol]bool),
