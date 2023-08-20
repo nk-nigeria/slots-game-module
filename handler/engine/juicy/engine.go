@@ -53,7 +53,7 @@ func (e *engine) Info(matchState interface{}) (interface{}, error) {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
 		spreadMatrix = s.WildMatrix.ToPbSlotMatrix()
 		matrix = spreadMatrix
-	default:
+	case pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET:
 		matrix = s.MatrixSpecial.ToPbSlotMatrix()
 		for idx, symbol := range s.MatrixSpecial.List {
 			if s.MatrixSpecial.IsFlip(idx) {
@@ -62,6 +62,9 @@ func (e *engine) Info(matchState interface{}) (interface{}, error) {
 				matrix.Lists[idx] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 			}
 		}
+		spreadMatrix = matrix
+	default:
+		matrix = s.MatrixSpecial.ToPbSlotMatrix()
 		spreadMatrix = matrix
 
 	}
