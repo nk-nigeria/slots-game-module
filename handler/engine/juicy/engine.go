@@ -84,8 +84,10 @@ func (e *engine) Info(matchState interface{}) (interface{}, error) {
 			TotalChipsWinByGame: s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
 			TotalLineWin:        s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
 		},
-		WinJp:      s.WinJp,
-		GameConfig: s.GameConfig,
+		WinJp: s.WinJp,
+	}
+	if s.GameConfig != nil {
+		slotdesk.GameConfig = s.GameConfig.GameConfig
 	}
 	return slotdesk, nil
 }

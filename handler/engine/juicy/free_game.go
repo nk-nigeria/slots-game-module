@@ -26,30 +26,13 @@ func NewFreeGame(randomIntFn func(int, int) int) lib.Engine {
 // NewGame implements lib.Engine
 func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	// switch s.NumScatterSeq {
-	// case 3:
-	// 	s.RatioFruitBasket = 1
-	// 	e.ratioWild = ratioWild1_2
-	// 	// s.NumSpinLeft = 6
-	// case 4:
-	// 	s.RatioFruitBasket = 2
-	// 	e.ratioWild = ratioWild1_5
-	// 	// s.NumSpinLeft = 9
-	// case 5:
-	// 	s.RatioFruitBasket = 4
-	// 	e.ratioWild = ratioWild2_0
-	// 	// s.NumSpinLeft = 15
-	// default:
-	// 	s.RatioFruitBasket = 1
-	// 	// s.NumSpinLeft = 3
-	// 	e.ratioWild = ratioWild1_0
-	// }
-	s.NumSpinLeft = entity.NumSpinByScatterSeq(s.NumScatterSeq)
-	matrixSpecial := entity.NewJuicyMatrix()
-	matrix := e.SpinMatrix(matrixSpecial, e.ratioWild)
-	s.MatrixSpecial = &matrix
-	// s.ChipWinByGame[s.CurrentSiXiangGame] = 0
-	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	if s.NumSpinLeft <= 0 {
+		s.NumSpinLeft = entity.NumSpinByScatterSeq(s.NumScatterSeq)
+		matrixSpecial := entity.NewJuicyMatrix()
+		matrix := e.SpinMatrix(matrixSpecial, e.ratioWild)
+		s.MatrixSpecial = &matrix
+		s.ChipStat.Reset(s.CurrentSiXiangGame)
+	}
 	s.IsSpinChange = false
 	return matchState, nil
 }
@@ -126,8 +109,10 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	}
 	s.IsSpinChange = false
 	lineWin := 0
-	for _, payline := range s.Paylines() {
+	paylines := s.Paylines()
+	for _, payline := range paylines {
 		lineWin += int(payline.GetRate())
+		payline.Chips = int64(payline.GetRate()) * s.Bet().Chips / 20
 	}
 	// s.RatioFruitBasket = 1
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
@@ -147,6 +132,7 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	chipWin := int64(lineWin) * s.Bet().Chips / 20
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipWin)
 	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
+	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk := &pb.SlotDesk{
 		GameReward: &pb.GameReward{
 			ChipsWin:            chipWin,
@@ -154,7 +140,7 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 		},
 		ChipsMcb:           s.Bet().Chips,
 		Matrix:             s.MatrixSpecial.ToPbSlotMatrix(),
-		Paylines:           s.Paylines(),
+		Paylines:           paylines,
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 		IsFinishGame:       s.NumSpinLeft < 0,

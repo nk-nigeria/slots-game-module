@@ -324,10 +324,13 @@ func NumSpinByScatterSeq(numScatterSeq int) int {
 	return numSpinLeft
 }
 
-func GameConfigFreeGame(numScatterSeq int) *pb.GameConfig {
-	gameCf := &pb.GameConfig{
-		NumScatterSeq: int64(numScatterSeq),
-		NumFreeSpin:   int64(NumSpinByScatterSeq(numScatterSeq)),
+func GameConfigFreeGame(numScatterSeq int) *GameConfig {
+	gameCf := &GameConfig{
+		GameConfig: &pb.GameConfig{
+			NumScatterSeq: int64(numScatterSeq),
+			NumFreeSpin:   int64(NumSpinByScatterSeq(numScatterSeq)),
+		},
+		AddGiftSpin: false,
 	}
 	switch numScatterSeq {
 	case 3:

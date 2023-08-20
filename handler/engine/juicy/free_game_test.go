@@ -218,3 +218,26 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 
 	})
 }
+
+func Test_freeGame_only_payline_Finish_Flow(t *testing.T) {
+	name := "Test_freeGame_only_payline_Finish"
+	t.Run(name, func(t *testing.T) {
+		e := NewFreeGame(nil)
+		s := entity.NewSlotsMathState(nil)
+		s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
+		s.NextSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
+		s.Bet().Chips = 100
+		e.NewGame(s)
+		for i := 0; i < 1000; i++ {
+			e.Process(s)
+			e.Finish(s)
+			if s.NumSpinLeft <= 0 {
+				assert.Equal(t, api.SiXiangGame_SI_XIANG_GAME_NORMAL, s.NextSiXiangGame)
+				s = entity.NewSlotsMathState(nil)
+				s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
+				s.Bet().Chips = 100
+				e.NewGame(s)
+			}
+		}
+	})
+}

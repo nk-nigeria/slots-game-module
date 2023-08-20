@@ -40,7 +40,6 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	matrix = e.SpinMatrix(matrix, ratioWild1_0)
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(matrix)
-	// s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.NumSpinLeft = -1
 	return matchState, nil
 }
@@ -49,7 +48,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.IsSpinChange = true
-	// s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.MatrixSpecial = nil
 	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
 	// cheat game
 	switch s.Bet().ReqSpecGame {
@@ -144,7 +143,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		// RatioFruitBasket:   int64(s.RatioFruitBasket),
 		IsFinishGame: true,
 		NumSpinLeft:  int64(s.NumSpinLeft),
-		GameConfig:   s.GameConfig,
+		GameConfig:   s.GameConfig.GameConfig,
 	}
 	slotDesk.Matrix.SpinLists = s.SpinList
 	slotDesk.SpreadMatrix = slotDesk.Matrix
