@@ -91,7 +91,7 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 		IsFinishGame:       true,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		SpinSymbols:        s.SpinSymbols,
-		GameConfig:         s.GameConfig,
+		GameConfig:         s.GameConfig.GameConfig,
 	}
 
 	return slotDesk, nil

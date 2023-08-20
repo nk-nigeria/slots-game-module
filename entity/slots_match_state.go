@@ -34,9 +34,20 @@ type SixiangSaveGame struct {
 	LastMcb       int64                          `json:"last_mcb,omitempty"`
 }
 
+type GameConfig struct {
+	*pb.GameConfig
+	AddGiftSpin bool `json:"add_gift_spin,omitempty"`
+}
+
 type JuiceSaveGame struct {
 	LastMcb        int64                   `json:"last_mcb,omitempty"`
 	ChipsAccumByJp map[pb.WinJackpot]int64 `json:"chips_accum_by_jp,omitempty"`
+	GamePlaying    pb.SiXiangGame          `json:"game_playing,omitempty"`
+	GameConfig     *GameConfig             `json:"game_config,omitempty"`
+	NumSpinLeft    int                     `json:"num_spin_left,omitempty"`
+	TotalChipWin   int                     `json:"total_chip_win,omitempty"`
+	SpinList       []*pb.SpinSymbol        `json:"spin_list,omitempty"`
+	MatrixSpecial  *SlotMatrix             `json:"matrix_special,omitempty"`
 }
 
 type TarzanSaveGame struct {
@@ -112,7 +123,7 @@ type SlotsMatchState struct {
 	NotDropEyeSymbol        bool
 	// chip accum by bet
 	ChipsAccumByJp map[pb.WinJackpot]int64
-	GameConfig     *pb.GameConfig
+	GameConfig     *GameConfig
 }
 
 func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
@@ -158,6 +169,7 @@ func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
 			Ratio:      int64(pb.WinJackpot_WIN_JACKPOT_GRAND),
 		},
 	}
+	m.GameConfig = &GameConfig{}
 	return &m
 }
 
@@ -404,6 +416,20 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if s.ChipsAccumByJp == nil {
 			s.ChipsAccumByJp = make(map[pb.WinJackpot]int64)
 		}
+		s.NextSiXiangGame = juiceSg.GamePlaying
+		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
+			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+		}
+		s.NumSpinLeft = juiceSg.NumSpinLeft
+		s.ChipStat.Reset(s.NextSiXiangGame)
+		s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(juiceSg.TotalChipWin))
+		s.MatrixSpecial = juiceSg.MatrixSpecial
+		s.SpinList = juiceSg.SpinList
+		s.LastResult = nil
+		s.GameConfig = juiceSg.GameConfig
+		if s.GameConfig == nil {
+			s.GameConfig = &GameConfig{}
+		}
 	}
 }
 
@@ -451,6 +477,12 @@ func (s *SlotsMatchState) SaveGameJson() string {
 		saveGame := JuiceSaveGame{
 			LastMcb:        s.bet.Chips,
 			ChipsAccumByJp: s.ChipsAccumByJp,
+			GameConfig:     s.GameConfig,
+			GamePlaying:    s.NextSiXiangGame,
+			NumSpinLeft:    s.NumSpinLeft,
+			TotalChipWin:   int(s.ChipStat.TotalChipWin(s.NextSiXiangGame)),
+			SpinList:       s.SpinList,
+			MatrixSpecial:  s.MatrixSpecial,
 		}
 		saveGameInf = saveGame
 	}

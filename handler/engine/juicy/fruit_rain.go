@@ -12,8 +12,8 @@ import (
 var _ lib.Engine = &fruitRain{}
 
 type fruitRain struct {
-	randomIntFn       func(min, max int) int
-	autoRefillGemSpin bool
+	randomIntFn func(min, max int) int
+	// autoRefillGemSpin bool
 	// matrixFruitRainBasket []pb.SiXiangSymbol
 }
 
@@ -30,46 +30,37 @@ func NewFruitRain(randomIntFn func(min, max int) int) lib.Engine {
 // NewGame implements lib.Engine
 func (e *fruitRain) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	matrixSpecial := entity.NewJuicyMatrix()
-	s.MatrixSpecial = &matrixSpecial
-	s.NumSpinLeft = 3
-	e.autoRefillGemSpin = true
-	m := entity.NewJuicyFruitRainMaxtrix()
-	s.WildMatrix = m
-	s.SpinList = make([]*pb.SpinSymbol, 0)
-	// e.matrixFruitRainBasket = m.List
 	s.WinJp = pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED
-	// switch s.NumScatterSeq {
-	// case 3:
-	// 	s.RatioFruitBasket = 1
-	// case 4:
-	// 	s.RatioFruitBasket = 2
-	// case 5:
-	// 	s.RatioFruitBasket = 4
-	// default:
-	// 	s.RatioFruitBasket = 1
-	// }
-	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		s.SpinList = append(s.SpinList, &pb.SpinSymbol{
-			Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
-			Row:       int32(row),
-			Col:       int32(col),
-			Index:     int32(idx),
-			Ratio:     0,
-			WinJp:     pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
-			WinAmount: 0,
-		})
-		for {
-			randomSymbol := entity.JuicySpinSymbol(e.randomIntFn, entity.JuiceAllSymbols)
-			if entity.IsFruitBasketSymbol(randomSymbol) {
-				continue
+	if s.NumSpinLeft <= 0 {
+		matrixSpecial := entity.NewJuicyMatrix()
+		s.MatrixSpecial = &matrixSpecial
+		s.NumSpinLeft = 3
+		s.GameConfig.AddGiftSpin = true
+		m := entity.NewJuicyFruitRainMaxtrix()
+		s.WildMatrix = m
+		s.SpinList = make([]*pb.SpinSymbol, 0)
+		s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			s.SpinList = append(s.SpinList, &pb.SpinSymbol{
+				Symbol:    pb.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED,
+				Row:       int32(row),
+				Col:       int32(col),
+				Index:     int32(idx),
+				Ratio:     0,
+				WinJp:     pb.WinJackpot_WIN_JACKPOT_UNSPECIFIED,
+				WinAmount: 0,
+			})
+			for {
+				randomSymbol := entity.JuicySpinSymbol(e.randomIntFn, entity.JuiceAllSymbols)
+				if entity.IsFruitBasketSymbol(randomSymbol) {
+					continue
+				}
+				s.MatrixSpecial.List[idx] = randomSymbol
+				s.MatrixSpecial.Flip(idx)
+				break
 			}
-			s.MatrixSpecial.List[idx] = randomSymbol
-			s.MatrixSpecial.Flip(idx)
-			break
-		}
-	})
-	s.ChipStat.Reset(s.CurrentSiXiangGame)
+		})
+		s.ChipStat.Reset(s.CurrentSiXiangGame)
+	}
 	return s, nil
 }
 
@@ -102,7 +93,7 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 
 		if entity.IsFruitBasketSymbol(newSymbol) {
 			s.NumSpinLeft = 3
-			e.autoRefillGemSpin = false
+			s.GameConfig.AddGiftSpin = false
 			spinSymbol := s.SpinList[idx]
 			spinSymbol.Symbol = newSymbol
 			val := entity.JuicyBasketSymbol[spinSymbol.Symbol]
@@ -115,9 +106,9 @@ func (e *fruitRain) Process(matchState interface{}) (interface{}, error) {
 	})
 	// Nếu trong 3 lượt đầu tiên mà không có Giỏ trái cây nào được thêm mới vào màn hình,
 	//  user được tặng 3 lượt freespin nữa. việc tặng chỉ xuất hiện 1 lần duy nhất.
-	if s.NumSpinLeft == 0 && e.autoRefillGemSpin {
+	if s.NumSpinLeft == 0 && s.GameConfig.AddGiftSpin {
 		s.NumSpinLeft = 3
-		e.autoRefillGemSpin = false
+		s.GameConfig.AddGiftSpin = false
 	}
 	return s, nil
 }
@@ -141,16 +132,6 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		if entity.IsFruitBasketSymbol(symbol) {
 			numFruitBasket++
 		}
-		// if entity.IsFruitJPSymbol(symbol) {
-		// 	switch symbol {
-		// 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI:
-		// 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_MINOR
-		// 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR:
-		// 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_MAJOR
-		// 	case pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR:
-		// 		s.WinJp = pb.WinJackpot_WIN_JACKPOT_MEGA
-		// 	}
-		// }
 	})
 	lineWin := int64(0)
 	for _, spin := range s.SpinSymbols {
@@ -209,6 +190,7 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 		NumSpinLeft:        int64(s.NumSpinLeft),
 	}
 	slotDesk.Matrix.SpinLists = s.SpinList
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.TotalChipsWinByGame)
 	s.LastResult = slotDesk
 	return slotDesk, nil
 }
