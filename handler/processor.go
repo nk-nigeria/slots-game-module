@@ -618,16 +618,6 @@ func (p *processor) InitSpecialGameDesk(ctx context.Context,
 			WithField("new game", s.NextSiXiangGame.String()).
 			Info("InitSpecialGameDesk")
 		p.engine.NewGame(s)
-		// if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-
-		// p.engine.NewGame(s)
-		// } else {
-		// 	logger.
-		// 		WithField("prev", s.CurrentSiXiangGame.String()).
-		// 		WithField("new game", s.NextSiXiangGame.String()).
-		// 		Info("Ignore InitSpecialGameDesk")
-
-		// }
 		if s.Bet().EmitNewgameEvent {
 			logger.Info("emit handlerRequestGetInfoTable by new game state")
 			for _, player := range s.GetPlayingPresences() {
@@ -637,11 +627,9 @@ func (p *processor) InitSpecialGameDesk(ctx context.Context,
 			}
 		}
 	}
-
 }
 
 func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet) bool {
-
 	switch s.CurrentSiXiangGame {
 	case pb.SiXiangGame_SI_XIANG_GAME_NORMAL:
 		if bet.Chips <= 0 {

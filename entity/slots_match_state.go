@@ -484,6 +484,9 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			SpinList:       s.SpinList,
 			MatrixSpecial:  s.MatrixSpecial,
 		}
+		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+			saveGame.TotalChipWin = 0
+		}
 		saveGameInf = saveGame
 	}
 	data, _ := json.Marshal(saveGameInf)

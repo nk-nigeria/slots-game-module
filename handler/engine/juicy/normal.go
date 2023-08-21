@@ -47,6 +47,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 // Process implements lib.Engine
 func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
 	s.IsSpinChange = true
 	s.MatrixSpecial = nil
 	matrix := e.SpinMatrix(s.Matrix, ratioWild1_0)
@@ -59,6 +60,13 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 		}
 	case int32(pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN):
 		for i := 0; i < 6; i++ {
+			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI
+		}
+	case -1:
+		for i := 0; i < 3; i++ {
+			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
+		}
+		for i := 4; i < 4+6; i++ {
 			matrix.List[i] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI
 		}
 	}
@@ -124,6 +132,8 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 
 	chipWin := int64(lineWin) * s.Bet().Chips / 20
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, chipWin)
+	s.ChipStat.AddLineWin(s.CurrentSiXiangGame, int64(lineWin))
 	s.PerlGreenForestChipsCollect += s.Bet().Chips
 	slotDesk := &pb.SlotDesk{
 		ChipsMcb: s.Bet().Chips,
