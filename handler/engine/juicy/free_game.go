@@ -57,15 +57,15 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 		if numFruitBasket >= 6 {
 			continue
 		}
-		numJpSymbol := 0
-		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-			if entity.IsFruitJPSymbol(symbol) {
-				numJpSymbol++
-			}
-		})
-		if numJpSymbol > 0 {
-			continue
-		}
+		// numJpSymbol := 0
+		// matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+		// 	if entity.IsFruitJPSymbol(symbol) {
+		// 		numJpSymbol++
+		// 	}
+		// })
+		// if numJpSymbol > 0 {
+		// 	continue
+		// }
 		break
 	}
 	s.MatrixSpecial = &matrix
@@ -79,9 +79,9 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 			Row:    int32(row),
 			Col:    int32(col),
 		}
-		if entity.IsFruitBasketSymbol(symbol) {
+		if entity.IsFruitBasketSymbol(symbol) && !entity.IsFruitJPSymbol(symbol) {
 			for {
-				randSym := entity.ShuffleSlice(entity.JuicyFruitRainSybol)[0]
+				randSym := entity.ShuffleSlice(entity.JuicyFruitRainSybol[1:])[0]
 				if randSym != pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_SPIN {
 					spinSymbol.Symbol = randSym
 					break
@@ -124,7 +124,7 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	}
 	// s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		if entity.IsFruitBasketSymbol(symbol) {
+		if entity.IsFruitBasketSymbol(symbol) && !entity.IsFruitJPSymbol(symbol) {
 			val := entity.JuicyBasketSymbol[symbol]
 			lineWin += int(float64(val.Value.Min) * float64(s.GameConfig.GetRatioBasket()))
 		}
@@ -143,7 +143,7 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 		Paylines:           paylines,
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
-		IsFinishGame:       s.NumSpinLeft < 0,
+		IsFinishGame:       true,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 	}
 	slotDesk.Matrix.SpinLists = s.SpinList

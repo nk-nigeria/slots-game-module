@@ -38,8 +38,12 @@ func (e *engine) Finish(matchState interface{}) (interface{}, error) {
 		return result, err
 	}
 	slotDesk.WinJpHistory = s.WinJPHistoryJuice()
+	slotDesk.GameConfig = nil
 	if slotDesk.IsFinishGame {
 		s.GameConfig = entity.GameConfigFreeGame(0)
+		if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET && s.GameConfig != nil {
+			slotDesk.GameConfig = s.GameConfig.GameConfig
+		}
 	}
 	s.LastResult = slotDesk
 	return slotDesk, nil
@@ -87,10 +91,8 @@ func (e *engine) Info(matchState interface{}) (interface{}, error) {
 			TotalChipsWinByGame: s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
 			TotalLineWin:        s.ChipStat.TotalLineWin(s.CurrentSiXiangGame),
 		},
-		WinJp: s.WinJp,
-	}
-	if s.GameConfig != nil {
-		slotdesk.GameConfig = s.GameConfig.GameConfig
+		WinJp:      s.WinJp,
+		GameConfig: nil,
 	}
 	return slotdesk, nil
 }

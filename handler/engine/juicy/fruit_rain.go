@@ -173,6 +173,7 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 	if isFinish {
 		s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 		s.WildMatrix = entity.SlotMatrix{}
+		s.NumSpinLeft = 0
 	}
 	slotDesk := &pb.SlotDesk{
 		ChipsMcb: s.Bet().Chips,
@@ -183,11 +184,12 @@ func (e *fruitRain) Finish(matchState interface{}) (interface{}, error) {
 			RatioWin:            float32(lineWin) / 100.0,
 			TotalLineWin:        totalLineWin,
 			TotalChipsWinByGame: totalChipWin,
-			TotalRatioWin:       float32(totalLineWin) / 100,
+			TotalRatioWin:       float32(totalLineWin) / 100.0,
 		},
 		CurrentSixiangGame: s.CurrentSiXiangGame,
 		NextSixiangGame:    s.NextSiXiangGame,
 		NumSpinLeft:        int64(s.NumSpinLeft),
+		IsFinishGame:       isFinish,
 	}
 	slotDesk.Matrix.SpinLists = s.SpinList
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, slotDesk.GameReward.TotalChipsWinByGame)
@@ -207,9 +209,15 @@ func (e *fruitRain) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	spinMatrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
-		randomSymbol := entity.JuicySpinSymbol(e.randomIntFn, entity.JuiceAllSymbols)
-		spinMatrix.Flip(idx)
-		spinMatrix.List[idx] = randomSymbol
+		for {
+			randomSymbol := entity.JuicySpinSymbol(e.randomIntFn, entity.JuiceAllSymbols)
+			if entity.IsFruitJPSymbol(randomSymbol) {
+				continue
+			}
+			spinMatrix.Flip(idx)
+			spinMatrix.List[idx] = randomSymbol
+			break
+		}
 	})
 	return spinMatrix
 }

@@ -166,6 +166,7 @@ func init() {
 		JuiceAllSymbols = append(JuiceAllSymbols, JuicyMidSymbol...)
 		JuiceAllSymbols = append(JuiceAllSymbols, JuicyHighSymbol...)
 		JuiceAllSymbols = append(JuiceAllSymbols, JuicySpecialSymbol...)
+		JuiceAllSymbols = append(JuiceAllSymbols, JuicyFruitBasektSymbol[1:]...)
 
 		JuiceAllSymbolsWildRatio1_2 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
 		JuiceAllSymbolsWildRatio1_5 = append(JuiceAllSymbolsWildRatio1_2, JuiceAllSymbols...)
