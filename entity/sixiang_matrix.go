@@ -300,7 +300,7 @@ func (sm *SlotMatrix) IsFlip(idx int) bool {
 	return sm.TrackFlip[idx]
 }
 
-func (sm *SlotMatrix) IsPayline(matrix SlotMatrix, paylineIndex []int) ([]int, bool) {
+func (sm *SlotMatrix) IsTarzanPayline(matrix SlotMatrix, paylineIndex []int) ([]int, bool) {
 	if len(paylineIndex) == 0 || len(sm.List) == 0 {
 		return nil, false
 	}
@@ -330,8 +330,35 @@ func (sm *SlotMatrix) IsPayline(matrix SlotMatrix, paylineIndex []int) ([]int, b
 		break
 
 	}
-	if len(validPaylineIndex) >= 2 {
-		return validPaylineIndex, true
+	// if len(validPaylineIndex) >= 2 {
+	// 	return validPaylineIndex, true
+	// }
+	// return validPaylineIndex, false
+	return validPaylineIndex, len(validPaylineIndex) >= 2
+}
+
+func (sm *SlotMatrix) IsIncaPayline(matrix SlotMatrix, paylineIndex []int) ([]int, bool) {
+	if len(paylineIndex) == 0 || len(sm.List) == 0 {
+		return nil, false
 	}
-	return validPaylineIndex, false
+	firstSymbol := matrix.List[paylineIndex[0]]
+	if firstSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+		return nil, false
+	}
+	for _, idx := range paylineIndex {
+		if firstSymbol != pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+			break
+		}
+		firstSymbol = matrix.List[idx]
+	}
+	validPaylineIndex := make([]int, 0, 2)
+	for _, idx := range paylineIndex {
+		sym := sm.List[idx]
+		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD || sym == firstSymbol {
+			validPaylineIndex = append(validPaylineIndex, idx)
+			continue
+		}
+		break
+	}
+	return validPaylineIndex, len(validPaylineIndex) >= 2
 }

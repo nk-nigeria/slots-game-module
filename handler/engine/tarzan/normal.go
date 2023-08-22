@@ -317,7 +317,7 @@ func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 func (e *normal) Paylines(matrix entity.SlotMatrix, wild entity.SlotMatrix) []*pb.Payline {
 	paylines := make([]*pb.Payline, 0)
 	for pair := entity.PaylineTarzanMapping.Oldest(); pair != nil; pair = pair.Next() {
-		paylineIndexs, isPayline := wild.IsPayline(matrix, pair.Value)
+		paylineIndexs, isPayline := wild.IsTarzanPayline(matrix, pair.Value)
 		if !isPayline {
 			continue
 		}
