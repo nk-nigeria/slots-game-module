@@ -48,7 +48,7 @@ func NewMatchHandler(
 	case define.TarzanGameName.String():
 		processor = handler.NewMatchProcessor(marshaler, unmarshaler, tarzan.NewEngine())
 	case define.JuicyGardenName.String(),
-		define.CrytoRush.String():
+		define.CryptoRush.String():
 		processor = handler.NewMatchProcessor(marshaler, unmarshaler, juicy.NewEngine())
 	case define.IncaGameName.String():
 		processor = handler.NewMatchProcessor(marshaler, unmarshaler, inca.NewEngine())

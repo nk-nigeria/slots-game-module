@@ -401,7 +401,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 		}
 	case define.JuicyGardenName.String(),
-		define.CrytoRush.String():
+		define.CryptoRush.String():
 		{
 			juiceSg := &JuiceSaveGame{}
 			err := json.Unmarshal([]byte(saveGame.Data), &juiceSg)
@@ -477,7 +477,7 @@ func (s *SlotsMatchState) SaveGameJson() string {
 		}
 		saveGameInf = tarzanSg
 	case define.JuicyGardenName.String(),
-		define.CrytoRush.String():
+		define.CryptoRush.String():
 		{
 			saveGame := JuiceSaveGame{
 				LastMcb:        s.bet.Chips,

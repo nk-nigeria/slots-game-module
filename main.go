@@ -29,7 +29,7 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		define.JuicyGardenName,
 		define.IncaGameName,
 		//clone game
-		define.CrytoRush,
+		define.CryptoRush,
 	}
 	for _, gameName := range gameNames {
 		name := gameName.String()
