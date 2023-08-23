@@ -73,6 +73,7 @@ func (*normal) Info(matchState interface{}) (interface{}, error) {
 		TsUnix:             time.Now().Unix(),
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		InfoBet:            s.Bet(),
+		BetLevels:          entity.BetLevels[:],
 	}
 	return slotdesk, nil
 }
@@ -83,9 +84,11 @@ func (*normal) Loop(matchState interface{}) (interface{}, error) {
 }
 
 // NewGame implements lib.Engine.
-func (*normal) NewGame(matchState interface{}) (interface{}, error) {
+func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	matrix := entity.NewSlotMatrix(entity.RowsIncaMatrix, entity.ColsIncaMatrix)
+	matrix.List = make([]pb.SiXiangSymbol, matrix.Size)
+	matrix = e.SpinMatrix(matrix)
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(matrix)
 	s.NumSpinLeft = -1
@@ -97,7 +100,7 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	s.SetMatrix(e.SpinMatrix(s.Matrix))
 	s.SetWildMatrix(e.SpreadWildInMatrix(s.Matrix))
-	s.SetPaylines(e.Paylines(*s.MatrixSpecial))
+	s.SetPaylines(e.Paylines(s.Matrix))
 	return s, nil
 }
 
@@ -108,6 +111,7 @@ func (e *normal) Random(min int, max int) int {
 
 func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
+	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	var randSymbol pb.SiXiangSymbol
 	symbols := entity.ShuffleSlice(entity.IncalAllSymbol)
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
@@ -120,7 +124,7 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 			break
 		}
 	})
-	return matrix
+	return spinMatrix
 }
 
 func (e *normal) Paylines(matrix entity.SlotMatrix) []*pb.Payline {
