@@ -7,6 +7,7 @@ import (
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler"
+	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/inca"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/juicy"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/tarzan"
@@ -39,29 +40,23 @@ func NewMatchHandler(
 	marshaler *protojson.MarshalOptions,
 	unmarshaler *protojson.UnmarshalOptions,
 ) *MatchHandler {
-	var matchHandler *MatchHandler
+
+	var processor lib.Processor
 	switch moduleName {
-	case define.SixiangGameName:
-		matchHandler = &MatchHandler{
-			processor: handler.NewMatchProcessor(marshaler, unmarshaler,
-				sixiang.NewEngine()),
-			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
-		}
-	case define.TarzanGameName:
-		matchHandler = &MatchHandler{
-			processor: handler.NewMatchProcessor(marshaler, unmarshaler,
-				tarzan.NewEngine()),
-			machine: lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
-		}
-	case define.JuicyGardenName:
-		{
-			matchHandler = &MatchHandler{
-				processor: handler.NewMatchProcessor(marshaler, unmarshaler, juicy.NewEngine()),
-				machine:   lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
-			}
-		}
+	case define.SixiangGameName.String():
+		processor = handler.NewMatchProcessor(marshaler, unmarshaler, sixiang.NewEngine())
+	case define.TarzanGameName.String():
+		processor = handler.NewMatchProcessor(marshaler, unmarshaler, tarzan.NewEngine())
+	case define.JuicyGardenName.String(),
+		define.CryptoRush.String():
+		processor = handler.NewMatchProcessor(marshaler, unmarshaler, juicy.NewEngine())
+	case define.IncaGameName.String():
+		processor = handler.NewMatchProcessor(marshaler, unmarshaler, inca.NewEngine())
 	}
-	return matchHandler
+	return &MatchHandler{
+		processor: processor,
+		machine:   lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
+	}
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {

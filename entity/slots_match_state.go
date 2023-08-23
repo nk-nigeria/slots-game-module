@@ -253,7 +253,7 @@ func (s *SlotsMatchState) GameEyePlayed() map[pb.SiXiangGame]int {
 }
 
 func (s *SlotsMatchState) PriceBuySixiangGem() (int64, error) {
-	if s.Label.Code != define.SixiangGameName {
+	if s.Label.Code != define.SixiangGameName.String() {
 		return 0, ErrorInvalidRequestGame
 	}
 
@@ -336,7 +336,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		return
 	}
 	switch s.Label.Code {
-	case define.SixiangGameName:
+	case define.SixiangGameName.String():
 		sixiangSaveGame := &SixiangSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &sixiangSaveGame)
 		if err != nil {
@@ -355,7 +355,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if len(s.gameEyePlayed[int(s.Bet().Chips)]) == len(ListEyeSiXiang) {
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 		}
-	case define.TarzanGameName:
+	case define.TarzanGameName.String():
 		tarzanSg := &TarzanSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &tarzanSg)
 		if err != nil {
@@ -400,35 +400,38 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if len(s.LetterSymbol) == len(TarzanLetterSymbol) {
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_TARZAN_JUNGLE_TREASURE
 		}
-	case define.JuicyGardenName:
-		juiceSg := &JuiceSaveGame{}
-		err := json.Unmarshal([]byte(saveGame.Data), &juiceSg)
-		if err != nil {
-			return
-		}
-		s.bet = &pb.InfoBet{
-			Chips: juiceSg.LastMcb,
-		}
-		if suggestMcb != nil {
-			s.bet.Chips = suggestMcb(juiceSg.LastMcb)
-		}
-		s.ChipsAccumByJp = juiceSg.ChipsAccumByJp
-		if s.ChipsAccumByJp == nil {
-			s.ChipsAccumByJp = make(map[pb.WinJackpot]int64)
-		}
-		s.NextSiXiangGame = juiceSg.GamePlaying
-		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
-			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-		}
-		s.NumSpinLeft = juiceSg.NumSpinLeft
-		s.ChipStat.Reset(s.NextSiXiangGame)
-		s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(juiceSg.TotalChipWin))
-		s.MatrixSpecial = juiceSg.MatrixSpecial
-		s.SpinList = juiceSg.SpinList
-		s.LastResult = nil
-		s.GameConfig = juiceSg.GameConfig
-		if s.GameConfig == nil {
-			s.GameConfig = &GameConfig{}
+	case define.JuicyGardenName.String(),
+		define.CryptoRush.String():
+		{
+			juiceSg := &JuiceSaveGame{}
+			err := json.Unmarshal([]byte(saveGame.Data), &juiceSg)
+			if err != nil {
+				return
+			}
+			s.bet = &pb.InfoBet{
+				Chips: juiceSg.LastMcb,
+			}
+			if suggestMcb != nil {
+				s.bet.Chips = suggestMcb(juiceSg.LastMcb)
+			}
+			s.ChipsAccumByJp = juiceSg.ChipsAccumByJp
+			if s.ChipsAccumByJp == nil {
+				s.ChipsAccumByJp = make(map[pb.WinJackpot]int64)
+			}
+			s.NextSiXiangGame = juiceSg.GamePlaying
+			if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
+				s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+			}
+			s.NumSpinLeft = juiceSg.NumSpinLeft
+			s.ChipStat.Reset(s.NextSiXiangGame)
+			s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(juiceSg.TotalChipWin))
+			s.MatrixSpecial = juiceSg.MatrixSpecial
+			s.SpinList = juiceSg.SpinList
+			s.LastResult = nil
+			s.GameConfig = juiceSg.GameConfig
+			if s.GameConfig == nil {
+				s.GameConfig = &GameConfig{}
+			}
 		}
 	}
 }
@@ -437,13 +440,13 @@ func (s *SlotsMatchState) SaveGameJson() string {
 	// return "test"
 	var saveGameInf interface{}
 	switch s.Label.Code {
-	case define.SixiangGameName:
+	case define.SixiangGameName.String():
 		sixiangSaveGame := &SixiangSaveGame{
 			GameEyePlayed: s.gameEyePlayed,
 			LastMcb:       s.bet.Chips,
 		}
 		saveGameInf = sixiangSaveGame
-	case define.TarzanGameName:
+	case define.TarzanGameName.String():
 		tarzanSg := &TarzanSaveGame{
 			LetterSymbol:                 make([]pb.SiXiangSymbol, 0),
 			PerlGreenForest:              s.PerlGreenForest,
@@ -473,21 +476,24 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			tarzanSg.LetterSymbol = append(tarzanSg.LetterSymbol, sym)
 		}
 		saveGameInf = tarzanSg
-	case define.JuicyGardenName:
-		saveGame := JuiceSaveGame{
-			LastMcb:        s.bet.Chips,
-			ChipsAccumByJp: s.ChipsAccumByJp,
-			GameConfig:     s.GameConfig,
-			GamePlaying:    s.NextSiXiangGame,
-			NumSpinLeft:    s.NumSpinLeft,
-			TotalChipWin:   int(s.ChipStat.TotalChipWin(s.NextSiXiangGame)),
-			SpinList:       s.SpinList,
-			MatrixSpecial:  s.MatrixSpecial,
+	case define.JuicyGardenName.String(),
+		define.CryptoRush.String():
+		{
+			saveGame := JuiceSaveGame{
+				LastMcb:        s.bet.Chips,
+				ChipsAccumByJp: s.ChipsAccumByJp,
+				GameConfig:     s.GameConfig,
+				GamePlaying:    s.NextSiXiangGame,
+				NumSpinLeft:    s.NumSpinLeft,
+				TotalChipWin:   int(s.ChipStat.TotalChipWin(s.NextSiXiangGame)),
+				SpinList:       s.SpinList,
+				MatrixSpecial:  s.MatrixSpecial,
+			}
+			if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+				saveGame.TotalChipWin = 0
+			}
+			saveGameInf = saveGame
 		}
-		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-			saveGame.TotalChipWin = 0
-		}
-		saveGameInf = saveGame
 	}
 	data, _ := json.Marshal(saveGameInf)
 	return string(data)

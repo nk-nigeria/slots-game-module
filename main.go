@@ -23,9 +23,16 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 	unmarshaler := &protojson.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
-	gameNames := []string{define.SixiangGameName, define.TarzanGameName, define.JuicyGardenName}
+	gameNames := []define.GameName{
+		define.SixiangGameName,
+		define.TarzanGameName,
+		define.JuicyGardenName,
+		define.IncaGameName,
+		//clone game
+		define.CryptoRush,
+	}
 	for _, gameName := range gameNames {
-		name := gameName
+		name := gameName.String()
 		if err := initializer.RegisterMatch(name, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {
 			return api.NewMatchHandler(name, marshaler, unmarshaler), nil
 		}); err != nil {
