@@ -58,14 +58,18 @@ func init() {
 		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_A] = m
 	}
 	{
-		var m = map[int32]float64{2: 0, 3: 10, 4: 50, 5: 250}
+		var m = map[int32]float64{2: 0, 3: 15, 4: 75, 5: 500}
 		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_DIAMONDS] = m
 		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_CLUBS] = m
 	}
 	{
+		var m = map[int32]float64{2: 2, 3: 25, 4: 125, 5: 725}
+		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_EAGLE_GARUDA] = m
+		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_ANTIQUE] = m
+	}
+	{
 		var m = map[int32]float64{2: 2, 3: 50, 4: 250, 5: 1250}
-		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_DIAMONDS] = m
-		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_CLUBS] = m
+		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUN] = m
 	}
 	{
 		var m = map[int32]float64{5: 1000}

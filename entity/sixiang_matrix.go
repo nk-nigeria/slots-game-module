@@ -354,6 +354,9 @@ func (sm *SlotMatrix) IsIncaPayline(matrix SlotMatrix, paylineIndex []int) ([]in
 	validPaylineIndex := make([]int, 0, 2)
 	for _, idx := range paylineIndex {
 		sym := sm.List[idx]
+		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+			break
+		}
 		if sym == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD || sym == firstSymbol {
 			validPaylineIndex = append(validPaylineIndex, idx)
 			continue
