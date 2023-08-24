@@ -117,8 +117,10 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		for {
 			randSymbol = symbols[e.Random(0, len(symbols))]
-			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD && col < entity.Col_2 {
-				continue
+			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+				if col == entity.Col_1 || col == entity.Col_5 {
+					continue
+				}
 			}
 			spinMatrix.List[idx] = randSymbol
 			break
