@@ -81,7 +81,7 @@ func (*fruitBasket) Finish(matchState interface{}) (interface{}, error) {
 		}
 	}
 	if s.NextSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-		s.GameConfig = entity.GameConfigFreeGame(s.NumScatterSeq)
+		s.GameConfig = entity.GameConfigFreeGame(int(s.GameConfig.NumScatterSeq))
 	}
 	slotDesk := &pb.SlotDesk{
 		ChipsMcb:           s.Bet().Chips,

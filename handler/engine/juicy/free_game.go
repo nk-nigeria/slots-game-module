@@ -27,7 +27,7 @@ func NewFreeGame(randomIntFn func(int, int) int) lib.Engine {
 func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
 	if s.NumSpinLeft <= 0 {
-		s.NumSpinLeft = entity.NumSpinByScatterSeq(s.NumScatterSeq)
+		s.NumSpinLeft = entity.NumSpinByScatterSeq(int(s.GameConfig.NumScatterSeq))
 		matrixSpecial := entity.NewJuicyMatrix()
 		matrix := e.SpinMatrix(matrixSpecial, e.ratioWild)
 		s.MatrixSpecial = &matrix
@@ -116,13 +116,13 @@ func (e *freeGame) Finish(matchState interface{}) (interface{}, error) {
 	}
 	// s.RatioFruitBasket = 1
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
-	if s.NumScatterSeq >= 3 {
-		lineWin *= s.NumScatterSeq
+	if s.GameConfig.NumScatterSeq >= 3 {
+		lineWin *= int(s.GameConfig.NumScatterSeq)
 	}
 	for _, spin := range s.SpinList {
 		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
 	}
-	// s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
+	// s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.GameConfig.NumScatterSeq)
 	s.MatrixSpecial.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 		if entity.IsFruitBasketSymbol(symbol) && !entity.IsFruitJPSymbol(symbol) {
 			val := entity.JuicyBasketSymbol[symbol]

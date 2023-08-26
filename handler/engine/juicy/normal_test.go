@@ -513,12 +513,12 @@ func Test_normal_GetNextSiXiangGame(t *testing.T) {
 	engine := e.(*normal)
 	s := entity.NewSlotsMathState(nil)
 	t.Run(name, func(t *testing.T) {
-		s.NumScatterSeq = 3
+		s.GameConfig.NumScatterSeq = 3
 		s.NumFruitBasket = 0
 		nextGame := engine.GetNextSiXiangGame(s)
 		assert.Equal(t, pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET, nextGame)
 
-		s.NumScatterSeq = 0
+		s.GameConfig.NumScatterSeq = 0
 		s.Matrix = entity.NewJuicyMatrix()
 		nextGame = engine.GetNextSiXiangGame(s)
 		assert.Equal(t, pb.SiXiangGame_SI_XIANG_GAME_NORMAL, nextGame)
@@ -527,7 +527,7 @@ func Test_normal_GetNextSiXiangGame(t *testing.T) {
 		nextGame = engine.GetNextSiXiangGame(s)
 		assert.Equal(t, pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_RAIN, nextGame)
 
-		s.NumScatterSeq = 3
+		s.GameConfig.NumScatterSeq = 3
 		nextGame = engine.GetNextSiXiangGame(s)
 		assert.Equal(t, pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET, nextGame)
 	})
@@ -622,14 +622,14 @@ func Test_normal_Only_fruitbasket_Finish(t *testing.T) {
 					s.Matrix.List[i+2*entity.ColsJuicyMatrix] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER
 				}
 				// t.Logf("num numScatterSeq %d num fruitBasket %d ratioFruitBasket %d",
-				// 	s.NumScatterSeq, float32(s.NumFruitBasket), float32(s.GameConfig.RatioBasket))
+				// 	s.GameConfig.NumScatterSeq, float32(s.NumFruitBasket), float32(s.GameConfig.RatioBasket))
 				listFruitbasket := []pb.SiXiangSymbol{
 					api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MAJOR,
 					api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINOR,
 					api.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_MINI,
 				}
 				rationFruitBasket := int(engine.transformNumScaterSeqToRationFruitBasket(numScatterSeq))
-				s.NumScatterSeq = numScatterSeq
+				s.GameConfig.NumScatterSeq = int64(numScatterSeq)
 				lineWin := 0
 				for i := 0; i < numFruitbasket; i++ {
 					symbol := entity.ShuffleSlice(listFruitbasket)[0]
@@ -664,7 +664,7 @@ func Test_normal_Only_fruitbasket_Finish(t *testing.T) {
 					nextGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
 				}
 				// t.Logf("num numScatterSeq %d num fruitBasket %d ratioFruitBasket %d",
-				// 	s.NumScatterSeq, float32(s.NumFruitBasket), float32(s.GameConfig.RatioBasket))
+				// 	s.GameConfig.NumScatterSeq, float32(s.NumFruitBasket), float32(s.GameConfig.RatioBasket))
 				assert.Equal(t, nextGame, slotDesk.NextSixiangGame)
 				assert.Equal(t, nextGame, s.NextSiXiangGame)
 				assert.Equal(t, numFruitbasket, s.NumFruitBasket)
