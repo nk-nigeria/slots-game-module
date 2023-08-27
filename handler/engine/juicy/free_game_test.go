@@ -26,7 +26,7 @@ func Test_freeGame_NewGame(t *testing.T) {
 		s := entity.NewSlotsMathState(nil)
 		s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
 		for i := 0; i <= 5; i++ {
-			s.NumScatterSeq = i
+			s.GameConfig.NumScatterSeq = int64(i)
 			e.NewGame(s)
 			ratioFruitBasket := 1
 			var ratioWild ratioWild = ratioWild1_0
@@ -167,7 +167,7 @@ func Test_freeGame_only_payline_Finish(t *testing.T) {
 			s.NumFruitBasket = 0
 			s.NumSpinLeft = 2
 			s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_JUICE_FREE_GAME
-			s.NumScatterSeq = numScatterSeq
+			s.GameConfig.NumScatterSeq = int64(numScatterSeq)
 			s.Matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 				s.Matrix.List[idx] = api.SiXiangSymbol_SI_XIANG_SYMBOL_UNSPECIFIED
 			})

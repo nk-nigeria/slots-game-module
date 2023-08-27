@@ -112,7 +112,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 	}
 	s.IsSpinChange = false
 	s.AddChipAccum(s.Bet().GetChips())
-	s.NumScatterSeq = e.countScattersSequent(&s.Matrix)
+	s.GameConfig.NumScatterSeq = int64(e.countScattersSequent(&s.Matrix))
 	lineWin := 0
 	paylines := s.Paylines()
 	for _, payline := range paylines {
@@ -123,11 +123,11 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		spin.WinAmount = int64(spin.Ratio) * s.Bet().Chips / 20
 	}
 
-	// s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.NumScatterSeq)
+	// s.RatioFruitBasket = e.transformNumScaterSeqToRationFruitBasket(s.GameConfig.NumScatterSeq)
 	s.NumFruitBasket = e.countFruitBasket(&s.Matrix)
 	// scatter x3 x4 x5 tính điểm tương ứng 3 4 5 x line bet
-	if s.NumScatterSeq >= 3 {
-		lineWin *= s.NumScatterSeq
+	if s.GameConfig.NumScatterSeq >= 3 {
+		lineWin *= int(s.GameConfig.NumScatterSeq)
 	}
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 
@@ -144,7 +144,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 			TotalLineWin:        int64(lineWin),
 			RatioWin:            float32(lineWin / 100.0),
 			TotalRatioWin:       float32(lineWin / 100.0),
-			RatioBonus:          float32(s.NumScatterSeq),
+			RatioBonus:          float32(s.GameConfig.NumScatterSeq),
 		},
 		Matrix:             s.Matrix.ToPbSlotMatrix(),
 		CurrentSixiangGame: s.CurrentSiXiangGame,
@@ -211,7 +211,7 @@ func (e *normal) WildMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 }
 
 func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
-	if s.NumScatterSeq >= 3 {
+	if s.GameConfig.NumScatterSeq >= 3 {
 		return pb.SiXiangGame_SI_XIANG_GAME_JUICE_FRUIT_BASKET
 	}
 	if s.NumFruitBasket >= 6 {

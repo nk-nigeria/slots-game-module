@@ -41,11 +41,17 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		ratio := entity.IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER][int32(numScatter)]
 		totalWin += int64(ratio) * s.Bet().Chips / 20
 	}
+	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+		s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
+		s.ChipStat.ResetChipWin(pb.SiXiangGame_SI_XIANG_GAME_INCA_FREE_GAME)
+		s.GameConfig.NumScatterSeq = int64(e.countScatterByCol(s.Matrix))
+	}
+	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, totalWin)
+	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
 	slotDesk := &pb.SlotDesk{
 		GameReward: &pb.GameReward{
-			ChipsWin:            totalWin,
-			TotalChipsWinByGame: totalWin,
-			UpdateWallet:        true,
+			ChipsWin:            s.ChipStat.ChipWin(s.CurrentSiXiangGame),
+			TotalChipsWinByGame: s.ChipStat.TotalChipWin(s.CurrentSiXiangGame),
 		},
 		ChipsMcb:           s.Bet().Chips,
 		CurrentSixiangGame: s.CurrentSiXiangGame,
@@ -53,7 +59,7 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		Matrix:             s.Matrix.ToPbSlotMatrix(),
 		SpreadMatrix:       s.WildMatrix.ToPbSlotMatrix(),
 		Paylines:           paylines,
-		IsFinishGame:       true,
+		IsFinishGame:       s.NumSpinLeft <= 0,
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		BetLevels:          entity.BetLevels[:],
 	}
@@ -188,4 +194,14 @@ func (e *normal) countScatterByCol(matrix entity.SlotMatrix) int {
 		}
 	})
 	return count
+}
+
+func (e *normal) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
+	if s.GameConfig.NumScatterSeq >= 3 {
+		return pb.SiXiangGame_SI_XIANG_GAME_INCA_FREE_GAME
+	}
+	if s.NumSpinLeft <= 0 {
+		return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+	}
+	return s.CurrentSiXiangGame
 }

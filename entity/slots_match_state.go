@@ -66,6 +66,15 @@ type TarzanSaveGame struct {
 	TurnSureSpinSpecial          int              `json:"turn_sure_spin_special,omitempty"`
 }
 
+type IncaSaveGame struct {
+	GamePlaying   pb.SiXiangGame `json:"game_playing,omitempty"`
+	LastMcb       int64          `json:"last_mcb,omitempty"`
+	MatrixSpecial *SlotMatrix    `json:"matrix_special,omitempty"`
+	GameConfig    *GameConfig    `json:"game_config,omitempty"`
+	NumSpinLeft   int            `json:"num_spin_left,omitempty"`
+	TotalChipWin  int            `json:"total_chip_win,omitempty"`
+}
+
 type SlotsMatchState struct {
 	// SaveGame map[string]*pb.SaveGame
 	lib.MatchState
@@ -110,8 +119,8 @@ type SlotsMatchState struct {
 	PerlGreenForest int
 	// chip tich luy
 	PerlGreenForestChipsCollect int64
-	NumScatterSeq               int
-	NumFruitBasket              int
+	// NumScatterSeq               int
+	NumFruitBasket int
 
 	LastSpinTime            time.Time
 	DurationTriggerAutoSpin time.Duration
@@ -330,6 +339,12 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if s.bet.Chips < 0 && suggestMcb != nil {
 			s.bet.Chips = suggestMcb(0)
 		}
+		if s.GameConfig == nil || s.GameConfig.GameConfig == nil {
+			s.GameConfig = &GameConfig{
+				GameConfig: &pb.GameConfig{},
+			}
+		}
+
 	}()
 	// save game expire
 	if saveGame.LastUpdateUnix == 0 || time.Now().Unix()-saveGame.LastUpdateUnix > 30*86400 {
@@ -339,7 +354,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 	case define.SixiangGameName.String():
 		sixiangSaveGame := &SixiangSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &sixiangSaveGame)
-		if err != nil {
+		if err != nil || sixiangSaveGame == nil {
 			return
 		}
 		s.gameEyePlayed = sixiangSaveGame.GameEyePlayed
@@ -358,7 +373,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 	case define.TarzanGameName.String():
 		tarzanSg := &TarzanSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &tarzanSg)
-		if err != nil {
+		if err != nil || tarzanSg == nil {
 			return
 		}
 		s.bet = &pb.InfoBet{
@@ -405,7 +420,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		{
 			juiceSg := &JuiceSaveGame{}
 			err := json.Unmarshal([]byte(saveGame.Data), &juiceSg)
-			if err != nil {
+			if err != nil || juiceSg == nil {
 				return
 			}
 			s.bet = &pb.InfoBet{
@@ -419,9 +434,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 				s.ChipsAccumByJp = make(map[pb.WinJackpot]int64)
 			}
 			s.NextSiXiangGame = juiceSg.GamePlaying
-			if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
-				s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
-			}
+
 			s.NumSpinLeft = juiceSg.NumSpinLeft
 			s.ChipStat.Reset(s.NextSiXiangGame)
 			s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(juiceSg.TotalChipWin))
@@ -429,10 +442,27 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 			s.SpinList = juiceSg.SpinList
 			s.LastResult = nil
 			s.GameConfig = juiceSg.GameConfig
-			if s.GameConfig == nil {
-				s.GameConfig = &GameConfig{}
-			}
 		}
+	case define.IncaGameName.String():
+		incaSg := &IncaSaveGame{}
+		err := json.Unmarshal([]byte(saveGame.Data), &incaSg)
+		if err != nil || incaSg == nil {
+			return
+		}
+		s.bet = &pb.InfoBet{
+			Chips: incaSg.LastMcb,
+		}
+		if suggestMcb != nil {
+			s.bet.Chips = suggestMcb(incaSg.LastMcb)
+		}
+		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_UNSPECIFIED {
+			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_NORMAL
+		}
+		s.NextSiXiangGame = incaSg.GamePlaying
+		s.NumSpinLeft = incaSg.NumSpinLeft
+		s.ChipStat.Reset(s.NextSiXiangGame)
+		s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(incaSg.TotalChipWin))
+		s.GameConfig = incaSg.GameConfig
 	}
 }
 
@@ -494,6 +524,16 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			}
 			saveGameInf = saveGame
 		}
+	case define.IncaGameName.String():
+		saveGame := IncaSaveGame{
+			GamePlaying:   s.CurrentSiXiangGame,
+			LastMcb:       s.bet.Chips,
+			MatrixSpecial: &s.Matrix,
+			GameConfig:    s.GameConfig,
+			NumSpinLeft:   s.NumSpinLeft,
+			TotalChipWin:  int(s.ChipStat.TotalChipWin(s.CurrentSiXiangGame)),
+		}
+		saveGameInf = saveGame
 	}
 	data, _ := json.Marshal(saveGameInf)
 	return string(data)
