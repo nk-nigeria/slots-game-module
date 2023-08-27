@@ -339,8 +339,10 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if s.bet.Chips < 0 && suggestMcb != nil {
 			s.bet.Chips = suggestMcb(0)
 		}
-		if s.GameConfig == nil {
-			s.GameConfig = &GameConfig{}
+		if s.GameConfig == nil || s.GameConfig.GameConfig == nil {
+			s.GameConfig = &GameConfig{
+				GameConfig: &pb.GameConfig{},
+			}
 		}
 
 	}()
