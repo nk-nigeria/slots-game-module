@@ -352,7 +352,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 	case define.SixiangGameName.String():
 		sixiangSaveGame := &SixiangSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &sixiangSaveGame)
-		if err != nil {
+		if err != nil || sixiangSaveGame == nil {
 			return
 		}
 		s.gameEyePlayed = sixiangSaveGame.GameEyePlayed
@@ -371,7 +371,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 	case define.TarzanGameName.String():
 		tarzanSg := &TarzanSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &tarzanSg)
-		if err != nil {
+		if err != nil || tarzanSg == nil {
 			return
 		}
 		s.bet = &pb.InfoBet{
@@ -418,7 +418,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		{
 			juiceSg := &JuiceSaveGame{}
 			err := json.Unmarshal([]byte(saveGame.Data), &juiceSg)
-			if err != nil {
+			if err != nil || juiceSg == nil {
 				return
 			}
 			s.bet = &pb.InfoBet{
@@ -444,7 +444,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 	case define.IncaGameName.String():
 		incaSg := &IncaSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &incaSg)
-		if err != nil {
+		if err != nil || incaSg == nil {
 			return
 		}
 		s.bet = &pb.InfoBet{
@@ -460,6 +460,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		s.NumSpinLeft = incaSg.NumSpinLeft
 		s.ChipStat.Reset(s.NextSiXiangGame)
 		s.ChipStat.AddChipWin(s.NextSiXiangGame, int64(incaSg.TotalChipWin))
+		s.GameConfig = incaSg.GameConfig
 	}
 }
 
