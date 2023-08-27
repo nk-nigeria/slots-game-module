@@ -69,7 +69,7 @@ func init() {
 	}
 	{
 		var m = map[int32]float64{2: 2, 3: 50, 4: 250, 5: 1250}
-		m[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUN] = m
+		IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUN] = m
 	}
 	{
 		var m = map[int32]float64{5: 1000}
