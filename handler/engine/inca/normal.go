@@ -119,11 +119,11 @@ func (e *normal) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
 	spinMatrix := entity.NewSlotMatrix(matrix.Rows, matrix.Cols)
 	spinMatrix.List = make([]pb.SiXiangSymbol, spinMatrix.Size)
 	var randSymbol pb.SiXiangSymbol
-	symbols := entity.ShuffleSlice(entity.IncalAllSymbol)
-	matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+	listSymbols := entity.ShuffleSlice(entity.IncalAllSymbol)
+	matrix.ForEeach(func(idx, _, col int, _ pb.SiXiangSymbol) {
 		for {
-			randSymbol = symbols[e.Random(0, len(symbols))]
-			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD {
+			randSymbol = listSymbols[e.Random(0, len(listSymbols))]
+			if randSymbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
 				if col == entity.Col_1 || col == entity.Col_5 {
 					continue
 				}

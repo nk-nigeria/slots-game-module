@@ -100,20 +100,40 @@ func Test_normal_SpinMatrix_ScatterOccur(t *testing.T) {
 	t.Run(name, func(t *testing.T) {
 		e := NewNormal(nil)
 		s := entity.NewSlotsMathState(nil)
+		s.GameConfig = &entity.GameConfig{
+			GameConfig: &pb.GameConfig{},
+		}
+		s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_NORMAL
 		s.Bet().Chips = 1000
 		e.NewGame(s)
-		e.Process(s)
-		engine := e.(*normal)
+
 		for i := 0; i < 10000; i++ {
-			engine.SpinMatrix(s.Matrix)
-			s.Matrix.ForEachCol(func(col int, symbols []api.SiXiangSymbol) {
+			e.Process(s)
+			result, err := e.Finish(s)
+			assert.NoError(t, err)
+			assert.NotNil(t, result)
+			slotDesk := result.(*api.SlotDesk)
+			sm := &entity.SlotMatrix{}
+			sm.FromPbMatrix(slotDesk.Matrix)
+			// sm.ForEachCol(func(col int, symbols []api.SiXiangSymbol) {
+			// 	if col == entity.Col_1 || col == entity.Col_5 {
+			// 		for row, sym := range symbols {
+			// 			if sym == api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+			// 				t.Logf("row %d col %d", row, col)
+			// 			}
+			// 			assert.NotEqual(t, pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER, sym)
+			// 		}
+			// 	}
+			// })
+			sm.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
 				if col == entity.Col_1 || col == entity.Col_5 {
-					for _, sym := range symbols {
-						assert.NotEqual(t, pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER, sym)
+					if symbol == api.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER {
+						t.Logf("row %d col %d", row, col)
 					}
+					assert.NotEqual(t, pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER, symbol)
+
 				}
 			})
 		}
 	})
-
 }
