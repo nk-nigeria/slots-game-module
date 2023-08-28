@@ -43,6 +43,8 @@ func init() {
 		IncalAllSymbol = append(IncalAllSymbol,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_WILD,
 			pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER,
+			pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER,
 		)
 	}
 	{
