@@ -266,6 +266,19 @@ func (sm *SlotMatrix) ToPbSlotMatrix() *pb.SlotMatrix {
 	return pbSl
 }
 
+func (sm *SlotMatrix) FromPbMatrix(m *pb.SlotMatrix) *SlotMatrix {
+	// matrix, cols,row
+	// pbSl := &pb.SlotMatrix{
+	// 	Rows: int32(sm.Rows),
+	// 	Cols: int32(sm.Cols),
+	// }
+	sm.Cols = int(m.GetCols())
+	sm.Rows = int(m.GetRows())
+	sm.List = make([]pb.SiXiangSymbol, sm.Rows*sm.Cols)
+	copy(sm.List, m.Lists) // deep copy
+	return sm
+}
+
 func (sm *SlotMatrix) RandomSymbolNotFlip(randomFn func(min, max int) int) (int, pb.SiXiangSymbol) {
 	listIdNotFlip := make([]int, 0)
 	for id := range sm.List {
