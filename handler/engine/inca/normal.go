@@ -1,8 +1,6 @@
 package inca
 
 import (
-	"time"
-
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
@@ -12,10 +10,10 @@ type normal struct {
 	randomFn func(min, max int) int
 }
 
-func NewEngine() lib.Engine {
-	e := NewNormal(nil)
-	return e
-}
+// func NewEngine() lib.Engine {
+// 	e := NewNormal(nil)
+// 	return e
+// }
 
 func NewNormal(randomIntFn func(int, int) int) lib.Engine {
 	e := &normal{}
@@ -41,13 +39,14 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		ratio := entity.IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER][int32(numScatter)]
 		totalWin += int64(ratio) * s.Bet().Chips / 20
 	}
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
-		s.ChipStat.ResetChipWin(s.CurrentSiXiangGame)
-		s.ChipStat.ResetChipWin(pb.SiXiangGame_SI_XIANG_GAME_INCA_FREE_GAME)
-		s.GameConfig.NumScatterSeq = int64(e.countScatterByCol(s.Matrix))
-	}
+	s.ChipStat.Reset(s.CurrentSiXiangGame)
+	s.ChipStat.Reset(pb.SiXiangGame_SI_XIANG_GAME_INCA_FREE_GAME)
+	s.GameConfig.NumScatterSeq = int64(e.countScatterByCol(s.Matrix))
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, totalWin)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)
+	if s.NumSpinLeft < 0 {
+		s.NumSpinLeft = -1
+	}
 	slotDesk := &pb.SlotDesk{
 		GameReward: &pb.GameReward{
 			ChipsWin:            s.ChipStat.ChipWin(s.CurrentSiXiangGame),
@@ -63,25 +62,22 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		NumSpinLeft:        int64(s.NumSpinLeft),
 		BetLevels:          entity.BetLevels[:],
 	}
+	if slotDesk.IsFinishGame {
+		if s.NextSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
+			s.GameConfig.GameConfig = &pb.GameConfig{}
+		} else {
+			slotDesk.GameConfig = s.GameConfig.GameConfig
+			slotDesk.GameConfig.NumFreeSpin = 15
+		}
+	}
+
 	s.LastResult = slotDesk
 	return slotDesk, nil
 }
 
 // Info implements lib.Engine.
 func (*normal) Info(matchState interface{}) (interface{}, error) {
-	s := matchState.(*entity.SlotsMatchState)
-	slotdesk := &pb.SlotDesk{
-		Matrix:             s.Matrix.ToPbSlotMatrix(),
-		SpreadMatrix:       s.WildMatrix.ToPbSlotMatrix(),
-		ChipsMcb:           s.Bet().Chips,
-		CurrentSixiangGame: s.CurrentSiXiangGame,
-		NextSixiangGame:    s.NextSiXiangGame,
-		TsUnix:             time.Now().Unix(),
-		NumSpinLeft:        int64(s.NumSpinLeft),
-		InfoBet:            s.Bet(),
-		BetLevels:          entity.BetLevels[:],
-	}
-	return slotdesk, nil
+	return nil, nil
 }
 
 // Loop implements lib.Engine.
@@ -98,6 +94,7 @@ func (e *normal) NewGame(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(matrix)
 	s.SetWildMatrix(matrix)
 	s.NumSpinLeft = -1
+
 	return matchState, nil
 }
 
@@ -107,6 +104,8 @@ func (e *normal) Process(matchState interface{}) (interface{}, error) {
 	s.SetMatrix(e.SpinMatrix(s.Matrix))
 	s.SetWildMatrix(e.SpreadWildInMatrix(s.Matrix))
 	s.SetPaylines(e.Paylines(s.Matrix))
+	s.NumSpinLeft -= 1
+	s.GameConfig.NumFreeSpin = int64(s.NumSpinLeft)
 	return s, nil
 }
 
