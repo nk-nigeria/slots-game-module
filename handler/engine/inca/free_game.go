@@ -70,6 +70,16 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 	return matchState, nil
 }
 
+func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
+	s := matchState.(*entity.SlotsMatchState)
+	_, err := e.normal.Process(s)
+	numScatterSeq := e.countScatterByCol(s.Matrix)
+	if numScatterSeq >= 3 {
+		s.NumSpinLeft = 15
+	}
+	return s, err
+}
+
 func (e *freeGame) GetNextSiXiangGame(s *entity.SlotsMatchState) pb.SiXiangGame {
 	if s.NumSpinLeft <= 0 {
 		return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
