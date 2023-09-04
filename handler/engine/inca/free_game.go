@@ -75,7 +75,7 @@ func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	_, err := e.normal.Process(s)
 	numScatterSeq := e.countScatterByCol(s.Matrix)
 	if numScatterSeq >= 3 {
-		s.NumSpinLeft = 15
+		s.NumSpinLeft += 15
 	}
 	return s, err
 }
