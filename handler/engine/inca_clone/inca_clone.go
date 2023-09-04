@@ -1,21 +1,31 @@
-package noel
+package incaclone
 
 import (
 	"errors"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/inca"
+	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 )
 
 type engine struct {
-	incaEngine lib.Engine
+	incaEngine       lib.Engine
+	useFnSymbolAlias func(source pb.SiXiangSymbol) pb.SiXiangSymbol
 }
 
-func NewEngine() lib.Engine {
+func NewEngine(gameCode define.GameName) lib.Engine {
 	e := &engine{
 		incaEngine: inca.NewEngine(),
+	}
+	switch gameCode {
+	case define.NoelGameName:
+		e.useFnSymbolAlias = entity.GetSymbolNoelFromInca
+	case define.FruitGameName:
+		e.useFnSymbolAlias = entity.GetSymbolFruitFromInca
+	default:
+		panic("not implement clone game")
 	}
 	return e
 }
@@ -77,21 +87,21 @@ func (e *engine) convertSymbol(slotDesk *pb.SlotDesk) *pb.SlotDesk {
 
 func (e *engine) convertSlotMaxtrix(sm *pb.SlotMatrix) {
 	entity.PbSlotMatrixForEeach(sm, func(idx int, row, col int32, symbol pb.SiXiangSymbol) {
-		newSymbol := entity.GetSymbolNoelFromInca(symbol)
+		newSymbol := e.useFnSymbolAlias(symbol)
 		sm.Lists[idx] = newSymbol
 	})
 }
 
 func (e *engine) convertSpinSymbol(sm []*pb.SpinSymbol) {
 	for _, spin := range sm {
-		newSymbol := entity.GetSymbolNoelFromInca(spin.GetSymbol())
+		newSymbol := e.useFnSymbolAlias(spin.GetSymbol())
 		spin.Symbol = newSymbol
 	}
 }
 
 func (e *engine) convertPayline(sm []*pb.Payline) {
 	for _, payline := range sm {
-		newSymbol := entity.GetSymbolNoelFromInca(payline.GetSymbol())
+		newSymbol := e.useFnSymbolAlias(payline.GetSymbol())
 		payline.Symbol = newSymbol
 	}
 }
