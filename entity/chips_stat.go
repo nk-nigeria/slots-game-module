@@ -21,6 +21,13 @@ func NewChipStat() *chipStat {
 	return &s
 }
 
+func (s *chipStat) ResetAll() {
+	s.chipsWin = make(map[pb.SiXiangGame]int64)
+	s.lineWin = make(map[pb.SiXiangGame]int64)
+	s.totalChipsWin = make(map[pb.SiXiangGame]int64)
+	s.totalLineWin = make(map[pb.SiXiangGame]int64)
+}
+
 func (s *chipStat) Reset(game pb.SiXiangGame) {
 	s.ResetChipWin(game)
 	s.ResetLineWin(game)

@@ -443,7 +443,8 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 			s.LastResult = nil
 			s.GameConfig = juiceSg.GameConfig
 		}
-	case define.IncaGameName.String():
+	case define.IncaGameName.String(),
+		define.NoelGameName.String():
 		incaSg := &IncaSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &incaSg)
 		if err != nil || incaSg == nil {
@@ -467,7 +468,6 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 }
 
 func (s *SlotsMatchState) SaveGameJson() string {
-	// return "test"
 	var saveGameInf interface{}
 	switch s.Label.Code {
 	case define.SixiangGameName.String():
@@ -524,7 +524,8 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			}
 			saveGameInf = saveGame
 		}
-	case define.IncaGameName.String():
+	case define.IncaGameName.String(),
+		define.NoelGameName.String():
 		saveGame := IncaSaveGame{
 			GamePlaying:   s.CurrentSiXiangGame,
 			LastMcb:       s.bet.Chips,
