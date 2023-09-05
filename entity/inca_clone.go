@@ -15,6 +15,7 @@ func init() {
 }
 
 func initMapSymbolNoelFromInca() {
+	mapSymbolNoelFromInca = make(map[pb.SiXiangSymbol]pb.SiXiangSymbol)
 	mapSymbolNoelFromInca[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUN] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_CHRISMAS_GIFT
 	mapSymbolNoelFromInca[pb.SiXiangSymbol_SI_XIANG_SYMBOL_EAGLE_GARUDA] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_CHRISMAS_CANDY
 	mapSymbolNoelFromInca[pb.SiXiangSymbol_SI_XIANG_SYMBOL_ANTIQUE] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_CHRISMAS_RING
@@ -27,6 +28,7 @@ func initMapSymbolNoelFromInca() {
 }
 
 func initMapSymbolFruitFromInca() {
+	mapSymbolFruitFromInca = make(map[pb.SiXiangSymbol]pb.SiXiangSymbol)
 	mapSymbolFruitFromInca[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SUN] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_GREEN
 	mapSymbolFruitFromInca[pb.SiXiangSymbol_SI_XIANG_SYMBOL_EAGLE_GARUDA] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_VIOLET
 	mapSymbolFruitFromInca[pb.SiXiangSymbol_SI_XIANG_SYMBOL_ANTIQUE] = pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_STONE_DIAMOND
