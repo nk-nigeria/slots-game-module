@@ -32,6 +32,8 @@ func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runti
 		define.CryptoRush,
 		define.NoelGameName,
 		define.FruitGameName,
+		define.FortuneFoundFortune,
+		define.JourneyToTheWest,
 	}
 	for _, gameName := range gameNames {
 		name := gameName.String()
