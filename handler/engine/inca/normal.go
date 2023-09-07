@@ -39,8 +39,9 @@ func (e *normal) Finish(matchState interface{}) (interface{}, error) {
 		ratio := entity.IncaRatioPaylineMap[pb.SiXiangSymbol_SI_XIANG_SYMBOL_SCATTER][int32(numScatter)]
 		totalWin += int64(ratio) * s.Bet().Chips / 20
 	}
-	s.ChipStat.Reset(s.CurrentSiXiangGame)
-	s.ChipStat.Reset(pb.SiXiangGame_SI_XIANG_GAME_INCA_FREE_GAME)
+	// s.ChipStat.Reset(s.CurrentSiXiangGame)
+	// s.ChipStat.Reset(pb.SiXiangGame_SI_XIANG_GAME_INCA_FREE_GAME)
+	s.ChipStat.ResetAll()
 	s.GameConfig.NumScatterSeq = int64(e.countScatterByCol(s.Matrix))
 	s.ChipStat.AddChipWin(s.CurrentSiXiangGame, totalWin)
 	s.NextSiXiangGame = e.GetNextSiXiangGame(s)

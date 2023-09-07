@@ -69,7 +69,7 @@ func (e *engine) Info(matchState interface{}) (interface{}, error) {
 		InfoBet:            s.Bet(),
 		BetLevels:          entity.BetLevels[:],
 	}
-	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_INCA_FREE_GAME {
+	if s.CurrentSiXiangGame != pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		slotdesk.GameConfig = s.GameConfig.GameConfig
 	}
 	return slotdesk, nil

@@ -8,6 +8,7 @@ import (
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/inca"
+	incaclone "github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/inca_clone"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/juicy"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/tarzan"
@@ -52,7 +53,11 @@ func NewMatchHandler(
 		processor = handler.NewMatchProcessor(marshaler, unmarshaler, juicy.NewEngine())
 	case define.IncaGameName.String():
 		processor = handler.NewMatchProcessor(marshaler, unmarshaler, inca.NewEngine())
+	case define.NoelGameName.String(),
+		define.FruitGameName.String():
+		processor = handler.NewMatchProcessor(marshaler, unmarshaler, incaclone.NewEngine(define.GameName(moduleName)))
 	}
+
 	return &MatchHandler{
 		processor: processor,
 		machine:   lib.NewGameStateMachine(sm.NewSlotsStateMachineState()),
