@@ -444,7 +444,8 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 			s.GameConfig = juiceSg.GameConfig
 		}
 	case define.IncaGameName.String(),
-		define.NoelGameName.String():
+		define.NoelGameName.String(),
+		define.FruitGameName.String():
 		incaSg := &IncaSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &incaSg)
 		if err != nil || incaSg == nil {
