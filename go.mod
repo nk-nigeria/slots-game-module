@@ -8,7 +8,7 @@ require (
 )
 
 require (
-	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230827172830-e68fea2c9cc4
+	github.com/ciaolink-game-platform/cgp-common v0.0.0-20230907133336-5d1db273c851
 	github.com/qmuntal/stateless v1.5.3
 	github.com/stretchr/testify v1.8.0
 	github.com/wk8/go-ordered-map/v2 v2.1.3

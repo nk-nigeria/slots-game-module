@@ -44,9 +44,11 @@ func NewMatchHandler(
 
 	var processor lib.Processor
 	switch moduleName {
-	case define.SixiangGameName.String():
+	case define.SixiangGameName.String(),
+		define.JourneyToTheWest.String():
 		processor = handler.NewMatchProcessor(marshaler, unmarshaler, sixiang.NewEngine())
-	case define.TarzanGameName.String():
+	case define.TarzanGameName.String(),
+		define.FortuneFoundFortune.String():
 		processor = handler.NewMatchProcessor(marshaler, unmarshaler, tarzan.NewEngine())
 	case define.JuicyGardenName.String(),
 		define.CryptoRush.String():
