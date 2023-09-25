@@ -351,7 +351,8 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		return
 	}
 	switch s.Label.Code {
-	case define.SixiangGameName.String():
+	case define.SixiangGameName.String(),
+		define.JourneyToTheWest.String():
 		sixiangSaveGame := &SixiangSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &sixiangSaveGame)
 		if err != nil || sixiangSaveGame == nil {
@@ -370,7 +371,8 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 		if len(s.gameEyePlayed[int(s.Bet().Chips)]) == len(ListEyeSiXiang) {
 			s.NextSiXiangGame = pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS
 		}
-	case define.TarzanGameName.String():
+	case define.TarzanGameName.String(),
+		define.FortuneFoundFortune.String():
 		tarzanSg := &TarzanSaveGame{}
 		err := json.Unmarshal([]byte(saveGame.Data), &tarzanSg)
 		if err != nil || tarzanSg == nil {
