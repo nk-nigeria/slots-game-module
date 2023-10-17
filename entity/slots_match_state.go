@@ -528,7 +528,8 @@ func (s *SlotsMatchState) SaveGameJson() string {
 			saveGameInf = saveGame
 		}
 	case define.IncaGameName.String(),
-		define.NoelGameName.String():
+		define.NoelGameName.String(),
+		define.FruitGameName.String():
 		saveGame := IncaSaveGame{
 			GamePlaying:   s.CurrentSiXiangGame,
 			LastMcb:       s.bet.Chips,
