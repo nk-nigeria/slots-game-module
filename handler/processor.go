@@ -646,11 +646,11 @@ func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet
 	}
 }
 
-func (p *processor) reportStatistic(logger runtime.Logger, userId string, slotDesk *pb.SlotDesk, s *entity.SlotsMatchState) {
+func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, userId string, slotDesk *pb.SlotDesk, s *entity.SlotsMatchState) {
 	// send to statistic
 	if slotDesk.IsFinishGame && slotDesk.GameReward != nil {
 		// report to operation module
-		report := lib.NewReportGame()
+		report := lib.NewReportGame(ctx)
 		// report.AddFee(totalFee)
 		report.AddMatch(&pb.MatchData{
 			GameId:   0,
@@ -668,7 +668,7 @@ func (p *processor) reportStatistic(logger runtime.Logger, userId string, slotDe
 		if err != nil || status > 300 {
 			if err != nil {
 				logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
-					lib.HostReport, s.Label.Code, string(data), status, err.Error())
+					report.ReportEndpoint(), s.Label.Code, string(data), status, err.Error())
 			} else {
 				logger.Info("Report game (%s) operatio -> %s successful", s.Label.Code)
 			}
@@ -753,7 +753,7 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 		slotDesk,
 		s.GetPlayingPresences(),
 		nil, false)
-	p.reportStatistic(logger, userId, slotDesk, s)
+	p.reportStatistic(ctx, logger, userId, slotDesk, s)
 }
 
 func (p *processor) saveGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB,
