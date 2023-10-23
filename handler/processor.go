@@ -704,7 +704,7 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 	slotDesk.GameReward.BalanceChipsWalletBefore = wallet.Chips
 	slotDesk.GameReward.BalanceChipsWalletAfter = wallet.Chips
 	if slotDesk.IsFinishGame {
-		if chipBetFee <= 0 && (slotDesk.GameReward != nil && slotDesk.GameReward.ChipsWin <= 0) {
+		if chipBetFee <= 0 && (slotDesk.GameReward != nil && slotDesk.GameReward.TotalChipsWinByGame <= 0) {
 			logger.WithField("user", s.GetPlayingPresences()[0].GetUserId()).
 				WithField("current game", slotDesk.CurrentSixiangGame.String()).
 				WithField("next game", slotDesk.NextSixiangGame.String()).
