@@ -36,7 +36,8 @@ func (s *StatePreparing) Enter(ctx context.Context, _ ...interface{}) error {
 			len(listPrecense), strings.Join(listUserId, ","))
 		state.AddLeavePresence(listPrecense...)
 	}
-	procPkg.GetProcessor().ProcessApplyPresencesLeave(ctx,
+	procPkg.GetProcessor().ProcessApplyPresencesLeave(
+		procPkg.GetContext(),
 		procPkg.GetLogger(),
 		procPkg.GetNK(),
 		procPkg.GetDb(),
@@ -65,7 +66,8 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	remain := state.GetRemainCountDown()
 	message := procPkg.GetMessages()
 	if len(message) > 0 {
-		procPkg.GetProcessor().ProcessMessageFromUser(ctx,
+		procPkg.GetProcessor().ProcessMessageFromUser(
+			procPkg.GetContext(),
 			procPkg.GetLogger(),
 			procPkg.GetNK(),
 			procPkg.GetDb(),

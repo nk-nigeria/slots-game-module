@@ -62,7 +62,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 	}
 
 	message := procPkg.GetMessages()
-	procPkg.GetProcessor().ProcessGame(ctx,
+	procPkg.GetProcessor().ProcessGame(procPkg.GetContext(),
 		procPkg.GetLogger(),
 		procPkg.GetNK(),
 		procPkg.GetDb(),

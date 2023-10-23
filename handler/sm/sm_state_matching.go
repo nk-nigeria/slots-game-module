@@ -42,7 +42,8 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	message := procPkg.GetMessages()
 	if len(message) > 0 {
-		procPkg.GetProcessor().ProcessMessageFromUser(ctx,
+		procPkg.GetProcessor().ProcessMessageFromUser(
+			procPkg.GetContext(),
 			procPkg.GetLogger(),
 			procPkg.GetNK(),
 			procPkg.GetDb(),
