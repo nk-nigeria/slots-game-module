@@ -657,6 +657,7 @@ func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, 
 			GameCode: s.Label.Code,
 			Mcb:      int64(s.Bet().Chips),
 			ChipFee:  slotDesk.GameReward.ChipFee,
+			TableId:  s.Label.TableId,
 		})
 		report.AddPlayerData(&pb.PlayerData{
 			UserId:  userId,

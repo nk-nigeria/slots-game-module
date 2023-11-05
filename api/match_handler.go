@@ -86,6 +86,10 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		logger.Warn("invalid match init parameter \"password\"")
 	}
 	open := int32(1)
+	tableId, ok := params["table_id"].(int64)
+	if !ok {
+		tableId = 0
+	}
 	if password != "" {
 		open = 0
 	}
@@ -96,6 +100,7 @@ func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db 
 		Name:     name,
 		Password: password,
 		MaxSize:  entity.MaxPresences,
+		TableId:  tableId,
 	}
 
 	labelJSON, err := json.Marshal(label)
