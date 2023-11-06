@@ -646,7 +646,7 @@ func (p *processor) checkValidBetInfo(s *entity.SlotsMatchState, bet *pb.InfoBet
 	}
 }
 
-func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, userId string, slotDesk *pb.SlotDesk, s *entity.SlotsMatchState) {
+func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, userId string, slotDesk *pb.SlotDesk, s *entity.SlotsMatchState) {
 	// send to statistic
 	if slotDesk.IsFinishGame && slotDesk.GameReward != nil {
 		// report to operation module
@@ -665,7 +665,7 @@ func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, 
 			ChipAdd: slotDesk.GameReward.BalanceChipsWalletAfter - slotDesk.GameReward.BalanceChipsWalletBefore,
 		})
 		// reportUrl := "http://103.226.250.195:8350"
-		data, status, err := report.Commit()
+		data, status, err := report.Commit(ctx, nk)
 		if err != nil || status > 300 {
 			if err != nil {
 				logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
@@ -754,7 +754,7 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 		slotDesk,
 		s.GetPlayingPresences(),
 		nil, false)
-	p.reportStatistic(ctx, logger, userId, slotDesk, s)
+	p.reportStatistic(ctx, logger, nk, userId, slotDesk, s)
 }
 
 func (p *processor) saveGame(ctx context.Context, logger runtime.Logger, nk runtime.NakamaModule, db *sql.DB,
