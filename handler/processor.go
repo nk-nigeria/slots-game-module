@@ -665,7 +665,7 @@ func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, 
 			ChipAdd: slotDesk.GameReward.BalanceChipsWalletAfter - slotDesk.GameReward.BalanceChipsWalletBefore,
 		})
 		// reportUrl := "http://103.226.250.195:8350"
-		data, status, err := report.Commit(ctx, nk)
+		data, status, err := report.Commit(ctx, nil)
 		if err != nil || status > 300 {
 			if err != nil {
 				logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
