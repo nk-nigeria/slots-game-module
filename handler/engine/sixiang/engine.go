@@ -49,11 +49,22 @@ func NewEngine() lib.Engine {
 
 	slotEngine.engines = make(map[pb.SiXiangGame]lib.Engine)
 	// i := 1
-	for _, i := range pb.SiXiangGame_value {
-		if i == 0 {
-			continue
-		}
-		game := pb.SiXiangGame(i)
+	games := []pb.SiXiangGame{
+		pb.SiXiangGame_SI_XIANG_GAME_NORMAL,
+		pb.SiXiangGame_SI_XIANG_GAME_BONUS,
+		pb.SiXiangGame_SI_XIANG_GAME_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_RAPIDPAY,
+		// bonus
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_DRAGON_PEARL,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_LUCKDRAW,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_GOLDPICK,
+		pb.SiXiangGame_SI_XIANG_GAME_SIXANGBONUS_RAPIDPAY,
+	}
+	for _, game := range games {
+		// game := pb.SiXiangGame(i)
 		slotEngine.engines[game] = newEngineByGame(game)
 	}
 	return &slotEngine

@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/ciaolink-game-platform/cgp-common v0.0.0-20231218131104-99b24a5e40c6
+	github.com/ciaolink-game-platform/cgp-common v0.0.0-20240109131402-d1d6334540a0
 	github.com/heroiclabs/nakama-common v1.30.0
 	github.com/qmuntal/stateless v1.6.8
 	github.com/stretchr/testify v1.8.4
