@@ -6,17 +6,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 
+	"github.com/ciaolink-game-platform/cgp-common/define"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/ciaolink-game-platform/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -260,6 +264,7 @@ func (p *processor) ProcessPresencesJoin(ctx context.Context,
 	}
 	for _, newuser := range newJoins {
 		p.getInfoTable(ctx, logger, nk, db, dispatcher, newuser.GetUserId(), s)
+		p.emitNkEvent(ctx, define.NakEventMatchJoin, nk, newuser.GetUserId(), &s.MatchState)
 	}
 }
 
@@ -274,13 +279,15 @@ func (p *processor) ProcessPresencesLeave(ctx context.Context,
 	s := matchState.(*entity.SlotsMatchState)
 	s.RemovePresence(presences...)
 	var listUserId []string
-	for _, p := range presences {
-		listUserId = append(listUserId, p.GetUserId())
+	for _, presence := range presences {
+		listUserId = append(listUserId, presence.GetUserId())
+		p.emitNkEvent(ctx, define.NakEventMatchLeave, nk, presence.GetUserId(), &s.MatchState)
+
 	}
 	if len(listUserId) == 0 {
 		return
 	}
-	cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
+	// cgbdb.UpdateUsersPlayingInMatch(ctx, logger, db, listUserId, "")
 }
 
 func (p *processor) ProcessPresencesLeavePending(ctx context.Context,
@@ -300,6 +307,21 @@ func (p *processor) ProcessPresencesLeavePending(ctx context.Context,
 			s.RemovePresence(presence)
 		}
 	}
+}
+
+func (p *processor) emitNkEvent(ctx context.Context, eventNk define.NakEvent, nk runtime.NakamaModule, userId string, s *lib.MatchState) {
+	matchId, _ := ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+	nk.Event(ctx, &api.Event{
+		Name:      string(eventNk),
+		Timestamp: timestamppb.Now(),
+		Properties: map[string]string{
+			"user_id":        userId,
+			"game_code":      s.Label.Code,
+			"end_match_unix": strconv.FormatInt(time.Now().Unix(), 10),
+			"match_id":       matchId,
+			"mcb":            strconv.FormatInt(int64(s.Label.Bet), 10),
+		},
+	})
 }
 
 func (p *processor) doSpin(ctx context.Context,
