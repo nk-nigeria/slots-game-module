@@ -7,11 +7,21 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"google.golang.org/protobuf/encoding/protojson"
 )
+
+var DefaultMarshaler = &protojson.MarshalOptions{
+	UseEnumNumbers:  true,
+	EmitUnpopulated: false,
+}
+var DefaulUnmarshaler = &protojson.UnmarshalOptions{
+	DiscardUnknown: false,
+}
 
 const (
 	MaxPresenceCard   = 13
 	JackpotPercentTax = 1 // 1%
+	TickRate          = 2
 )
 
 var (

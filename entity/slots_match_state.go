@@ -135,7 +135,7 @@ type SlotsMatchState struct {
 	GameConfig     *GameConfig
 }
 
-func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
+func NewSlotsMathState(label *pb.Match) *SlotsMatchState {
 	m := SlotsMatchState{
 		IsSpinChange:   false,
 		MatchState:     lib.NewMathState(label, NewMyPrecense),
@@ -262,7 +262,7 @@ func (s *SlotsMatchState) GameEyePlayed() map[pb.SiXiangGame]int {
 }
 
 func (s *SlotsMatchState) PriceBuySixiangGem() (int64, error) {
-	if s.Label.Code != define.SixiangGameName.String() {
+	if s.Label.Name != define.SixiangGameName.String() {
 		return 0, ErrorInvalidRequestGame
 	}
 
@@ -350,7 +350,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 	if saveGame.LastUpdateUnix == 0 || time.Now().Unix()-saveGame.LastUpdateUnix > 30*86400 {
 		return
 	}
-	switch s.Label.Code {
+	switch s.Label.Name {
 	case define.SixiangGameName.String(),
 		define.JourneyToTheWest.String():
 		sixiangSaveGame := &SixiangSaveGame{}
@@ -472,7 +472,7 @@ func (s *SlotsMatchState) LoadSaveGame(saveGame *pb.SaveGame, suggestMcb func(mc
 
 func (s *SlotsMatchState) SaveGameJson() string {
 	var saveGameInf interface{}
-	switch s.Label.Code {
+	switch s.Label.Name {
 	case define.SixiangGameName.String():
 		sixiangSaveGame := &SixiangSaveGame{
 			GameEyePlayed: s.gameEyePlayed,

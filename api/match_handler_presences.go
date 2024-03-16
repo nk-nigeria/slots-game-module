@@ -14,12 +14,12 @@ import (
 
 func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, dispatcher runtime.MatchDispatcher, tick int64, state interface{}, presence runtime.Presence, metadata map[string]string) (interface{}, bool, string) {
 	s := state.(*entity.SlotsMatchState)
-	logger.WithField("game", s.Label.Code).
+	logger.WithField("game", s.Label.Name).
 		WithField("metadata", metadata).
 		Info("match join attempt")
 
 	// check password
-	if s.Label.Open == 0 {
+	if !s.Label.Open {
 		logger.Info("match protect with password, check password")
 		joinPassword := metadata["password"]
 		if joinPassword != s.Label.Password {
@@ -45,10 +45,10 @@ func (m *MatchHandler) MatchJoinAttempt(ctx context.Context, logger runtime.Logg
 	if err != nil {
 		return s, false, status.Error(codes.Internal, "read chip balance failed").Error()
 	}
-	if wallet.Chips < int64(s.Label.Bet) {
+	if wallet.Chips < int64(s.Label.MarkUnit) {
 		logger.WithField("user", presence.GetUserId()).
 			WithField("wallet chip", wallet.Chips).
-			WithField("bet chip", s.Label.Bet).
+			WithField("bet chip", s.Label.MarkUnit).
 			Warn("Reject] user join game cause by not enough chip join game")
 		return s, false, status.Error(codes.Internal, "chip balance not enough").Error()
 	}
@@ -68,7 +68,7 @@ func (m *MatchHandler) MatchJoin(
 	presences []runtime.Presence) interface{} {
 	s := state.(*entity.SlotsMatchState)
 	logger.
-		WithField("game", s.Label.Code).
+		WithField("game", s.Label.Name).
 		WithField("presences", presences).
 		Info("macth join")
 	m.processor.ProcessPresencesJoin(ctx,
@@ -94,7 +94,7 @@ func (m *MatchHandler) MatchLeave(ctx context.Context,
 	s := state.(*entity.SlotsMatchState)
 	logger.
 		WithField("precenses", presences).
-		WithField("game", s.Label.Code).
+		WithField("game", s.Label.Name).
 		Info("match leave")
 
 	if m.machine.IsPlayingState() || m.machine.IsReward() {
@@ -145,6 +145,6 @@ func (m *MatchHandler) MatchTerminate(ctx context.Context, logger runtime.Logger
 		logger.WithField("state", s).Info("match terminate")
 		return state
 	}
-	logger.WithField("game", s.Label.Code).Info("match terminate")
+	logger.WithField("game", s.Label.Name).Info("match terminate")
 	return state
 }

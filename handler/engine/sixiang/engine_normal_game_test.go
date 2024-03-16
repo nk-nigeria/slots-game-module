@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
 	api "github.com/ciaolink-game-platform/cgp-common/proto"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +23,7 @@ func Test_normalEngine_InitMatrix(t *testing.T) {
 		{
 			name: "Test Init Matrix",
 			args: args{
-				matchState: entity.NewSlotsMathState(&lib.MatchLabel{}),
+				matchState: entity.NewSlotsMathState(&pb.Match{}),
 			},
 		},
 	}

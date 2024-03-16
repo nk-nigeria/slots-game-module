@@ -80,7 +80,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	// }
 
 	presence := s.GetPresences()[0]
-	saveGame := p.loadSaveGame(ctx, logger, nk, db, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s.Label.Code)
+	saveGame := p.loadSaveGame(ctx, logger, nk, db, dispatcher, s.GetPlayingPresences()[0].GetUserId(), s.Label.Name)
 	s.LoadSaveGame(saveGame, func(mcbInSaveGame int64) int64 {
 		return p.suggestMcb(ctx, logger, nk, presence.GetUserId(), mcbInSaveGame)
 	})
@@ -175,7 +175,7 @@ func (p *processor) ProcessApplyPresencesLeave(ctx context.Context,
 	s.RemovePresence(pendingLeaves...)
 	s.ApplyLeavePresence()
 	p.saveGame(ctx, logger, nk, db, dispatcher, pendingLeaves[0].GetUserId(),
-		s.SaveGameJson(), s.Label.Code)
+		s.SaveGameJson(), s.Label.Name)
 }
 
 func (p *processor) ProcessFinishGame(ctx context.Context,
@@ -316,10 +316,10 @@ func (p *processor) emitNkEvent(ctx context.Context, eventNk define.NakEvent, nk
 		Timestamp: timestamppb.Now(),
 		Properties: map[string]string{
 			"user_id":        userId,
-			"game_code":      s.Label.Code,
+			"game_code":      s.Label.Name,
 			"end_match_unix": strconv.FormatInt(time.Now().Unix(), 10),
 			"match_id":       matchId,
-			"mcb":            strconv.FormatInt(int64(s.Label.Bet), 10),
+			"mcb":            strconv.FormatInt(int64(s.Label.MarkUnit), 10),
 		},
 	})
 }
@@ -379,7 +379,7 @@ func (p *processor) doSpin(ctx context.Context,
 	s.Bet().ReqSpecGame = bet.ReqSpecGame
 	_, err = p.engine.Process(s)
 	if err != nil {
-		logger.WithField("error", err.Error()).WithField("bet info", s.Bet()).WithField("game", s.Label.Code).WithField("state", s.CurrentSiXiangGame).
+		logger.WithField("error", err.Error()).WithField("bet info", s.Bet()).WithField("game", s.Label.Name).WithField("state", s.CurrentSiXiangGame).
 			Error("engine process failed")
 		return
 	}
@@ -391,7 +391,7 @@ func (p *processor) doSpin(ctx context.Context,
 	}
 	slotDesk := result.(*pb.SlotDesk)
 	if slotDesk == nil {
-		logger.WithField("error", "slotDesk is null").WithField("bet info", s.Bet()).WithField("game", s.Label.Code).WithField("state", s.CurrentSiXiangGame).
+		logger.WithField("error", "slotDesk is null").WithField("bet info", s.Bet()).WithField("game", s.Label.Name).WithField("state", s.CurrentSiXiangGame).
 			Error("engine process failed")
 		return
 	}
@@ -524,7 +524,7 @@ func (p *processor) buySixiangGem(
 		return
 	}
 	err = p.updateChipUser(ctx, logger, nk,
-		s.GetPlayingPresences()[0].GetUserId(), s.Label.Code,
+		s.GetPlayingPresences()[0].GetUserId(), s.Label.Name,
 		-int64(chips), map[string]interface{}{"action": "buy_gem"},
 	)
 	if err != nil {
@@ -552,7 +552,7 @@ func (p *processor) buySixiangGem(
 	if s.CurrentSiXiangGame == pb.SiXiangGame_SI_XIANG_GAME_NORMAL {
 		s.NextSiXiangGame = gemWantBuy
 	}
-	p.saveGame(ctx, logger, nk, db, dispatcher, userID, s.SaveGameJson(), s.Label.Code)
+	p.saveGame(ctx, logger, nk, db, dispatcher, userID, s.SaveGameJson(), s.Label.Name)
 	// p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_BUY_SIXIANG_GEM),
 	// 	&pb.InfoBet{}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
 	s.Bet().EmitNewgameEvent = true
@@ -676,7 +676,7 @@ func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, 
 		// report.AddFee(totalFee)
 		report.AddMatch(&pb.MatchData{
 			GameId:   0,
-			GameCode: s.Label.Code,
+			GameCode: s.Label.Name,
 			Mcb:      int64(s.Bet().Chips),
 			ChipFee:  slotDesk.GameReward.ChipFee,
 			TableId:  s.Label.TableId,
@@ -691,9 +691,9 @@ func (p *processor) reportStatistic(ctx context.Context, logger runtime.Logger, 
 		if err != nil || status > 300 {
 			if err != nil {
 				logger.Error("Report game (%s) operation -> url %s failed, response %s status %d err %s",
-					report.ReportEndpoint(), s.Label.Code, string(data), status, err.Error())
+					report.ReportEndpoint(), s.Label.Name, string(data), status, err.Error())
 			} else {
-				logger.Info("Report game (%s) operatio -> %s successful", s.Label.Code)
+				logger.Info("Report game (%s) operatio -> %s successful", s.Label.Name)
 			}
 		}
 	}
@@ -746,14 +746,14 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 			// update chip win/loose by game
 			p.updateChipUser(ctx, logger, nk,
 				s.GetPlayingPresences()[0].GetUserId(),
-				s.Label.Code, chipWinGame, nil)
+				s.Label.Name, chipWinGame, nil)
 			chipBonus := gameReward.GetPerlGreenForestChips()
 			// update bonus chip
 			if gameReward.UpdateChipsBonus && chipBonus > 0 {
 				gameReward.BalanceChipsWalletAfter += chipBonus
 				p.updateChipUser(ctx, logger, nk,
 					s.GetPlayingPresences()[0].GetUserId(),
-					s.Label.Code, chipBonus, map[string]interface{}{"action": "bonus_perl_green_forest"},
+					s.Label.Name, chipBonus, map[string]interface{}{"action": "bonus_perl_green_forest"},
 				)
 			}
 			slotDesk.GameReward = gameReward
@@ -911,6 +911,6 @@ func (p *processor) checkAndSaveGame(ctx context.Context, logger runtime.Logger,
 ) {
 	switch s.CurrentSiXiangGame {
 	case pb.SiXiangGame_SI_XIANG_GAME_TARZAN_FREESPINX9:
-		p.saveGame(ctx, logger, nk, db, dispatcher, userId, s.SaveGameJson(), s.Label.Code)
+		p.saveGame(ctx, logger, nk, db, dispatcher, userId, s.SaveGameJson(), s.Label.Name)
 	}
 }

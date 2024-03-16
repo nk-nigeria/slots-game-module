@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler"
@@ -13,18 +12,14 @@ import (
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/tarzan"
 	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/sm"
-
 	"github.com/ciaolink-game-platform/cgp-common/define"
 	"github.com/ciaolink-game-platform/cgp-common/lib"
+	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var _ runtime.Match = &MatchHandler{}
-
-const (
-	tickRate = 4
-)
 
 type MatchHandler struct {
 	processor lib.Processor
@@ -68,52 +63,31 @@ func NewMatchHandler(
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
 	logger.Info("match init: %v", params)
-	bet, ok := params["bet"].(int32)
+	label, ok := params["data"].(string)
 	if !ok {
-		logger.Error("invalid match init parameter \"bet\"")
-		return nil, 0, ""
+		logger.WithField("params", params).Error("invalid match init parameter \"data\"")
+		return nil, entity.TickRate, ""
 	}
-	name, ok := params["name"].(string)
-	if !ok {
-		logger.Warn("invalid match init parameter \"name\"")
-	}
-	code, ok := params["code"].(string)
-	if !ok {
-		logger.Warn("invalid match init parameter \"code\"")
-	}
-	password, ok := params["password"].(string)
-	if !ok {
-		logger.Warn("invalid match init parameter \"password\"")
-	}
-	open := int32(1)
-	tableId, ok := params["table_id"].(int64)
-	if !ok {
-		tableId = 0
-	}
-	if password != "" {
-		open = 0
-	}
-	label := &lib.MatchLabel{
-		Open:     open,
-		Bet:      bet,
-		Code:     code,
-		Name:     name,
-		Password: password,
-		MaxSize:  entity.MaxPresences,
-		TableId:  tableId,
-	}
-
-	labelJSON, err := json.Marshal(label)
+	matchInfo := &pb.Match{}
+	err := entity.DefaulUnmarshaler.Unmarshal([]byte(label), matchInfo)
 	if err != nil {
 		logger.Error("match init json label failed ", err)
-		return nil, tickRate, ""
+		return nil, entity.TickRate, ""
 	}
-	logger.WithField("label", string(labelJSON)).Info("match init")
-	matchState := entity.NewSlotsMathState(label)
+	matchInfo.MatchId, _ = ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
+	labelJSON, err := entity.DefaultMarshaler.Marshal(matchInfo)
+
+	if err != nil {
+		logger.Error("match init json label failed ", err)
+		return nil, entity.TickRate, ""
+	}
+
+	logger.Info("match init label= %s", string(labelJSON))
+	matchState := entity.NewSlotsMathState(matchInfo)
 	if matchState == nil {
-		return nil, tickRate, string(labelJSON)
+		return nil, entity.TickRate, string(labelJSON)
 	}
 	procPkg := lib.NewProcessorPackage(matchState, m.processor, logger, nil, nil, nil, nil, nil)
 	m.machine.TriggerIdle(lib.GetContextWithProcessorPackager(procPkg))
-	return matchState, tickRate, string(labelJSON)
+	return matchState, entity.TickRate, string(labelJSON)
 }
