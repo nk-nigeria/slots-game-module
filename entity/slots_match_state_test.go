@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ciaolink-game-platform/cgp-common/define"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
 	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
@@ -152,8 +151,8 @@ func TestSlotsMatchState_LoadSaveGame(t *testing.T) {
 	name := "TestSlotsMatchState_LoadSaveGame"
 	t.Run(name, func(t *testing.T) {
 		data := "{\"last_update_unix\":1692888989,\"data\":\"null\"}"
-		s := NewSlotsMathState(&lib.MatchLabel{
-			Code: define.IncaGameName.String(),
+		s := NewSlotsMathState(&pb.Match{
+			Name: define.IncaGameName.String(),
 		})
 		saveGame := &pb.SaveGame{
 			Data:           data,
