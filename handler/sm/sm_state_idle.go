@@ -27,7 +27,7 @@ func (s *StateIdle) Enter(ctx context.Context, _ ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	if s.Count == 0 {
-		s.timeout = 100 * time.Second
+		s.timeout = 500 * time.Second
 	} else {
 		s.timeout = 10 * time.Second
 	}
