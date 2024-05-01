@@ -47,25 +47,40 @@ func Test_normal_SpinMatrix(t *testing.T) {
 		})
 		return num
 	}
+	checkValidSymbol := func(matrix entity.SlotMatrix) bool {
+		valid := true
+		matrix.ForEeach(func(idx, row, col int, symbol pb.SiXiangSymbol) {
+			if symbol == pb.SiXiangSymbol_SI_XIANG_SYMBOL_JUICE_FRUITBASKET_GRAND {
+				valid = false
+				return
+			}
+		})
+		return valid
+	}
 	t.Run(name, func(t *testing.T) {
-		for i := 0; i < 10000; i++ {
+		for i := 0; i < 100000; i++ {
 			matrix := engine.SpinMatrix(m, ratioWild1_0)
 			numUnspecSymbol := numUnspecSymbol(matrix)
 			assert.Equal(t, int(0), int(numUnspecSymbol))
 			numWildRatio1_0 += countWildSymbol(matrix)
 			checkWildPositition(matrix)
+			assert.Equal(t, true, checkValidSymbol(matrix))
 
 			matrix1_2 := engine.SpinMatrix(m, ratioWild1_2)
 			numWildRatio1_2 += countWildSymbol(matrix1_2)
 			checkWildPositition(matrix1_2)
+			assert.Equal(t, true, checkValidSymbol(matrix1_2))
 
 			matrix1_5 := engine.SpinMatrix(m, ratioWild1_5)
 			numWildRatio1_5 += countWildSymbol(matrix1_5)
 			checkWildPositition(matrix1_5)
+			assert.Equal(t, true, checkValidSymbol(matrix1_5))
 
 			matrix2_0 := engine.SpinMatrix(m, ratioWild2_0)
 			numWildRatio2_0 += countWildSymbol(matrix2_0)
 			checkWildPositition(matrix2_0)
+			assert.Equal(t, true, checkValidSymbol(matrix2_0))
+
 		}
 
 		assert.Less(t, ratioWild1_0, ratioWild1_2)
