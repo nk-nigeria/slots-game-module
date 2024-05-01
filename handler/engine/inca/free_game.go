@@ -72,10 +72,20 @@ func (e *freeGame) NewGame(matchState interface{}) (interface{}, error) {
 
 func (e *freeGame) Process(matchState interface{}) (interface{}, error) {
 	s := matchState.(*entity.SlotsMatchState)
-	_, err := e.normal.Process(s)
-	numScatterSeq := e.countScatterByCol(s.Matrix)
-	if numScatterSeq >= 3 {
-		s.NumSpinLeft += 15
+	var err error
+	for {
+		_, err = e.normal.Process(s)
+		if err != nil {
+			return s, err
+		}
+		numScatterSeq := e.countScatterByCol(s.Matrix)
+		if numScatterSeq >= 3 {
+			// s.NumSpinLeft += 15
+			// not allow 3 scatter in freespin
+			s.NumSpinLeft += 1
+			continue
+		}
+		break
 	}
 	return s, err
 }
