@@ -861,7 +861,7 @@ func (p *processor) suggestMcb(ctx context.Context, logger runtime.Logger, nk ru
 	})
 	mcbSuggest := entity.BetLevels[0]
 	for _, betLv := range betsLevel {
-		if betLv < wallet.Chips {
+		if betLv < (wallet.Chips / 50) {
 			mcbSuggest = betLv
 			break
 		}
