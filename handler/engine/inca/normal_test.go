@@ -137,3 +137,41 @@ func Test_normal_SpinMatrix_ScatterOccur(t *testing.T) {
 		}
 	})
 }
+
+func Test_normal_Payline(t *testing.T) {
+	name := "Test_normal_Payline"
+	t.Run(name, func(t *testing.T) {
+		e := NewNormal(nil)
+		s := entity.NewSlotsMathState(nil)
+		s.GameConfig = &entity.GameConfig{
+			GameConfig: &pb.GameConfig{},
+		}
+		s.CurrentSiXiangGame = api.SiXiangGame_SI_XIANG_GAME_NORMAL
+		s.Bet().Chips = 1000
+		e.NewGame(s)
+		e.Process(s)
+		// s.Matrix.List[0] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		// s.Matrix.List[1] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		// s.Matrix.List[2] = api.SiXiangSymbol_SI_XIANG_SYMBOL_EAGLE_GARUDA
+		// s.Matrix.List[3] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_HEARTS
+		// s.Matrix.List[4] = api.SiXiangSymbol_SI_XIANG_SYMBOL_EAGLE_GARUDA
+
+		// s.Matrix.List[5] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUN
+		// s.Matrix.List[6] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUN
+		// s.Matrix.List[7] = api.SiXiangSymbol_SI_XIANG_SYMBOL_WILD
+		// s.Matrix.List[8] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUN
+		// s.Matrix.List[9] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_HEARTS
+
+		// s.Matrix.List[10] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		// s.Matrix.List[11] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_HEARTS
+		// s.Matrix.List[12] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUIT_SPADES
+		// s.Matrix.List[13] = api.SiXiangSymbol_SI_XIANG_SYMBOL_SUN
+		// s.Matrix.List[14] = api.SiXiangSymbol_SI_XIANG_SYMBOL_K
+		// engine := e.(*normal)
+		// paylines := engine.Paylines(s.Matrix)
+		// assert.NotNil(t, paylines)
+		// assert.Equal(t, 2, len(paylines))
+		finish, _ := e.Finish(s)
+		assert.NotNil(t, finish)
+	})
+}
