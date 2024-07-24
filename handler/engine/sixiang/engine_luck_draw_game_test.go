@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	api "github.com/ciaolink-game-platform/cgp-common/proto"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgp-common/lib"
+	api "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

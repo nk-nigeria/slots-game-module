@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/api"
-	"github.com/ciaolink-game-platform/cgp-common/define"
+	"github.com/nakamaFramework/cgb-slots-game-module/api"
+	"github.com/nakamaFramework/cgp-common/define"
 
 	"google.golang.org/protobuf/encoding/protojson"
 

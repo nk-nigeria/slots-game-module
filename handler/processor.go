@@ -8,17 +8,17 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
+	"github.com/nakamaFramework/cgb-slots-game-module/cgbdb"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nakamaFramework/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

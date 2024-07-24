@@ -3,7 +3,7 @@ package entity
 import (
 	"testing"
 
-	api "github.com/ciaolink-game-platform/cgp-common/proto"
+	api "github.com/nakamaFramework/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

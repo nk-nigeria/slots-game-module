@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/snowflake"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 const (

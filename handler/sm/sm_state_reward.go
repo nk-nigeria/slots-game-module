@@ -3,7 +3,7 @@ package sm
 import (
 	"context"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nakamaFramework/cgp-common/lib"
 )
 
 type StateReward struct {

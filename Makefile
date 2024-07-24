@@ -1,19 +1,19 @@
-PROJECT_NAME=github.com/ciaolink-game-platform/cgb-slots-game-module
+PROJECT_NAME=github.com/nakamaFramework/cgb-slots-game-module
 APP_NAME=slots-game.so
 APP_PATH=$(PWD)
 
 update-submodule-dev:
-	git checkout develop && git pull
+	# git checkout develop && git pull
 	git submodule update --init
 	git submodule update --remote
 	cd ./cgp-common && git checkout develop && git pull && cd ..
-	go get github.com/ciaolink-game-platform/cgp-common@develop
+	go get github.com/nakamaFramework/cgp-common@develop
 update-submodule-stg:
 	git checkout staging && git pull
 	git submodule update --init
 	git submodule update --remote
 	cd ./cgp-common && git checkout staging && git pull && cd ..
-	go get github.com/ciaolink-game-platform/cgp-common@staging
+	go get github.com/nakamaFramework/cgp-common@staging
 
 build:
 	./sync_pkg_3.11.sh
@@ -36,7 +36,7 @@ proto:
 local:
 	# git submodule update --init
 	# git submodule update --remote
-	# go get github.com/ciaolink-game-platform/cgp-common@main
+	# go get github.com/nakamaFramework/cgp-common@main
 	./sync_pkg_3.11.sh
 	go mod tidy
 	go mod vendor

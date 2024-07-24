@@ -5,18 +5,18 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/inca"
-	incaclone "github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/inca_clone"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/juicy"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/sixiang"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/tarzan"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/sm"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgb-slots-game-module/handler"
+	"github.com/nakamaFramework/cgb-slots-game-module/handler/engine/inca"
+	incaclone "github.com/nakamaFramework/cgb-slots-game-module/handler/engine/inca_clone"
+	"github.com/nakamaFramework/cgb-slots-game-module/handler/engine/juicy"
+	"github.com/nakamaFramework/cgb-slots-game-module/handler/engine/sixiang"
+	"github.com/nakamaFramework/cgb-slots-game-module/handler/engine/tarzan"
+	"github.com/nakamaFramework/cgb-slots-game-module/handler/sm"
 
-	"github.com/ciaolink-game-platform/cgp-common/define"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/nakamaFramework/cgp-common/define"
+	"github.com/nakamaFramework/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

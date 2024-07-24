@@ -1,6 +1,6 @@
 package entity
 
-import pb "github.com/ciaolink-game-platform/cgp-common/proto"
+import pb "github.com/nakamaFramework/cgp-common/proto"
 
 func PbSlotMatrixForEeach(sm *pb.SlotMatrix, fn func(idx int, row, col int32, symbol pb.SiXiangSymbol)) {
 	row := int32(0)
