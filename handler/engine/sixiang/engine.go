@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
-	"github.com/ciaolink-game-platform/cgp-common/utilities"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgp-common/lib"
+	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nakamaFramework/cgp-common/utilities"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

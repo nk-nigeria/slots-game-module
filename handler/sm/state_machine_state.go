@@ -6,7 +6,7 @@ import (
 
 	"github.com/qmuntal/stateless"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nakamaFramework/cgp-common/lib"
 )
 
 const (

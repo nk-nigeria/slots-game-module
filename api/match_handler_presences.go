@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	"github.com/ciaolink-game-platform/cgp-common/presenter"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgp-common/lib"
+	"github.com/nakamaFramework/cgp-common/presenter"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgp-common/lib"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 type StatePreparing struct {

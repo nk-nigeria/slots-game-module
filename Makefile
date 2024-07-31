@@ -1,4 +1,4 @@
-PROJECT_NAME=github.com/ciaolink-game-platform/cgb-slots-game-module
+PROJECT_NAME=github.com/nakamaFramework/cgb-slots-game-module
 APP_NAME=slots-game.so
 APP_PATH=$(PWD)
 NAKAMA_VER=3.19.0
@@ -8,18 +8,18 @@ update-submodule-dev:
 	git submodule update --init
 	git submodule update --remote
 	cd ./cgp-common && git checkout develop && git pull origin develop && cd ..
-	go get github.com/ciaolink-game-platform/cgp-common@develop
+	go get github.com/nakamaFramework/cgp-common@develop
 update-submodule-stg:
 	git checkout staging && git pull
 	git submodule update --init
 	git submodule update --remote
 	cd ./cgp-common && git checkout staging && git pull && cd ..
-	go get github.com/ciaolink-game-platform/cgp-common@staging
+	go get github.com/nakamaFramework/cgp-common@staging
 
 build:
 	./sync_pkg_3.11.sh
 	go mod tidy && 	go mod vendor
-	docker run --rm -w "/app" -v "${APP_PATH}:/app" heroiclabs/nakama-pluginbuilder:${NAKAMA_VER} build -buildvcs=false --trimpath --buildmode=plugin -o ./bin/${APP_NAME}
+	docker run --rm -w "/app" -v "${APP_PATH}:/app" heroiclabs/nakama-pluginbuilder:${NAKAMA_VER} build -buildvcs=false --trimpath --mod=vendor --buildmode=plugin -o ./bin/${APP_NAME}
 
 syncdev:
 	rsync -aurv --delete ./bin/${APP_NAME} root@cgpdev:/root/cgp-server-dev/dist/data/modules/bin/
@@ -37,7 +37,7 @@ proto:
 local:
 	# git submodule update --init
 	# git submodule update --remote
-	# go get github.com/ciaolink-game-platform/cgp-common@main
+	# go get github.com/nakamaFramework/cgp-common@main
 	./sync_pkg_3.11.sh
 	go mod tidy
 	go mod vendor

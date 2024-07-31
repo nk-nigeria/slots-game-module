@@ -1,6 +1,6 @@
 package entity
 
-import "github.com/ciaolink-game-platform/cgp-common/lib"
+import "github.com/nakamaFramework/cgp-common/lib"
 
 type juiceGardenMatchState struct {
 	lib.MatchState

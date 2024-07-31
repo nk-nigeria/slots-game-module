@@ -3,11 +3,11 @@ package incaclone
 import (
 	"errors"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/handler/engine/inca"
-	"github.com/ciaolink-game-platform/cgp-common/define"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgb-slots-game-module/handler/engine/inca"
+	"github.com/nakamaFramework/cgp-common/define"
+	"github.com/nakamaFramework/cgp-common/lib"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 )
 
 type engine struct {
