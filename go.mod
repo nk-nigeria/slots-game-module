@@ -1,13 +1,11 @@
 module github.com/nakamaFramework/cgb-slots-game-module
 
-go 1.21
-
-replace github.com/nakamaFramework/cgp-common => ./cgp-common
+go 1.21.0
 
 require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/heroiclabs/nakama-common v1.30.0
-	github.com/nakamaFramework/cgp-common v0.0.0-20240504095842-8329997a7086
+	github.com/nakamaFramework/cgp-common v0.0.0-20240829034007-4e53913ff929
 	github.com/qmuntal/stateless v1.6.8
 	github.com/stretchr/testify v1.8.4
 	github.com/wk8/go-ordered-map/v2 v2.1.8

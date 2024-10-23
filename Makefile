@@ -16,6 +16,9 @@ update-submodule-stg:
 	cd ./cgp-common && git checkout staging && git pull && cd ..
 	go get github.com/nakamaFramework/cgp-common@staging
 
+cpdev:
+	scp ./bin/${APP_NAME} nakama:/root/cgp-server-dev/dist/data/modules/
+	
 build:
 	./sync_pkg_3.11.sh
 	go mod tidy && 	go mod vendor
