@@ -4,8 +4,6 @@ github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMU
 github.com/buger/jsonparser v1.1.1/go.mod h1:6RYKKt7H4d4+iWqouImQ9R2FZql3VbhNgx27UK13J/0=
 github.com/bwmarrin/snowflake v0.3.0 h1:xm67bEhkKh6ij1790JB83OujPR5CzNe8QuQqAgISZN0=
 github.com/bwmarrin/snowflake v0.3.0/go.mod h1:NdZxfVWX+oR6y2K0o6qAYv6gIOP9rjG0/E9WsDpxqwE=
-github.com/ciaolink-game-platform/cgp-common v0.0.0-20240504095842-8329997a7086 h1:fJy5cbsIa4K1l3Kz/rBqXfQQKHWFR0EdAyOB9Q94tKM=
-github.com/ciaolink-game-platform/cgp-common v0.0.0-20240504095842-8329997a7086/go.mod h1:oeyyErMYJbu+1J9t/z7ZzmRHdw/n+Do+iJ33EZR5rh8=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -28,6 +26,8 @@ github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
+github.com/nakamaFramework/cgp-common v0.0.0-20250213045023-ff2ce795e5c1 h1:1l601CfC9is94l5TzpBdEtXpr+oo9jf4YMSs21KHdfo=
+github.com/nakamaFramework/cgp-common v0.0.0-20250213045023-ff2ce795e5c1/go.mod h1:TJd3xJ9ZwSXQ97tD0iSM3/pOOartioM5zetspmTqp24=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/qmuntal/stateless v1.6.8 h1:FFtK4eVFg59hupskooMg2MxDvW325KtHjiuXiaFHeRQ=

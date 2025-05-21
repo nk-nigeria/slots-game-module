@@ -9,20 +9,20 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
+	"github.com/nakamaFramework/cgb-slots-game-module/cgbdb"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
 
-	"github.com/ciaolink-game-platform/cgp-common/define"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/nakamaFramework/cgp-common/define"
+	pb "github.com/nakamaFramework/cgp-common/proto"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nakamaFramework/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

@@ -3,8 +3,8 @@ package sixiang
 import (
 	"testing"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	api "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	api "github.com/nakamaFramework/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 
