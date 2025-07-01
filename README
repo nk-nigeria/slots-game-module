@@ -32,4 +32,4 @@ struct Payline {
   int64 chips = 5; // số chips win ở payline này (được tính = mcb*rate)
 }
 
-** Game client demo đơn giản ở repo <https://github.com/ciaolink-game-platform/cgp-game-client.git>
+** Game client demo đơn giản ở repo <https://github.com/nk-nigeria/cgp-game-client.git>

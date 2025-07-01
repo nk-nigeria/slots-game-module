@@ -1,9 +1,9 @@
-package sm
+package handler
 
 import (
 	"context"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
 )
 
 type StateReward struct {

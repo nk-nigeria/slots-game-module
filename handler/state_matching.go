@@ -1,11 +1,11 @@
-package sm
+package handler
 
 import (
 	"context"
 	"time"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
+	"github.com/nk-nigeria/slots-game-module/entity"
 )
 
 type StateMatching struct {
@@ -62,9 +62,9 @@ func (s *StateMatching) Process(ctx context.Context, args ...interface{}) error 
 		return nil
 	}
 	if state.IsReadyToPlay() {
-		s.Trigger(ctx, lib.TriggerPresenceReady)
+		s.Trigger(ctx, triggerPresenceReady)
 	} else {
-		s.Trigger(ctx, lib.TriggerIdle)
+		s.Trigger(ctx, triggerIdle)
 	}
 	return nil
 }

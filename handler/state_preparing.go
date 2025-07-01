@@ -1,13 +1,13 @@
-package sm
+package handler
 
 import (
 	"context"
 	"math"
 	"strings"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/slots-game-module/entity"
 )
 
 type StatePreparing struct {
@@ -73,10 +73,10 @@ func (s *StatePreparing) Process(ctx context.Context, args ...interface{}) error
 	}
 	if remain <= 0 {
 		if state.IsReadyToPlay() {
-			s.Trigger(ctx, lib.TriggerPreparingDone)
+			s.Trigger(ctx, triggerPreparingDone)
 		} else {
 			// change to wait
-			s.Trigger(ctx, lib.TriggerPreparingFailed)
+			s.Trigger(ctx, triggerPreparingFailed)
 		}
 		return nil
 	}

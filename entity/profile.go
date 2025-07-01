@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
 )
 

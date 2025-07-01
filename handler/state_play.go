@@ -1,13 +1,13 @@
-package sm
+package handler
 
 import (
 	"context"
 	"math"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
+	"github.com/nk-nigeria/slots-game-module/entity"
 )
 
 type StatePlay struct {
@@ -68,7 +68,7 @@ func (s *StatePlay) Process(ctx context.Context, args ...interface{}) error {
 		state)
 
 	if state.CountDownReachTime.Unix() <= 0 {
-		s.Trigger(ctx, lib.TriggerNoOne)
+		s.Trigger(ctx, triggerNoOne)
 	}
 
 	// if len(message) > 0 {

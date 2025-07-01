@@ -1,4 +1,4 @@
-package sm
+package handler
 
 import (
 	"context"
@@ -6,7 +6,20 @@ import (
 
 	"github.com/qmuntal/stateless"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
+)
+
+const (
+	triggerIdle            = "GameIdle"
+	triggerMatching        = "GameMatching"
+	triggerPresenceReady   = "GamePresenceReady"
+	triggerPreparingDone   = "GamePreparingDone"
+	triggerPreparingFailed = "GamePreparingFailed"
+	triggerPlayTimeout     = "GamePlayTimeout"
+	triggerRewardTimeout   = "GameRewardTimeout"
+	triggerNoOne           = "GameNoOne"
+
+	triggerProcess = "GameProcess"
 )
 
 const (

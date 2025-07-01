@@ -1,11 +1,11 @@
-package sm
+package handler
 
 import (
 	"context"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	"github.com/ciaolink-game-platform/cgp-common/presenter"
+	"github.com/nk-nigeria/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/presenter"
+	"github.com/nk-nigeria/slots-game-module/entity"
 )
 
 type StateIdle struct {
@@ -46,13 +46,13 @@ func (s *StateIdle) Process(ctx context.Context, args ...interface{}) error {
 	procPkg := lib.GetProcessorPackagerFromContext(ctx)
 	state := procPkg.GetMatchState().(*entity.SlotsMatchState)
 	if state.GetPresenceSize() > 0 {
-		s.Trigger(ctx, lib.TriggerMatching)
+		s.Trigger(ctx, triggerMatching)
 		return nil
 	}
 	if remain := state.GetRemainCountDown(); remain < 0 {
 		// Do finish here
 		procPkg.GetLogger().Info("[idle] idle timeout => exit")
-		s.Trigger(ctx, lib.TriggerNoOne)
+		s.Trigger(ctx, triggerNoOne)
 		return presenter.ErrGameFinish
 	}
 	return nil

@@ -3,7 +3,7 @@ syntax = "proto3";
 
 package api;
 
-option go_package = "github.com/ciaolink-game-platform/cgp-bing-module/api";
+option go_package = "github.com/nk-nigeria/cgp-bing-module/api";
 
 message SlotDesk {
   repeated int32 matrices = 1;

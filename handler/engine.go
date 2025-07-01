@@ -3,10 +3,10 @@ package handler
 import (
 	"fmt"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
-	"github.com/ciaolink-game-platform/cgp-common/lib"
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
-	"github.com/ciaolink-game-platform/cgp-common/utilities"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/cgp-common/utilities"
+	"github.com/nk-nigeria/slots-game-module/entity"
 )
 
 var _ lib.Engine = &slotsEngine{}
@@ -75,18 +75,28 @@ func (e *slotsEngine) Finish(matchState interface{}) (interface{}, error) {
 	// add payline result
 	{
 		slotDesk.Paylines = s.GetPaylines()
-		for _, payline := range slotDesk.Paylines {
-			slotDesk.ChipsWinInSpin += payline.GetChips()
-		}
+		// for _, payline := range slotDesk.Paylines {
+		// 	slotDesk.ChipsWinInSpin += payline.GetChips()
+		// }
 	}
 	// check if win bonus game
 	{
 		nextSiXiangGame := e.GetNextSiXiangGame(s)
 		// s.AddTrackingPlayBonusGame(nextSiXiangGame)
 		s.NextSiXiangGame = nextSiXiangGame
-		slotDesk.SixiangGame = nextSiXiangGame
+		slotDesk.SixiangGems[0] = nextSiXiangGame
 	}
 	return slotDesk, nil
+}
+
+func (e *slotsEngine) Info(matchState interface{}) (interface{}, error) {
+	fmt.Println("Slots Engine Info")
+	return nil, nil
+}
+
+func (e *slotsEngine) Loop(matchState interface{}) (interface{}, error) {
+	fmt.Println("Slots Engine Loop")
+	return nil, nil
 }
 
 func (e *slotsEngine) SpinMatrix(matrix entity.SlotMatrix) entity.SlotMatrix {
@@ -210,7 +220,7 @@ func (e *slotsEngine) GetNextSiXiangGame(matchState *entity.SlotsMatchState) pb.
 	if numScatter == 3 {
 		return pb.SiXiangGame_SI_XIANG_GAME_BONUS
 	}
-	return pb.SiXiangGame_SI_XIANG_GAME_NOMAL
+	return pb.SiXiangGame_SI_XIANG_GAME_NORMAL
 }
 
 func (e *slotsEngine) RatioPayline(payline *pb.Payline) float64 {

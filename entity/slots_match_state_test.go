@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

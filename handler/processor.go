@@ -5,15 +5,15 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/cgbdb"
+	"github.com/nk-nigeria/slots-game-module/cgbdb"
 
-	"github.com/ciaolink-game-platform/cgb-slots-game-module/entity"
+	"github.com/nk-nigeria/slots-game-module/entity"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
 	"github.com/heroiclabs/nakama-common/runtime"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -54,17 +54,17 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	logger.Info("List matrix new game %v", string(s.GetMatrix().List))
 	slotDesk := &pb.SlotDesk{}
 	presence := s.GetPlayingPresences()[0]
-	wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
-	if err != nil {
-		logger.WithField("error", err.Error()).
-			WithField("user id", presence.GetUserId()).
-			Error("get profile user failed")
-		return
-	}
+	// wallet, err := entity.ReadWalletUser(ctx, nk, logger, presence.GetUserId())
+	// if err != nil {
+	// 	logger.WithField("error", err.Error()).
+	// 		WithField("user id", presence.GetUserId()).
+	// 		Error("get profile user failed")
+	// 	return
+	// }
 	matrix := s.GetMatrix()
 	slotDesk.Matrix = matrix.ToPbSlotMatrix()
-	slotDesk.BalanceChipsWalletBefore = wallet.Chips
-	slotDesk.BalanceChipsWalletAfter = wallet.Chips
+	// slotDesk.BalanceChipsWalletBefore = wallet.Chips
+	// slotDesk.BalanceChipsWalletAfter = wallet.Chips
 
 	p.broadcastMessage(logger, dispatcher,
 		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
@@ -104,13 +104,13 @@ func (p *processor) ProcessGame(ctx context.Context,
 			s.SetAllowSpin(false)
 			s.SetBetInfo(bet)
 			p.engine.Process(matchState)
-			wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
-			if err != nil {
-				logger.WithField("error", err.Error()).
-					WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
-					Error("get profile user failed")
-				continue
-			}
+			// wallet, err := entity.ReadWalletUser(ctx, nk, logger, s.GetPlayingPresences()[0].GetUserId())
+			// if err != nil {
+			// 	logger.WithField("error", err.Error()).
+			// 		WithField("user id", s.GetPlayingPresences()[0].GetUserId()).
+			// 		Error("get profile user failed")
+			// 	continue
+			// }
 			result, err := p.engine.Finish(matchState)
 			if err != nil {
 				logger.WithField("error", err.Error()).
@@ -118,18 +118,18 @@ func (p *processor) ProcessGame(ctx context.Context,
 				continue
 			}
 			slotDesk := result.(*pb.SlotDesk)
-			slotDesk.BalanceChipsWalletBefore = wallet.Chips
-			slotDesk.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWinInSpin() - bet.Chips
-			p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
-				Updates: []*pb.BalanceUpdate{
-					{
-						UserId:            s.GetPlayingPresences()[0].GetUserId(),
-						AmountChipBefore:  slotDesk.BalanceChipsWalletBefore,
-						AmountChipCurrent: slotDesk.BalanceChipsWalletAfter,
-						AmountChipAdd:     slotDesk.BalanceChipsWalletAfter - slotDesk.BalanceChipsWalletBefore,
-					},
-				},
-			})
+			// slotDesk.BalanceChipsWalletBefore = wallet.Chips
+			// slotDesk.BalanceChipsWalletAfter = wallet.Chips + slotDesk.GetChipsWinInSpin() - bet.Chips
+			// p.updateChipByResultGameFinish(ctx, logger, nk, &pb.BalanceResult{
+			// 	Updates: []*pb.BalanceUpdate{
+			// 		{
+			// 			UserId:            s.GetPlayingPresences()[0].GetUserId(),
+			// 			AmountChipBefore:  slotDesk.BalanceChipsWalletBefore,
+			// 			AmountChipCurrent: slotDesk.BalanceChipsWalletAfter,
+			// 			AmountChipAdd:     slotDesk.BalanceChipsWalletAfter - slotDesk.BalanceChipsWalletBefore,
+			// 		},
+			// 	},
+			// })
 			p.broadcastMessage(logger, dispatcher,
 				int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 				slotDesk,

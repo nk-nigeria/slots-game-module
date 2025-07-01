@@ -3,10 +3,10 @@ package entity
 import (
 	"time"
 
-	"github.com/ciaolink-game-platform/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 
-	pb "github.com/ciaolink-game-platform/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 const (
@@ -180,7 +180,7 @@ type SlotsMatchState struct {
 	bet             *pb.InfoBet
 }
 
-func NewSlotsMathState(label *lib.MatchLabel) *SlotsMatchState {
+func NewSlotsMathState(label *pb.Match) *SlotsMatchState {
 	m := SlotsMatchState{
 		MatchState:     lib.NewMathState(label, NewMyPrecense),
 		balanceResult:  nil,
