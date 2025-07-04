@@ -14,20 +14,19 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/nk-nigeria/cgp-common/lib"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var _ lib.Processor = &processor{}
 
 type processor struct {
 	engine      lib.Engine
-	marshaler   *protojson.MarshalOptions
-	unmarshaler *protojson.UnmarshalOptions
+	marshaler   *proto.MarshalOptions
+	unmarshaler *proto.UnmarshalOptions
 	// turnBaseEngine *lib.TurnBaseEngine
 }
 
-func NewMatchProcessor(marshaler *protojson.MarshalOptions,
-	unmarshaler *protojson.UnmarshalOptions,
+func NewMatchProcessor(marshaler *proto.MarshalOptions,
+	unmarshaler *proto.UnmarshalOptions,
 	engine lib.Engine) lib.Processor {
 	p := processor{
 		marshaler:   marshaler,

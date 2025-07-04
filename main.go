@@ -8,19 +8,15 @@ import (
 	"github.com/nk-nigeria/slots-game-module/api"
 	"github.com/nk-nigeria/slots-game-module/entity"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/heroiclabs/nakama-common/runtime"
+	"google.golang.org/protobuf/proto"
 )
 
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	initStart := time.Now()
 
-	marshaler := &protojson.MarshalOptions{
-		UseEnumNumbers:  true,
-		EmitUnpopulated: true,
-	}
-	unmarshaler := &protojson.UnmarshalOptions{
+	marshaler := &proto.MarshalOptions{}
+	unmarshaler := &proto.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
 	if err := initializer.RegisterMatch(entity.ModuleName, func(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule) (runtime.Match, error) {

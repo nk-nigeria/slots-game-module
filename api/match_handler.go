@@ -32,8 +32,8 @@ func (m *MatchHandler) MatchSignal(ctx context.Context, logger runtime.Logger, d
 }
 
 func NewMatchHandler(
-	marshaler *protojson.MarshalOptions,
-	unmarshaler *protojson.UnmarshalOptions,
+	marshaler *proto.MarshalOptions,
+	unmarshaler *proto.UnmarshalOptions,
 ) *MatchHandler {
 	return &MatchHandler{
 		processor: handler.NewMatchProcessor(marshaler, unmarshaler,
