@@ -6,7 +6,7 @@ import (
 
 	"github.com/qmuntal/stateless"
 
-	"github.com/nakamaFramework/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
 )
 
 const (

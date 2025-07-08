@@ -4,10 +4,10 @@ import (
 	"context"
 	"math"
 
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
-	"github.com/nakamaFramework/cgp-common/lib"
+	"github.com/nk-nigeria/slots-game-module/entity"
+	"github.com/nk-nigeria/cgp-common/lib"
 )
 
 type StatePlay struct {

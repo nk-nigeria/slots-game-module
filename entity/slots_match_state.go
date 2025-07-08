@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/nakamaFramework/cgp-common/define"
-	"github.com/nakamaFramework/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/define"
+	"github.com/nk-nigeria/cgp-common/lib"
 
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 const (

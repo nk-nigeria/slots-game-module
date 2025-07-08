@@ -4,10 +4,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
-	"github.com/nakamaFramework/cgp-common/lib"
-	api "github.com/nakamaFramework/cgp-common/proto"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/slots-game-module/entity"
+	"github.com/nk-nigeria/cgp-common/lib"
+	api "github.com/nk-nigeria/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

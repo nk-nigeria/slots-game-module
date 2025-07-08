@@ -3,7 +3,7 @@ package sm
 import (
 	"context"
 
-	"github.com/nakamaFramework/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
 )
 
 type StateReward struct {

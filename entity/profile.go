@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 type ListProfile []*pb.SimpleProfile

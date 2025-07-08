@@ -3,9 +3,9 @@ package inca
 import (
 	"time"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
-	"github.com/nakamaFramework/cgp-common/lib"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/slots-game-module/entity"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 func NewEngine() lib.Engine {

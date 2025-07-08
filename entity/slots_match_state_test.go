@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/nakamaFramework/cgp-common/define"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/cgp-common/define"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 

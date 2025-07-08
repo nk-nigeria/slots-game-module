@@ -9,20 +9,20 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/cgbdb"
+	"github.com/nk-nigeria/slots-game-module/cgbdb"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
+	"github.com/nk-nigeria/slots-game-module/entity"
 
 	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgp-common/define"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/cgp-common/define"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/nakamaFramework/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/lib"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 

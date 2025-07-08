@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/api"
-	"github.com/nakamaFramework/cgp-common/define"
+	"github.com/nk-nigeria/cgp-common/define"
+	"github.com/nk-nigeria/slots-game-module/api"
 
 	"google.golang.org/protobuf/encoding/protojson"
 

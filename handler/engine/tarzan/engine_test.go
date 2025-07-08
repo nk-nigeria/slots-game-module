@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/nakamaFramework/cgp-common/lib"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 func TestNewEngine(t *testing.T) {

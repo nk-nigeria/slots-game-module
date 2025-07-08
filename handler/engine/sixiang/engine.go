@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
-	"github.com/nakamaFramework/cgp-common/lib"
-	pb "github.com/nakamaFramework/cgp-common/proto"
-	"github.com/nakamaFramework/cgp-common/utilities"
+	"github.com/nk-nigeria/slots-game-module/entity"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
+	"github.com/nk-nigeria/cgp-common/utilities"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

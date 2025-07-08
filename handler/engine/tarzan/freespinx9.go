@@ -3,9 +3,9 @@ package tarzan
 import (
 	"fmt"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
-	"github.com/nakamaFramework/cgp-common/lib"
-	pb "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/slots-game-module/entity"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
 const maxGemSpinFreeSpinX9 = 9

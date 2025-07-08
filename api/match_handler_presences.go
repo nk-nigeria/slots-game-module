@@ -5,9 +5,9 @@ import (
 	"database/sql"
 
 	"github.com/heroiclabs/nakama-common/runtime"
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
-	"github.com/nakamaFramework/cgp-common/lib"
-	"github.com/nakamaFramework/cgp-common/presenter"
+	"github.com/nk-nigeria/slots-game-module/entity"
+	"github.com/nk-nigeria/cgp-common/lib"
+	"github.com/nk-nigeria/cgp-common/presenter"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

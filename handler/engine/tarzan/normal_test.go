@@ -3,8 +3,8 @@ package tarzan
 import (
 	"testing"
 
-	"github.com/nakamaFramework/cgb-slots-game-module/entity"
-	api "github.com/nakamaFramework/cgp-common/proto"
+	"github.com/nk-nigeria/slots-game-module/entity"
+	api "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/stretchr/testify/assert"
 )
 
