@@ -11,6 +11,7 @@ import (
 
 	"github.com/heroiclabs/nakama-common/runtime"
 	pb "github.com/nk-nigeria/cgp-common/proto"
+	pb1 "github.com/nk-nigeria/cgp-common/proto/whot"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/nk-nigeria/cgp-common/lib"
@@ -66,7 +67,7 @@ func (p *processor) ProcessNewGame(ctx context.Context,
 	// slotDesk.BalanceChipsWalletAfter = wallet.Chips
 
 	p.broadcastMessage(logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+		int64(pb1.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotDesk,
 		[]runtime.Presence{presence},
 		nil, false)
@@ -84,7 +85,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 	defer s.SetAllowSpin(true)
 
 	for _, message := range messages {
-		if message.GetOpCode() == int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN) {
+		if message.GetOpCode() == int64(pb1.OpCodeRequest_OPCODE_REQUEST_SPIN) {
 			if !s.IsAllowSpin() {
 				continue
 			}
@@ -130,7 +131,7 @@ func (p *processor) ProcessGame(ctx context.Context,
 			// 	},
 			// })
 			p.broadcastMessage(logger, dispatcher,
-				int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+				int64(pb1.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 				slotDesk,
 				s.GetPlayingPresences(),
 				nil, false)
@@ -147,7 +148,7 @@ func (p *processor) NotifyUpdateGameState(
 ) {
 	p.broadcastMessage(
 		logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+		int64(pb1.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
 		updateState, nil, nil, true)
 }
 
@@ -320,7 +321,7 @@ func (p *processor) broadcastMessage(logger runtime.Logger,
 		return err
 	}
 	err = dispatcher.BroadcastMessage(opCode, dataJson, presences, sender, true)
-	if opCode == int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE) {
+	if opCode == int64(pb1.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE) {
 		return nil
 	}
 	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
