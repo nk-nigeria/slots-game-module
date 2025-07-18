@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"fmt"
+
 	pb "github.com/nk-nigeria/cgp-common/proto"
 )
 
@@ -257,12 +259,15 @@ func (sm *SlotMatrix) ListFromIndexs(indexs []int) []pb.SiXiangSymbol {
 
 func (sm *SlotMatrix) ToPbSlotMatrix() *pb.SlotMatrix {
 	// matrix, cols,row
+	fmt.Printf("DEBUG: ToPbSlotMatrix - Input matrix size: %d, rows: %d, cols: %d\n", len(sm.List), sm.Rows, sm.Cols)
 	pbSl := &pb.SlotMatrix{
 		Rows: int32(sm.Rows),
 		Cols: int32(sm.Cols),
 	}
 	pbSl.Lists = make([]pb.SiXiangSymbol, pbSl.Rows*pbSl.Cols)
+	fmt.Printf("DEBUG: ToPbSlotMatrix - Created pbSl.Lists with size: %d\n", len(pbSl.Lists))
 	copy(pbSl.Lists, sm.List) // deep copy
+	fmt.Printf("DEBUG: ToPbSlotMatrix - After copy, pbSl.Lists size: %d\n", len(pbSl.Lists))
 	return pbSl
 }
 

@@ -8,7 +8,7 @@ import (
 	"github.com/nk-nigeria/cgp-common/define"
 	"github.com/nk-nigeria/slots-game-module/api"
 
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 )
@@ -16,11 +16,8 @@ import (
 func InitModule(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, initializer runtime.Initializer) error {
 	initStart := time.Now()
 
-	marshaler := &protojson.MarshalOptions{
-		UseEnumNumbers:  true,
-		EmitUnpopulated: true,
-	}
-	unmarshaler := &protojson.UnmarshalOptions{
+	marshaler := &proto.MarshalOptions{}
+	unmarshaler := &proto.UnmarshalOptions{
 		DiscardUnknown: false,
 	}
 	gameNames := []define.GameName{

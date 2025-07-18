@@ -17,28 +17,28 @@ import (
 	"github.com/heroiclabs/nakama-common/runtime"
 	"github.com/nk-nigeria/cgp-common/define"
 	pb "github.com/nk-nigeria/cgp-common/proto"
+	pb1 "github.com/nk-nigeria/cgp-common/proto/whot"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/nk-nigeria/cgp-common/lib"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var _ lib.Processor = &processor{}
 
 type processor struct {
 	engine      lib.Engine
-	marshaler   *protojson.MarshalOptions
-	unmarshaler *protojson.UnmarshalOptions
+	marshaler   *proto.MarshalOptions
+	unmarshaler *proto.UnmarshalOptions
 
 	delayTime time.Time
 }
 
 func NewMatchProcessor(
-	marshaler *protojson.MarshalOptions,
-	unmarshaler *protojson.UnmarshalOptions,
+	marshaler *proto.MarshalOptions,
+	unmarshaler *proto.UnmarshalOptions,
 	engine lib.Engine) lib.Processor {
 	p := processor{
 		marshaler:   marshaler,
@@ -120,14 +120,14 @@ func (p *processor) ProcessGame(ctx context.Context,
 		p.InitSpecialGameDesk(ctx, logger, nk, db, dispatcher, matchState)
 
 		switch message.GetOpCode() {
-		case int64(pb.OpCodeRequest_OPCODE_REQUEST_SPIN):
+		case int64(pb1.OpCodeRequest_OPCODE_REQUEST_SPIN):
 			p.doSpin(ctx, logger, nk, db, dispatcher, message, s)
-		case int64(pb.OpCodeRequest_OPCODE_REQUEST_INFO_TABLE):
+		case int64(pb1.OpCodeRequest_OPCODE_REQUEST_INFO_TABLE):
 			logger.Info("handlerRequestGetInfoTable by user request")
 			p.getInfoTable(ctx, logger, nk, db, dispatcher, message.GetUserId(), s)
-		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
+		case int64(pb1.OpCodeRequest_OPCODE_REQUEST_BUY_SIXIANG_GEM):
 			p.buySixiangGem(ctx, logger, nk, db, dispatcher, message, s)
-		case int64(pb.OpCodeRequest_OPCODE_REQUEST_BET):
+		case int64(pb1.OpCodeRequest_OPCODE_REQUEST_BET):
 			p.doChangeBet(ctx, logger, nk, db, dispatcher, message, s)
 		}
 	}
@@ -155,7 +155,7 @@ func (p *processor) NotifyUpdateGameState(
 ) {
 	p.broadcastMessage(
 		logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
+		int64(pb1.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE),
 		updateState, nil, nil, true)
 }
 
@@ -342,9 +342,9 @@ func (p *processor) doSpin(ctx context.Context,
 	if err != nil {
 		logger.WithField("err", err.Error()).WithField("msg", message.GetData()).WithField("user id", message.GetUserId()).
 			Error("unmarshal bet info failed")
-		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR),
+		p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_ERROR),
 			&pb.Error{
-				Code:  int64(pb.OpCodeUpdate_OPCODE_ERROR),
+				Code:  int64(pb1.OpCodeUpdate_OPCODE_ERROR),
 				Error: entity.ErrorInfoBetInvalid.Error(),
 			},
 			[]runtime.Presence{s.GetPresence(message.GetUserId())}, nil, false)
@@ -365,7 +365,7 @@ func (p *processor) doSpin(ctx context.Context,
 		err := p.checkEnoughChipFromWallet(ctx, logger, nk, message.GetUserId(), s.Bet().Chips)
 		if err != nil {
 			logger.Error("deduce chip bet failed %s", err.Error())
-			p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+			p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
 				Code:  int64(codes.Aborted),
 				Error: entity.ErrorChipNotEnough.Error(),
 			}, []runtime.Presence{s.GetPresence(message.GetUserId())}, nil, false)
@@ -440,7 +440,7 @@ func (p *processor) getInfoTable(
 		gameReward.BalanceChipsWalletAfter = wallet.Chips
 	}
 	slotdesk.GameReward = gameReward
-	p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+	p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotdesk, []runtime.Presence{s.GetPresence(userID)}, nil, true)
 }
 
@@ -502,14 +502,14 @@ func (p *processor) buySixiangGem(
 	}
 	chips, err := s.PriceBuySixiangGem()
 	if err != nil {
-		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+		p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
 			Code:  int64(codes.Aborted),
 			Error: err.Error(),
 		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
 		return
 	}
 	if chips == 0 {
-		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+		p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
 			Code:  int64(codes.Aborted),
 			Error: entity.ErrorInternal.Error(),
 		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
@@ -517,7 +517,7 @@ func (p *processor) buySixiangGem(
 	err = p.checkEnoughChipFromWallet(ctx, logger, nk, userID, int64(chips))
 	if err != nil {
 		logger.WithField("err", err.Error()).Error("chip not enough for buy gem")
-		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+		p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
 			Code:  int64(codes.Aborted),
 			Error: entity.ErrorChipNotEnough.Error(),
 		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
@@ -529,7 +529,7 @@ func (p *processor) buySixiangGem(
 	)
 	if err != nil {
 		logger.WithField("err", err.Error()).Error("update chip buy gem failed")
-		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
+		p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_ERROR), &pb.Error{
 			Code:  int64(codes.Aborted),
 			Error: entity.ErrorInternal.Error(),
 		}, []runtime.Presence{s.GetPresence(userID)}, nil, false)
@@ -566,24 +566,29 @@ func (p *processor) broadcastMessage(logger runtime.Logger,
 	sender runtime.Presence,
 	reliable bool,
 ) error {
-	dataJson, err := p.marshaler.Marshal(data)
+
+	jsonData, err := json.Marshal(data)
 	if err != nil {
-		logger.WithField("err", err).
-			Error("Error when marshaler data for broadcastMessage")
+		logger.Error("Failed to marshal data to JSON for logging: %v", err)
+		jsonData = []byte("{}")
+	}
+
+	dataBytes, err := p.marshaler.Marshal(data)
+	if err != nil {
+		logger.WithField("err", err).Error("Error when marshaler data for broadcastMessage")
 		return err
 	}
-	err = dispatcher.BroadcastMessage(opCode, dataJson, presences, sender, true)
-	if opCode == int64(pb.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE) {
+
+	err = dispatcher.BroadcastMessage(opCode, dataBytes, presences, sender, true)
+	if opCode == int64(pb1.OpCodeUpdate_OPCODE_UPDATE_GAME_STATE) {
 		return nil
 	}
-	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(dataJson))
 	if err != nil {
-		logger.
-			WithField("message", string(dataJson)).
-			Error("Error BroadcastMessage")
+		logger.WithField("message", string(jsonData)).Error("Error BroadcastMessage")
 		return err
 	}
-	logger.Info("broadcast message opcode %v, to %v", opCode, presences)
+
+	logger.Info("broadcast message opcode %v, to %v, data %v", opCode, presences, string(jsonData))
 	return nil
 }
 
@@ -772,7 +777,7 @@ func (p *processor) gameSummary(ctx context.Context, logger runtime.Logger, nk r
 	// 	p.delayTime = time.Now().Add(2 * time.Second)
 	// }
 	p.broadcastMessage(logger, dispatcher,
-		int64(pb.OpCodeUpdate_OPCODE_UPDATE_TABLE),
+		int64(pb1.OpCodeUpdate_OPCODE_UPDATE_TABLE),
 		slotDesk,
 		s.GetPlayingPresences(),
 		nil, false)
@@ -887,9 +892,9 @@ func (p *processor) doChangeBet(
 			WithField("msg", message.GetData()).
 			WithField("user id", message.GetUserId()).
 			Error("unmarshal bet info failed")
-		p.broadcastMessage(logger, dispatcher, int64(pb.OpCodeUpdate_OPCODE_ERROR),
+		p.broadcastMessage(logger, dispatcher, int64(pb1.OpCodeUpdate_OPCODE_ERROR),
 			&pb.Error{
-				Code:  int64(pb.OpCodeUpdate_OPCODE_ERROR),
+				Code:  int64(pb1.OpCodeUpdate_OPCODE_ERROR),
 				Error: entity.ErrorInfoBetInvalid.Error(),
 			},
 			[]runtime.Presence{s.GetPresence(message.GetUserId())}, nil, false)

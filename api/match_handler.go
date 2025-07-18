@@ -5,6 +5,9 @@ import (
 	"database/sql"
 
 	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/nk-nigeria/cgp-common/define"
+	"github.com/nk-nigeria/cgp-common/lib"
+	pb "github.com/nk-nigeria/cgp-common/proto"
 	"github.com/nk-nigeria/slots-game-module/entity"
 	"github.com/nk-nigeria/slots-game-module/handler"
 	"github.com/nk-nigeria/slots-game-module/handler/engine/inca"
@@ -13,10 +16,7 @@ import (
 	"github.com/nk-nigeria/slots-game-module/handler/engine/sixiang"
 	"github.com/nk-nigeria/slots-game-module/handler/engine/tarzan"
 	"github.com/nk-nigeria/slots-game-module/handler/sm"
-	"github.com/nk-nigeria/cgp-common/define"
-	"github.com/nk-nigeria/cgp-common/lib"
-	pb "github.com/nk-nigeria/cgp-common/proto"
-	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 var _ runtime.Match = &MatchHandler{}
@@ -33,8 +33,8 @@ func (m *MatchHandler) MatchSignal(ctx context.Context, logger runtime.Logger, d
 
 func NewMatchHandler(
 	moduleName string,
-	marshaler *protojson.MarshalOptions,
-	unmarshaler *protojson.UnmarshalOptions,
+	marshaler *proto.MarshalOptions,
+	unmarshaler *proto.UnmarshalOptions,
 ) *MatchHandler {
 
 	var processor lib.Processor
@@ -62,18 +62,19 @@ func NewMatchHandler(
 }
 
 func (m *MatchHandler) MatchInit(ctx context.Context, logger runtime.Logger, db *sql.DB, nk runtime.NakamaModule, params map[string]interface{}) (interface{}, int, string) {
-	logger.Info("match init: %v", params)
-	label, ok := params["data"].(string)
+	rawLabel, ok := params["label"].(string)
 	if !ok {
-		logger.WithField("params", params).Error("invalid match init parameter \"data\"")
+		logger.WithField("params", params).Error("invalid match init parameter \"label\"")
 		return nil, entity.TickRate, ""
 	}
+
 	matchInfo := &pb.Match{}
-	err := entity.DefaulUnmarshaler.Unmarshal([]byte(label), matchInfo)
+	err := proto.Unmarshal([]byte(rawLabel), matchInfo)
 	if err != nil {
 		logger.Error("match init json label failed ", err)
-		return nil, entity.TickRate, ""
+		return nil, 0, ""
 	}
+
 	matchInfo.MatchId, _ = ctx.Value(runtime.RUNTIME_CTX_MATCH_ID).(string)
 	labelJSON, err := entity.DefaultMarshaler.Marshal(matchInfo)
 
